@@ -11,8 +11,7 @@ export default function Footer() {
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-2">
             <Logo height={28} />
-            <p className="mt-4 max-w-md text-sm leading-relaxed text-muted">{SITE_TAGLINE}</p>
-            <p className="mt-2 text-sm text-muted">{CONTACT.location}</p>
+            <p className="mt-4 text-sm text-muted whitespace-nowrap">{SITE_TAGLINE}</p>
           </div>
 
           <div>
@@ -38,16 +37,6 @@ export default function Footer() {
                 <a href={`mailto:${CONTACT.email}`} className="transition-colors hover:text-foreground">
                   {CONTACT.email}
                 </a>
-              </li>
-              <li>
-                <a href={`tel:${CONTACT.phone.replace(/\s/g, "")}`} className="transition-colors hover:text-foreground">
-                  {CONTACT.phone}
-                </a>
-              </li>
-              <li>
-                <Link href="/contact" className="transition-colors hover:text-foreground">
-                  Request a quote
-                </Link>
               </li>
             </ul>
           </div>
