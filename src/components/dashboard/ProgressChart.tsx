@@ -6,7 +6,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { ChartTooltip } from "@/components/dashboard/ChartTooltip";
 import { PROGRESS_VS_PLAN_DATA } from "@/lib/mock-data";
+import { cn } from "@/lib/utils";
 import {
   CartesianGrid,
   Line,
@@ -20,99 +22,32 @@ import {
 const PLANNED_COLOR = "#64748b";
 const ACTUAL_COLOR = "#3b82f6";
 
-function ChartTooltip({
-  active,
-  payload,
-  label,
-}: {
-  active?: boolean;
-  payload?: Array<{ name: string; value: number; color: string }>;
-  label?: string;
-}) {
-  if (!active || !payload?.length) return null;
-
+export default function ProgressChart({ compact = false }: { compact?: boolean }) {
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-[#0D1B2A] px-4 py-3 shadow-2xl">
-      <p className="mb-2 text-[10px] font-medium uppercase tracking-wider text-white/40">
-        {label}
-      </p>
-      {payload.map((entry) => (
-        <div key={entry.name} className="flex items-center gap-2 text-xs">
-          <span
-            className="h-2 w-2 rounded-full"
-            style={{ backgroundColor: entry.color }}
-          />
-          <span className="text-white/50">{entry.name}</span>
-          <span className="ml-auto font-mono text-white/90">{entry.value}%</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-export default function ProgressChart() {
-  return (
-    <Card>
-      <CardHeader className="flex-row items-center justify-between space-y-0 pb-4">
-        <CardTitle>Progress vs Plan</CardTitle>
-        <div className="flex items-center gap-5 text-xs text-white/45">
-          <span className="flex items-center gap-2">
-            <span
-              className="h-0.5 w-5 rounded-full"
-              style={{ backgroundColor: ACTUAL_COLOR }}
-            />
+    <Card className="h-full">
+      <CardHeader className={cn("flex-row items-center justify-between space-y-0", compact ? "pb-2" : "pb-4")}>
+        <CardTitle className={compact ? "text-sm" : undefined}>Progress vs Plan</CardTitle>
+        <div className="flex items-center gap-4 text-[11px] text-white/45">
+          <span className="flex items-center gap-1.5">
+            <span className="h-0.5 w-4 rounded-full bg-[#3b82f6]" />
             Actual
           </span>
-          <span className="flex items-center gap-2">
-            <span
-              className="h-0.5 w-5 rounded-full"
-              style={{ backgroundColor: PLANNED_COLOR }}
-            />
+          <span className="flex items-center gap-1.5">
+            <span className="h-0.5 w-4 rounded-full bg-[#64748b]" />
             Planned
           </span>
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="h-[280px] w-full min-w-0">
+        <div className={cn("w-full min-w-0", compact ? "h-[220px]" : "h-[280px]")}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={PROGRESS_VS_PLAN_DATA}>
-              <CartesianGrid
-                stroke="rgba(255,255,255,0.06)"
-                strokeDasharray="3 3"
-                vertical={false}
-              />
-              <XAxis
-                dataKey="period"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 11 }}
-              />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                domain={[0, 100]}
-                tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 11 }}
-                tickFormatter={(v) => `${v}%`}
-              />
-              <Tooltip content={<ChartTooltip />} />
-              <Line
-                type="monotone"
-                dataKey="planned"
-                name="Planned"
-                stroke={PLANNED_COLOR}
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 4, fill: PLANNED_COLOR, strokeWidth: 0 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="actual"
-                name="Actual"
-                stroke={ACTUAL_COLOR}
-                strokeWidth={2.5}
-                dot={false}
-                activeDot={{ r: 4, fill: ACTUAL_COLOR, strokeWidth: 0 }}
-              />
+              <CartesianGrid stroke="rgba(255,255,255,0.05)" strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="period" axisLine={false} tickLine={false} tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }} />
+              <YAxis axisLine={false} tickLine={false} domain={[0, 100]} tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }} tickFormatter={(v) => `${v}%`} />
+              <Tooltip content={<ChartTooltip suffix="%" />} />
+              <Line type="monotone" dataKey="planned" name="Planned" stroke={PLANNED_COLOR} strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="actual" name="Actual" stroke={ACTUAL_COLOR} strokeWidth={2.5} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>

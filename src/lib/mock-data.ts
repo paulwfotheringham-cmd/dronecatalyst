@@ -11,13 +11,13 @@ export const project = {
   client: "TerraBuild Infrastructure",
   industry: "Industrial Logistics Development",
   location: "Western Australia",
-  description:
-    "A $180M industrial logistics development in Western Australia.",
+  siteArea: "240ha",
   completion: 67,
   daysAhead: 4,
   earthworksCompleted: "1.82M",
   issues: 12,
   lastSurvey: "4 Days Ago",
+  updated: "4 Days Ago",
   captured: "4 Days Ago",
   targetCompletion: "March 2026",
   projectValue: "$180M",
@@ -32,6 +32,16 @@ export const NAV_ITEMS = [
   { label: "Documents", icon: "Files" },
   { label: "Alerts", icon: "Bell" },
   { label: "Settings", icon: "Settings" },
+] as const;
+
+export const PAGE_TABS = [
+  { label: "Overview", active: true },
+  { label: "Progress" },
+  { label: "Earthworks" },
+  { label: "Schedule" },
+  { label: "Risk" },
+  { label: "Reports" },
+  { label: "Maps" },
 ] as const;
 
 export const PROJECT_BRIEF = {
@@ -49,10 +59,10 @@ export const PROJECT_BRIEF = {
 };
 
 export const KPI_METRICS = [
-  { value: "67%", label: "Project Completion", icon: "BarChart3" },
-  { value: "+4", label: "Days Ahead", icon: "TrendingUp" },
-  { value: "1.82M m³", label: "Earthworks Completed", icon: "Truck" },
-  { value: "12", label: "Open Issues", icon: "AlertTriangle" },
+  { value: "67%", label: "Project Completion", accent: "blue" as const },
+  { value: "+4", label: "Days Ahead", accent: "emerald" as const },
+  { value: "1.82M m³", label: "Earthworks Completed", accent: "cyan" as const },
+  { value: "12", label: "Open Issues", accent: "amber" as const },
 ];
 
 export const AI_SUMMARY = {
@@ -74,6 +84,23 @@ export const PROGRESS_VS_PLAN_DATA = PROGRESS_PLANNED.map((planned, index) => ({
   planned,
   actual: PROGRESS_ACTUAL[index],
 }));
+
+export const SCHEDULE_PERFORMANCE_DATA = [
+  { milestone: "Earthworks", planned: 88, actual: 94 },
+  { milestone: "Drainage", planned: 72, actual: 61 },
+  { milestone: "Roads", planned: 65, actual: 68 },
+  { milestone: "Utilities", planned: 58, actual: 55 },
+  { milestone: "Warehouses", planned: 45, actual: 49 },
+];
+
+export const COMPLETION_TREND_DATA = [
+  { month: "Jan", completion: 18 },
+  { month: "Feb", completion: 28 },
+  { month: "Mar", completion: 36 },
+  { month: "Apr", completion: 44 },
+  { month: "May", completion: 55 },
+  { month: "Jun", completion: 67 },
+];
 
 export const SITE_MARKERS = [
   { id: 1, label: "North Warehouse", x: "22%", y: "24%" },
@@ -98,11 +125,11 @@ export const EARTHWORKS_VOLUME_DATA = [
   { month: "Jun", volume: 940 },
 ];
 
-export const RECENT_REPORTS = [
-  { title: "June Progress Report", date: "12 Jun 2026", type: "Progress" },
-  { title: "Earthworks Volume Analysis", date: "8 Jun 2026", type: "Volume" },
-  { title: "Site Inspection Report", date: "3 Jun 2026", type: "Inspection" },
-  { title: "Drainage Progress Review", date: "28 May 2026", type: "Compliance" },
+export const REPORTS = [
+  { title: "June Progress Report", generatedAgo: "2 days ago" },
+  { title: "Earthworks Analysis", generatedAgo: "4 days ago" },
+  { title: "Executive Summary", generatedAgo: "5 days ago" },
+  { title: "Monthly Progress Pack", generatedAgo: "8 days ago" },
 ];
 
 export const UPCOMING_ACTIVITIES = [
