@@ -12,7 +12,6 @@ const NAV = [
   { href: "#services", label: "Services" },
   { href: "#platform", label: "Platform" },
   { href: "/about", label: "About Us" },
-  { href: "/contact", label: "Contact Us" },
 ] as const;
 
 export default function MobileMenu({ open, onClose }: MobileMenuProps) {
@@ -56,6 +55,13 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
             </li>
           ))}
         </ul>
+        <Link
+          href="/contact"
+          onClick={onClose}
+          className="mt-6 inline-flex items-center justify-center rounded-md bg-[#EEF5FF] px-4 py-3 text-sm font-semibold text-[#0b2d63]"
+        >
+          Contact Us
+        </Link>
       </nav>
     </div>
   );

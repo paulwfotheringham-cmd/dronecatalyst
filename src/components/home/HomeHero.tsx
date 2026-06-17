@@ -1,147 +1,107 @@
 import Image from "next/image";
 import Link from "next/link";
+import DashboardMockup from "./DashboardMockup";
 
 export default function HomeHero() {
   return (
-    <section className="relative overflow-hidden pb-20 pt-20 lg:pb-24 lg:pt-24">
-      <div className="absolute inset-0 grid-pattern" aria-hidden />
+    <section className="relative min-h-[720px] overflow-visible pb-32 pt-28 lg:min-h-[780px] lg:pb-40 lg:pt-32">
+      {/* Quarry background */}
+      <div className="absolute inset-0" aria-hidden>
+        <Image
+          src="https://images.unsplash.com/photo-1541976590-713941681591?auto=format&fit=crop&w=2400&q=80"
+          alt=""
+          fill
+          priority
+          className="object-cover"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#050816]/95 via-[#050816]/75 to-[#050816]/40" />
+        <div
+          className="absolute inset-0 opacity-40"
+          style={{
+            background:
+              "radial-gradient(ellipse 50% 60% at 10% 20%, rgba(37,99,235,0.35), transparent 70%)",
+          }}
+        />
+      </div>
+
+      {/* Abstract wave accent — top left */}
       <div
-        className="absolute inset-0"
+        className="pointer-events-none absolute left-0 top-0 h-64 w-96 opacity-30"
         aria-hidden
         style={{
           background:
-            "radial-gradient(ellipse 70% 50% at 20% 0%, rgba(37,99,235,0.14), transparent 60%)",
+            "radial-gradient(ellipse at 0% 0%, rgba(37,99,235,0.5) 0%, transparent 65%)",
         }}
       />
 
-      <div className="mx-auto grid max-w-7xl items-center gap-14 px-6 lg:grid-cols-2 lg:gap-10">
-        <div className="relative">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-muted">
-            Data. Insight. Visibility.
-          </p>
-          <h1 className="mt-5 text-5xl font-semibold leading-[0.95] tracking-tight text-foreground sm:text-6xl">
-            FROM DRONE
-            <br />
-            TO INTELLIGENCE
-          </h1>
-          <p className="mt-6 text-base font-medium text-foreground/90">
-            We do more than just fly.
-          </p>
-          <p className="mt-4 max-w-xl text-base leading-relaxed text-muted sm:text-lg">
-            Drone Catalyst captures, processes and delivers aerial intelligence through a
-            secure cloud platform, giving you access to your projects, reports and
-            insights anytime, anywhere.
-          </p>
+      <div className="relative mx-auto max-w-7xl px-6">
+        <div className="grid items-start gap-12 lg:grid-cols-[1fr_1.1fr] lg:gap-8">
+          {/* Left copy */}
+          <div className="max-w-xl pt-4 lg:pt-8">
+            <h1 className="text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-[3.25rem]">
+              FROM DRONE
+              <br />
+              TO INTELLIGENCE
+            </h1>
+            <p className="mt-4 text-lg font-semibold text-accent sm:text-xl">
+              Data. Insight. Visibility.
+            </p>
+            <p className="mt-6 max-w-lg text-base leading-relaxed text-white/85 sm:text-[17px]">
+              We do more than just fly. Drone Catalyst captures, processes and delivers
+              aerial intelligence through a secure cloud platform, giving you access to your
+              projects, reports and insights anytime, anywhere.
+            </p>
 
-          <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
-            <Link
-              href="#services"
-              className="inline-flex items-center justify-center rounded-lg border border-border-strong bg-surface/60 px-6 py-3.5 text-sm font-semibold text-foreground backdrop-blur transition-colors hover:bg-surface-elevated"
-            >
-              Explore Services
-            </Link>
-            <Link
-              href="/contact"
-              className="inline-flex items-center justify-center rounded-lg border border-[#cfe0ff] bg-[#EEF5FF] px-6 py-3.5 text-sm font-semibold text-[#0b2d63] transition-colors hover:bg-[#e3efff]"
-            >
-              Contact Us
-            </Link>
-          </div>
-        </div>
-
-        <div className="relative">
-          <div className="relative overflow-hidden rounded-3xl border border-border bg-surface">
-            <div className="relative aspect-[5/4]">
-              {/* Quarry image */}
-              <Image
-                src="https://images.unsplash.com/photo-1541976590-713941681591?auto=format&fit=crop&w=1800&q=80"
-                alt="Quarry site"
-                fill
-                priority
-                className="object-cover"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-background/15 to-transparent" />
-
-              {/* Drone image over quarry */}
-              <div className="pointer-events-none absolute -right-10 top-2 h-[70%] w-[70%] opacity-95">
-                <Image
-                  src="https://images.unsplash.com/photo-1524143986875-3b0c1f0b7f53?auto=format&fit=crop&w=1400&q=80"
-                  alt="Drone in flight"
-                  fill
-                  className="object-contain mix-blend-screen"
-                  sizes="(max-width: 1024px) 70vw, 35vw"
-                />
-              </div>
-
-              {/* Dashboard overlay */}
-              <div className="absolute left-6 top-6 w-[78%] max-w-[520px] -translate-y-8">
-                <div className="relative scale-[0.75] origin-top-left">
-                  <div className="gradient-border rounded-2xl bg-[#0b1020]/85 p-4 shadow-2xl">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-semibold tracking-wide text-white/80">
-                        Drone Catalyst Platform
-                      </p>
-                      <div className="flex items-center gap-1.5">
-                        <span className="h-2 w-2 rounded-full bg-white/20" />
-                        <span className="h-2 w-2 rounded-full bg-white/20" />
-                        <span className="h-2 w-2 rounded-full bg-white/20" />
-                      </div>
-                    </div>
-                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                      <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                        <p className="text-[11px] font-semibold uppercase tracking-widest text-white/55">
-                          Project
-                        </p>
-                        <p className="mt-2 text-sm font-semibold text-white">
-                          Quarry Inspection — EU
-                        </p>
-                        <p className="mt-1 text-xs text-white/55">
-                          Reports • Imagery • Findings
-                        </p>
-                      </div>
-                      <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                        <p className="text-[11px] font-semibold uppercase tracking-widest text-white/55">
-                          Status
-                        </p>
-                        <p className="mt-2 text-sm font-semibold text-white">
-                          Processing complete
-                        </p>
-                        <p className="mt-1 text-xs text-white/55">
-                          Analytics ready in portal
-                        </p>
-                      </div>
-                    </div>
-                    <div className="mt-3 rounded-xl border border-white/10 bg-white/5 p-4">
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs font-medium text-white/80">Asset visibility</p>
-                        <p className="text-xs text-white/55">Last updated 2m</p>
-                      </div>
-                      <div className="mt-3 grid grid-cols-6 gap-2">
-                        {Array.from({ length: 24 }).map((_, i) => (
-                          <span
-                            // eslint-disable-next-line react/no-array-index-key
-                            key={i}
-                            className="h-2 rounded bg-white/10"
-                            style={{
-                              background:
-                                i % 7 === 0 ? "rgba(37,99,235,0.55)" : "rgba(255,255,255,0.12)",
-                            }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
+              <Link
+                href="#services"
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-[#0b2d63] px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#0d3575]"
+              >
+                Explore Services
+                <span aria-hidden>›</span>
+              </Link>
+              <Link
+                href="/contact"
+                className="inline-flex items-center justify-center rounded-md bg-[#e8e8e8] px-7 py-3.5 text-sm font-semibold text-[#0b2d63] transition-colors hover:bg-white"
+              >
+                Contact Us
+              </Link>
             </div>
           </div>
 
-          {/* Spacer to ensure hero media never touches next section */}
-          <div className="h-10" aria-hidden />
+          {/* Right: drone + heatmap over quarry */}
+          <div className="relative hidden min-h-[320px] lg:block">
+            <div className="absolute -right-4 top-0 h-[280px] w-[90%]">
+              <Image
+                src="https://images.unsplash.com/photo-1473968512647-3e447244af8f?auto=format&fit=crop&w=1200&q=80"
+                alt=""
+                fill
+                className="object-contain object-right-top drop-shadow-2xl"
+                sizes="50vw"
+              />
+            </div>
+            {/* Heatmap mesh overlay */}
+            <div
+              className="absolute bottom-0 right-0 h-48 w-[75%] rounded-lg opacity-70"
+              aria-hidden
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(37,99,235,0.15) 25%, transparent 25%, transparent 50%, rgba(16,185,129,0.2) 50%, rgba(16,185,129,0.2) 75%, rgba(239,68,68,0.15) 75%)",
+                backgroundSize: "24px 24px",
+                maskImage: "radial-gradient(ellipse at center, black 30%, transparent 75%)",
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Dashboard — overlaps into next section */}
+        <div className="relative z-10 mt-10 flex justify-center lg:absolute lg:bottom-0 lg:right-6 lg:mt-0 lg:translate-y-[45%] lg:justify-end">
+          <div className="w-full max-w-[640px] scale-[0.92] origin-top sm:scale-100 lg:scale-[0.88] xl:scale-95">
+            <DashboardMockup />
+          </div>
         </div>
       </div>
     </section>
   );
 }
-
