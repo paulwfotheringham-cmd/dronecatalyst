@@ -2,9 +2,15 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { NAV_LINKS } from "@/lib/site";
 import Logo from "./Logo";
 import MobileMenu from "./MobileMenu";
+
+const NAV = [
+  { href: "#services", label: "Services" },
+  { href: "#platform", label: "Platform" },
+  { href: "/about", label: "About Us" },
+  { href: "/contact", label: "Contact Us" },
+] as const;
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -16,7 +22,7 @@ export default function Navbar() {
           <Logo />
 
           <nav aria-label="Main navigation" className="hidden items-center gap-1 lg:flex">
-            {NAV_LINKS.map((link) => (
+            {NAV.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -28,6 +34,12 @@ export default function Navbar() {
           </nav>
 
           <div className="flex items-center gap-3">
+            <Link
+              href="/contact"
+              className="hidden rounded-lg border border-[#cfe0ff] bg-[#EEF5FF] px-4 py-2 text-sm font-semibold text-[#0b2d63] transition-colors hover:bg-[#e3efff] lg:inline-flex"
+            >
+              Contact Us
+            </Link>
             <button
               type="button"
               aria-label="Open menu"

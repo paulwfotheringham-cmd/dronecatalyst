@@ -1,13 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { NAV_LINKS } from "@/lib/site";
 import Logo from "./Logo";
 
 type MobileMenuProps = {
   open: boolean;
   onClose: () => void;
 };
+
+const NAV = [
+  { href: "#services", label: "Services" },
+  { href: "#platform", label: "Platform" },
+  { href: "/about", label: "About Us" },
+  { href: "/contact", label: "Contact Us" },
+] as const;
 
 export default function MobileMenu({ open, onClose }: MobileMenuProps) {
   if (!open) return null;
@@ -38,7 +44,7 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
           </button>
         </div>
         <ul className="flex flex-col gap-1">
-          {NAV_LINKS.map((link) => (
+          {NAV.map((link) => (
             <li key={link.href}>
               <Link
                 href={link.href}
