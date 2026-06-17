@@ -10,7 +10,7 @@ type CTAProps = {
 export default function CTA({
   title = "Ready to mobilise aerial intelligence?",
   description = "Tell us about your site, timeline and deliverables. We respond within one business day.",
-  primaryLabel = "Get a Quote",
+  primaryLabel = "Contact Us",
   primaryHref = "/contact",
 }: CTAProps) {
   return (

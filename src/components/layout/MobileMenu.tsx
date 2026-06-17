@@ -50,15 +50,6 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
             </li>
           ))}
         </ul>
-        <div className="mt-auto pt-8">
-          <Link
-            href="/contact"
-            onClick={onClose}
-            className="flex w-full items-center justify-center rounded-lg bg-accent px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-accent-hover"
-          >
-            Get a Quote
-          </Link>
-        </div>
       </nav>
     </div>
   );

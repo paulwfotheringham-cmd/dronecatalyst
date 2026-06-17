@@ -16,8 +16,7 @@ export default function HomePage() {
         subtitle={SITE_DESCRIPTION}
         image="https://images.unsplash.com/photo-1473966968600-fa801b869a1a?auto=format&fit=crop&w=2000&q=80"
         imageAlt="Aerial landscape at golden hour"
-        primaryCta={{ label: "Get a Quote", href: "/contact" }}
-        secondaryCta={{ label: "Explore Services", href: "#services" }}
+        primaryCta={{ label: "Contact Us", href: "/contact" }}
       />
 
       <section id="services" className="py-20 lg:py-24">
@@ -55,7 +54,7 @@ export default function HomePage() {
           <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
             <div>
               <SectionHeader
-                eyebrow="Why DroneCatalyst"
+                eyebrow="Why Drone Catalyst"
                 title="Operational excellence, end to end"
                 description={SITE_TAGLINE}
               />
