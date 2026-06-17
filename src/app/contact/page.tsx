@@ -9,7 +9,7 @@ import { CONTACT } from "@/lib/site";
 export const metadata: Metadata = createPageMetadata({
   title: "Contact",
   description:
-    "Contact DroneCatalyst for drone inspection, surveying and commercial imaging quotes. Email, phone and WhatsApp enquiries welcome.",
+    "Contact DroneCatalyst for drone inspection, surveying and commercial imaging enquiries. We respond within one business day.",
   path: "/contact",
 });
 
@@ -41,30 +41,6 @@ export default function ContactPage() {
                   >
                     {CONTACT.email}
                   </a>
-                </li>
-                <li>
-                  <span className="block text-muted">Phone</span>
-                  <a
-                    href={`tel:${CONTACT.phone.replace(/\s/g, "")}`}
-                    className="font-medium text-foreground transition-colors hover:text-accent"
-                  >
-                    {CONTACT.phone}
-                  </a>
-                </li>
-                <li>
-                  <span className="block text-muted">WhatsApp</span>
-                  <a
-                    href={`https://wa.me/${CONTACT.whatsapp}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-medium text-foreground transition-colors hover:text-accent"
-                  >
-                    Message on WhatsApp
-                  </a>
-                </li>
-                <li>
-                  <span className="block text-muted">Location</span>
-                  <span className="font-medium text-foreground">{CONTACT.location}</span>
                 </li>
               </ul>
             </div>
