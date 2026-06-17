@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CONTACT, NAV_LINKS, SITE_NAME, SITE_TAGLINE } from "@/lib/site";
+import Logo from "./Logo";
 
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -9,12 +10,7 @@ export default function Footer() {
       <div className="mx-auto max-w-7xl px-6 py-16">
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-2">
-            <Link href="/" className="inline-flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-sm font-bold text-white">
-                DC
-              </span>
-              <span className="text-base font-semibold text-foreground">{SITE_NAME}</span>
-            </Link>
+            <Logo height={28} />
             <p className="mt-4 max-w-md text-sm leading-relaxed text-muted">{SITE_TAGLINE}</p>
             <p className="mt-2 text-sm text-muted">{CONTACT.location}</p>
           </div>

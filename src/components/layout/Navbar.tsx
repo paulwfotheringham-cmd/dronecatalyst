@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { NAV_LINKS, SITE_NAME } from "@/lib/site";
+import { NAV_LINKS } from "@/lib/site";
+import Logo from "./Logo";
 import MobileMenu from "./MobileMenu";
 
 export default function Navbar() {
@@ -12,14 +13,7 @@ export default function Navbar() {
     <>
       <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:h-[4.5rem]">
-          <Link href="/" className="group flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-sm font-bold text-white">
-              DC
-            </span>
-            <span className="text-base font-semibold tracking-tight text-foreground group-hover:text-white">
-              {SITE_NAME}
-            </span>
-          </Link>
+          <Logo />
 
           <nav aria-label="Main navigation" className="hidden items-center gap-1 lg:flex">
             {NAV_LINKS.map((link) => (

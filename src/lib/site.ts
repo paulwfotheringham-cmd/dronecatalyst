@@ -1,5 +1,6 @@
 export const SITE_URL = "https://dronecatalyst.com";
 export const SITE_NAME = "DroneCatalyst";
+export const LOGO_PATH = "/dronecatalyst-logo.svg";
 export const SITE_TAGLINE =
   "Aerial intelligence for inspection, surveying and commercial imaging";
 export const SITE_DESCRIPTION =

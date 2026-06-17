@@ -1,4 +1,4 @@
-import { CONTACT, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "./site";
+import { CONTACT, LOGO_PATH, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "./site";
 
 export function organizationJsonLd() {
   return {
@@ -6,6 +6,7 @@ export function organizationJsonLd() {
     "@type": "Organization",
     name: SITE_NAME,
     url: SITE_URL,
+    logo: `${SITE_URL}${LOGO_PATH}`,
     description: SITE_DESCRIPTION,
     email: CONTACT.email,
     telephone: CONTACT.phone,
