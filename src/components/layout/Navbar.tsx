@@ -26,25 +26,23 @@ export default function Navbar() {
             : "sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-xl"
         }
       >
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:h-[4.5rem]">
+        <div className="mx-auto flex h-[64px] max-w-[1280px] items-center justify-between px-8">
           <Logo />
 
-          <nav aria-label="Main navigation" className="hidden items-center gap-1 lg:flex">
+          <nav aria-label="Main navigation" className="hidden items-center gap-[4px] lg:flex">
             {NAV.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`inline-flex items-center gap-1 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors ${
-                  isHome
-                    ? "text-white/85 hover:text-white"
-                    : "text-muted hover:text-foreground"
+                className={`inline-flex items-center gap-1 px-[14px] py-2 text-[14px] font-medium ${
+                  isHome ? "text-white/90" : "text-muted hover:text-foreground"
                 }`}
               >
                 {link.label}
                 {link.chevron && (
                   <svg
-                    width="12"
-                    height="12"
+                    width="10"
+                    height="10"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -61,10 +59,10 @@ export default function Navbar() {
           <div className="flex items-center gap-3">
             <Link
               href="/contact"
-              className={`hidden rounded-md px-4 py-2 text-sm font-semibold transition-colors lg:inline-flex ${
+              className={`hidden h-[36px] items-center rounded-md px-[16px] text-[14px] font-semibold lg:inline-flex ${
                 isHome
-                  ? "bg-white text-[#0b2d63] hover:bg-white/90"
-                  : "border border-[#cfe0ff] bg-[#EEF5FF] text-[#0b2d63] hover:bg-[#e3efff]"
+                  ? "bg-white text-[#0b2d63]"
+                  : "border border-[#cfe0ff] bg-[#EEF5FF] text-[#0b2d63]"
               }`}
             >
               Contact Us
@@ -74,10 +72,10 @@ export default function Navbar() {
               aria-label="Open menu"
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen(true)}
-              className={`flex h-10 w-10 items-center justify-center rounded-lg border transition-colors lg:hidden ${
+              className={`flex h-10 w-10 items-center justify-center rounded-lg border lg:hidden ${
                 isHome
-                  ? "border-white/25 text-white hover:border-white/40"
-                  : "border-border text-muted hover:border-border-strong hover:text-foreground"
+                  ? "border-white/25 text-white"
+                  : "border-border text-muted"
               }`}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

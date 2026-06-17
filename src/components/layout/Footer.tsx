@@ -6,44 +6,44 @@ const LOGO_DARK = "/dronecatalyst-logo-dark.svg";
 
 export default function Footer() {
   return (
-    <footer className="border-t border-black/10 bg-white text-[#0b2d63]">
-      <div className="mx-auto max-w-7xl px-6 py-16">
-        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
+    <footer className="bg-white text-[#1a2b4a]">
+      <div className="mx-auto max-w-[1280px] px-8 pb-[32px] pt-[56px]">
+        <div className="grid gap-[48px] md:grid-cols-2 lg:grid-cols-4">
           <div>
             <Link href="/" className="inline-flex shrink-0 items-center">
               <Image
                 src={LOGO_DARK}
                 alt={SITE_NAME}
-                width={180}
-                height={39}
-                className="h-8 w-auto object-contain"
+                width={170}
+                height={37}
+                className="h-[30px] w-auto object-contain"
               />
             </Link>
-            <p className="mt-4 text-sm font-medium text-[#0b2d63]/70">
+            <p className="mt-[14px] text-[13px] font-medium text-[#1a2b4a]/65">
               From Drone to Intelligence.
             </p>
-            <span className="mt-3 block h-0.5 w-10 bg-accent" aria-hidden />
+            <span className="mt-[12px] block h-[3px] w-[36px] bg-[#2563eb]" aria-hidden />
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-[#0b2d63]">
+            <h3 className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#1a2b4a]">
               Services
             </h3>
-            <ul className="mt-4 space-y-2">
+            <ul className="mt-[16px] space-y-[10px]">
               <li>
-                <Link href="/surveying" className="text-sm text-[#0b2d63]/70 hover:text-[#0b2d63]">
+                <Link href="/surveying" className="text-[13px] text-[#1a2b4a]/65 hover:text-[#1a2b4a]">
                   Surveying &amp; Geospatial Intelligence
                 </Link>
               </li>
               <li>
-                <Link href="/inspection" className="text-sm text-[#0b2d63]/70 hover:text-[#0b2d63]">
+                <Link href="/inspection" className="text-[13px] text-[#1a2b4a]/65 hover:text-[#1a2b4a]">
                   Inspection &amp; Asset Intelligence
                 </Link>
               </li>
               <li>
                 <Link
                   href="/commercial-imaging"
-                  className="text-sm text-[#0b2d63]/70 hover:text-[#0b2d63]"
+                  className="text-[13px] text-[#1a2b4a]/65 hover:text-[#1a2b4a]"
                 >
                   Premium Media &amp; Broadcast
                 </Link>
@@ -52,17 +52,17 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-[#0b2d63]">
+            <h3 className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#1a2b4a]">
               Company
             </h3>
-            <ul className="mt-4 space-y-2 text-sm text-[#0b2d63]/70">
+            <ul className="mt-[16px] space-y-[10px]">
               <li>
-                <Link href="/about" className="hover:text-[#0b2d63]">
+                <Link href="/about" className="text-[13px] text-[#1a2b4a]/65 hover:text-[#1a2b4a]">
                   About Us
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="hover:text-[#0b2d63]">
+                <Link href="/contact" className="text-[13px] text-[#1a2b4a]/65 hover:text-[#1a2b4a]">
                   Contact Us
                 </Link>
               </li>
@@ -70,18 +70,18 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-[#0b2d63]">
+            <h3 className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#1a2b4a]">
               Contact
             </h3>
-            <ul className="mt-4 space-y-2 text-sm text-[#0b2d63]/70">
+            <ul className="mt-[16px]">
               <li>
                 <a
                   href="mailto:info@dronecatalyst.com"
-                  className="inline-flex items-center gap-2 hover:text-[#0b2d63]"
+                  className="inline-flex items-center gap-[8px] text-[13px] text-[#1a2b4a]/65 hover:text-[#1a2b4a]"
                 >
                   <svg
-                    width="16"
-                    height="16"
+                    width="15"
+                    height="15"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -98,8 +98,8 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 border-t border-black/10 pt-8 text-center">
-          <p className="text-sm text-[#0b2d63]/60">
+        <div className="mt-[48px] border-t border-black/[0.08] pt-[24px] text-center">
+          <p className="text-[12px] text-[#1a2b4a]/50">
             © 2026 Drone Catalyst. All rights reserved.
           </p>
         </div>
