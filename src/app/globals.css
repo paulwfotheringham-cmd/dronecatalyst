@@ -112,14 +112,14 @@ body {
 @keyframes scanSweep {
   0% {
     transform: translateY(0);
-    opacity: 0.55;
+    opacity: 0.6;
   }
-  12% {
+  10% {
     opacity: 1;
   }
   100% {
-    transform: translateY(130px);
-    opacity: 0.5;
+    transform: translateY(150px);
+    opacity: 0.55;
   }
 }
 

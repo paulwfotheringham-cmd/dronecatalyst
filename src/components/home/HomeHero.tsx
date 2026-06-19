@@ -8,31 +8,31 @@ const HERO_IMAGE = "/images/hero/drone-quarry-scan.webp";
 export default function HomeHero() {
   return (
     <section className="relative overflow-x-hidden bg-[#020617]">
-      {/* Composed hero asset — full width */}
+      {/* Composed hero asset — emphasize drone + quarry on right */}
       <div className="pointer-events-none absolute inset-0" aria-hidden>
         <Image
           src={HERO_IMAGE}
           alt=""
           fill
           priority
-          className="object-cover object-center"
+          className="object-cover object-[68%_center]"
           sizes="100vw"
         />
       </div>
 
       <HeroScanOverlay />
 
-      {/* Dark blue gradient — left text readability, right image visible */}
+      {/* Gradient — heavy left only, quarry + scan stay clear on right */}
       <div
         className="pointer-events-none absolute inset-0 z-[3]"
         aria-hidden
         style={{
           background:
-            "linear-gradient(to right, rgba(2, 6, 18, 0.9) 0%, rgba(3, 7, 20, 0.88) 22%, rgba(5, 8, 22, 0.55) 38%, rgba(5, 8, 22, 0.08) 50%, transparent 62%)",
+            "linear-gradient(to right, rgba(2, 6, 18, 0.92) 0%, rgba(3, 7, 20, 0.88) 28%, rgba(5, 8, 22, 0.45) 42%, rgba(5, 8, 22, 0.04) 52%, transparent 58%)",
         }}
       />
 
-      <div className="relative z-10 mx-auto max-w-[1400px] px-6 pb-28 pt-[104px] sm:px-8 lg:px-10 lg:pb-36 lg:pt-[120px]">
+      <div className="relative z-10 mx-auto max-w-[1400px] px-6 pb-20 pt-[104px] sm:px-8 lg:px-10 lg:pb-24 lg:pt-[120px]">
         <div className="grid items-center gap-12 lg:grid-cols-[42%_58%] lg:gap-10 xl:gap-12">
           {/* Left column */}
           <div className="relative max-w-[560px]">
@@ -72,9 +72,9 @@ export default function HomeHero() {
             </div>
           </div>
 
-          {/* Right column — scan zone upper, dashboard output lower-right */}
-          <div className="relative min-h-[520px] sm:min-h-[600px] lg:min-h-[720px] xl:min-h-[760px]">
-            <div className="absolute bottom-0 right-0 z-10 w-[92%] translate-y-4 sm:w-[88%] sm:translate-y-6 lg:w-[54%] lg:translate-x-6 lg:translate-y-10 lg:min-w-[480px] xl:w-[52%] xl:translate-x-8 xl:translate-y-12">
+          {/* Right column — scan dominates upper area; compact dashboard bottom-right */}
+          <div className="relative min-h-[420px] sm:min-h-[480px] lg:min-h-[540px]">
+            <div className="absolute bottom-0 right-0 z-10 lg:translate-x-4 lg:translate-y-2">
               <GeospatialDashboard />
             </div>
           </div>
