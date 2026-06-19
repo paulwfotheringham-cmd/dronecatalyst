@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import GeospatialDashboard from "./GeospatialDashboard";
 
-const HERO_BACKGROUND = "/images/hero-survey-background.png";
+const HERO_BACKGROUND = "/images/hero-intelligence-background.png";
 
 export default function HomeHero() {
   return (
