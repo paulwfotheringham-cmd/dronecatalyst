@@ -21,7 +21,7 @@ function GlassCard({
 
 export default function GeospatialDashboard() {
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/14 bg-[#07111f]/75 p-3 shadow-[0_56px_140px_rgba(0,0,0,0.75),0_0_0_1px_rgba(255,255,255,0.05)] backdrop-blur-2xl sm:p-4">
+    <div className="overflow-hidden rounded-2xl border border-white/16 bg-[#07111f]/60 p-3 shadow-[0_64px_160px_rgba(0,0,0,0.82),0_28px_56px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.1)] backdrop-blur-2xl sm:p-4">
       <div className="mb-3 flex items-center justify-between px-1">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#60a5fa]">

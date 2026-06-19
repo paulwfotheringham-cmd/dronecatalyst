@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import GeospatialDashboard from "./GeospatialDashboard";
 
-const HERO_BACKGROUND = "/images/hero-intelligence-background.png";
+const HERO_BACKGROUND = "/images/hero-quarry-cinematic.png";
 
 export default function HomeHero() {
   return (
@@ -14,7 +14,7 @@ export default function HomeHero() {
           alt=""
           fill
           priority
-          className="object-cover object-[72%_38%] brightness-[0.42] contrast-[1.15] saturate-[0.88]"
+          className="object-cover object-center brightness-[0.48] contrast-[1.12] saturate-[0.9]"
           sizes="100vw"
         />
         <div className="absolute inset-0 bg-[#020617]/35" />
@@ -72,7 +72,7 @@ export default function HomeHero() {
 
           {/* Right column — intelligence dashboard */}
           <div className="relative min-h-[380px] sm:min-h-[440px] lg:min-h-[560px] xl:min-h-[600px]">
-            <div className="absolute bottom-0 right-0 z-30 w-full sm:w-[94%] lg:w-[66%] lg:min-w-[480px] xl:w-[68%]">
+            <div className="absolute bottom-0 right-0 z-30 w-full sm:w-[98%] lg:w-[76%] lg:min-w-[552px] xl:w-[78%]">
               <GeospatialDashboard />
             </div>
           </div>
