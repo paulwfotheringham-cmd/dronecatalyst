@@ -25,8 +25,8 @@ export default function HomeHero() {
         <div className="absolute -right-1/4 bottom-0 h-[480px] w-[480px] animate-[pulse_12s_ease-in-out_infinite_2s] rounded-full bg-[#1d4ed8]/10 blur-[100px]" />
       </div>
 
-      <div className="relative mx-auto max-w-[1280px] px-6 pb-20 pt-[104px] sm:px-8 lg:px-8 lg:pb-32 lg:pt-[120px]">
-        <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16 xl:gap-20">
+      <div className="relative mx-auto max-w-[1280px] px-6 pb-12 pt-[104px] sm:px-8 lg:px-6 lg:pb-16 lg:pt-[120px]">
+        <div className="grid items-center gap-8 lg:grid-cols-[44%_56%] lg:gap-8 xl:gap-10">
           {/* Left column */}
           <div className="max-w-[560px]">
             <h1 className="text-[2.5rem] font-bold leading-[0.98] tracking-[-0.03em] text-white sm:text-[3.25rem] lg:text-[3.75rem] xl:text-[4.25rem]">
@@ -62,17 +62,21 @@ export default function HomeHero() {
           </div>
 
           {/* Right column — single composed hero artwork */}
-          <div className="relative mx-auto w-full max-w-[640px] lg:mx-0 lg:max-w-none">
-            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0c1222] shadow-[0_32px_80px_rgba(0,0,0,0.5)] sm:rounded-3xl lg:aspect-[5/4]">
+          <div className="relative mx-auto w-full lg:mx-0 lg:-mr-4 xl:-mr-8">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/[0.06] bg-[#0c1222] shadow-[0_24px_64px_rgba(0,0,0,0.45)] sm:rounded-3xl lg:aspect-[5/4] lg:scale-[1.2] lg:origin-left xl:scale-[1.2]">
               <Image
                 src={HERO_ARTWORK}
                 alt="Drone surveying an industrial quarry site with aerial intelligence platform dashboard"
                 fill
                 priority
-                className="object-cover object-center"
-                sizes="(max-width: 1024px) 100vw, 640px"
+                className="object-cover object-center contrast-[1.12] saturate-[1.14] brightness-[1.04]"
+                sizes="(max-width: 1024px) 100vw, 768px"
               />
-              <div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-[#050816]/10" />
+              <div className="absolute inset-0 bg-gradient-to-br from-[#2563eb]/[0.07] via-transparent to-[#1e3a5f]/[0.09]" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#050816]/35 via-transparent to-[#2563eb]/[0.05]" />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_45%,rgba(37,99,235,0.08),transparent_55%)]" />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_42%,rgba(5,8,22,0.22)_100%)]" />
+              <div className="absolute inset-0 bg-gradient-to-l from-[#050816]/25 via-[#050816]/[0.03] to-transparent" />
             </div>
           </div>
         </div>
