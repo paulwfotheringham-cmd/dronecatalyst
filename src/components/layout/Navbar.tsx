@@ -16,6 +16,11 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
   const isHome = pathname === "/";
+  const isDashboard = pathname?.startsWith("/test1");
+
+  if (isDashboard) {
+    return null;
+  }
 
   return (
     <>

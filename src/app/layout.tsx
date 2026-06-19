@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import Footer from "@/components/layout/Footer";
+import FooterGate from "@/components/layout/FooterGate";
 import Navbar from "@/components/layout/Navbar";
 import JsonLd from "@/components/JsonLd";
 import { homeMetadata } from "@/lib/metadata";
@@ -30,7 +30,7 @@ export default function RootLayout({
         <JsonLd data={[organizationJsonLd(), webSiteJsonLd()]} />
         <Navbar />
         <main className="flex-1">{children}</main>
-        <Footer />
+        <FooterGate />
       </body>
     </html>
   );

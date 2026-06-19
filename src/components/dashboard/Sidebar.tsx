@@ -1,32 +1,52 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { NAV_ITEMS, project } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
-import { Zap } from "lucide-react";
+import { X, Zap } from "lucide-react";
 import { DashboardIcon } from "./icons";
 
-export default function Sidebar() {
+type SidebarProps = {
+  mobileOpen?: boolean;
+  onClose?: () => void;
+};
+
+export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
   return (
-    <aside className="sticky top-0 flex h-dvh w-[240px] shrink-0 flex-col self-start overflow-hidden border-r border-white/[0.08] bg-[#07111F]">
-      <div className="flex h-16 shrink-0 items-center gap-3 border-b border-white/[0.08] px-6">
-        <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 shadow-lg shadow-blue-500/20">
-          <Zap className="h-4 w-4 text-white" />
+    <aside
+      className={cn(
+        "fixed inset-y-0 left-0 z-50 flex h-dvh w-[min(280px,88vw)] flex-col overflow-hidden border-r border-white/[0.08] bg-[#07111F] transition-transform duration-300 ease-out lg:static lg:z-auto lg:w-[240px] lg:shrink-0 lg:translate-x-0",
+        mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+      )}
+    >
+      <div className="flex h-14 shrink-0 items-center justify-between border-b border-white/[0.08] px-4 lg:h-16 lg:px-6">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 shadow-lg shadow-blue-500/20">
+            <Zap className="h-4 w-4 text-white" />
+          </div>
+          <div>
+            <p className="text-[11px] font-semibold tracking-wide text-white/90">
+              DRONE CATALYST
+            </p>
+            <p className="text-[10px] text-white/35">Intelligence Platform</p>
+          </div>
         </div>
-        <div>
-          <p className="text-[11px] font-semibold tracking-wide text-white/90">
-            DRONE CATALYST
-          </p>
-          <p className="text-[10px] text-white/35">Intelligence Platform</p>
-        </div>
+        <button
+          type="button"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.08] text-white/60 lg:hidden"
+          aria-label="Close menu"
+          onClick={onClose}
+        >
+          <X className="h-4 w-4" />
+        </button>
       </div>
 
-      <div className="shrink-0 border-b border-white/[0.08] px-6 py-6">
+      <div className="shrink-0 border-b border-white/[0.08] px-4 py-4 lg:px-6 lg:py-6">
         <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-white/30">
           Client
         </p>
-        <p className="mt-2 text-sm font-medium leading-snug text-white/85">
+        <p className="mt-1.5 text-sm font-medium leading-snug text-white/85">
           {project.client}
         </p>
-        <div className="mt-5 space-y-1.5">
+        <div className="mt-4 space-y-1 lg:mt-5">
           <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-white/30">
             Project
           </p>
@@ -34,13 +54,14 @@ export default function Sidebar() {
         </div>
       </div>
 
-      <ScrollArea className="min-h-0 flex-1 px-3 py-4">
+      <ScrollArea className="min-h-0 flex-1 px-2 py-3 lg:px-3 lg:py-4">
         <nav className="space-y-1">
           {NAV_ITEMS.map((item) => (
             <button
               key={item.label}
               type="button"
               aria-current={"active" in item && item.active ? "page" : undefined}
+              onClick={onClose}
               className={cn(
                 "flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-left text-[13px] transition-colors",
                 "active" in item && item.active
