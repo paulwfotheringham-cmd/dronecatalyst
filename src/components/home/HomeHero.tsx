@@ -1,28 +1,25 @@
 import Image from "next/image";
 import Link from "next/link";
 import GeospatialDashboard from "./GeospatialDashboard";
-import HeroScanOverlay from "./HeroScanOverlay";
 
 const HERO_IMAGE = "/images/hero/drone-quarry-scan.webp";
 
 export default function HomeHero() {
   return (
     <section className="relative overflow-x-hidden bg-[#020617]">
-      {/* Composed hero asset — emphasize drone + quarry on right */}
+      {/* Composed hero asset — pan down to reveal full drone */}
       <div className="pointer-events-none absolute inset-0" aria-hidden>
         <Image
           src={HERO_IMAGE}
           alt=""
           fill
           priority
-          className="object-cover object-[68%_center]"
+          className="object-cover object-[62%_28%]"
           sizes="100vw"
         />
       </div>
 
-      <HeroScanOverlay />
-
-      {/* Gradient — heavy left only, quarry + scan stay clear on right */}
+      {/* Gradient — heavy left only, quarry stays clear on right */}
       <div
         className="pointer-events-none absolute inset-0 z-[3]"
         aria-hidden
@@ -32,7 +29,7 @@ export default function HomeHero() {
         }}
       />
 
-      <div className="relative z-10 mx-auto max-w-[1400px] px-6 pb-20 pt-[104px] sm:px-8 lg:px-10 lg:pb-24 lg:pt-[120px]">
+      <div className="relative z-10 mx-auto max-w-[1400px] px-6 pb-24 pt-[104px] sm:px-8 lg:px-10 lg:pb-32 lg:pt-[120px]">
         <div className="grid items-center gap-12 lg:grid-cols-[42%_58%] lg:gap-10 xl:gap-12">
           {/* Left column */}
           <div className="relative max-w-[560px]">
@@ -72,9 +69,9 @@ export default function HomeHero() {
             </div>
           </div>
 
-          {/* Right column — scan dominates upper area; compact dashboard bottom-right */}
-          <div className="relative min-h-[420px] sm:min-h-[480px] lg:min-h-[540px]">
-            <div className="absolute bottom-0 right-0 z-10 lg:translate-x-4 lg:translate-y-2">
+          {/* Right column — drone + quarry upper; dashboard lower-right */}
+          <div className="relative min-h-[460px] sm:min-h-[520px] lg:min-h-[580px]">
+            <div className="absolute bottom-0 right-0 z-10 translate-y-6 sm:translate-y-8 lg:translate-x-4 lg:translate-y-14 xl:translate-y-16">
               <GeospatialDashboard />
             </div>
           </div>
