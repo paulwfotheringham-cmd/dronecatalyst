@@ -41,31 +41,34 @@ export default function HomeHero() {
           alt=""
           fill
           priority
-          className="object-cover object-center"
+          className="object-cover object-center brightness-[0.6] contrast-[1.1]"
           sizes="100vw"
         />
+        <div className="absolute inset-0 bg-[#050816]/20" />
       </div>
 
-      {/* Layer 2 — left-side readability overlay only */}
+      {/* Layer 2 — left-side readability overlay only (~45% width) */}
       <div
-        className="pointer-events-none absolute inset-y-0 left-0 z-[1] w-full max-w-[820px]"
+        className="pointer-events-none absolute inset-y-0 left-0 z-[1] w-[45%]"
         aria-hidden
         style={{
           background:
-            "linear-gradient(to right, rgba(5, 8, 22, 0.94) 0%, rgba(5, 8, 22, 0.88) 18%, rgba(5, 8, 22, 0.62) 42%, rgba(5, 8, 22, 0.22) 58%, transparent 72%)",
+            "linear-gradient(to right, rgba(3, 7, 18, 0.98) 0%, rgba(5, 8, 22, 0.96) 28%, rgba(5, 8, 22, 0.72) 62%, transparent 100%)",
         }}
       />
 
-      {/* Layer 3 — drone, upper-right */}
-      <div className="pointer-events-none absolute right-[6%] top-[28%] z-[2] hidden h-[120px] w-[168px] opacity-90 lg:block xl:right-[9%] xl:top-[30%] xl:h-[136px] xl:w-[190px]">
-        <HeroDroneAccent />
+      {/* Layer 3 — drone, integrated near dashboard */}
+      <div className="pointer-events-none absolute right-[4%] top-[26%] z-[2] hidden h-[96px] w-[134px] opacity-85 blur-[0.3px] lg:block xl:right-[5%] xl:top-[24%] xl:h-[109px] xl:w-[152px]">
+        <div className="h-full w-full drop-shadow-[0_16px_40px_rgba(0,0,0,0.55)]">
+          <HeroDroneAccent />
+        </div>
       </div>
 
       <div className="relative z-10 mx-auto max-w-[1280px] px-6 pb-16 pt-[104px] sm:px-8 lg:px-6 lg:pb-20 lg:pt-[120px]">
         <div className="grid items-start gap-10 lg:grid-cols-[44%_56%] lg:gap-8 xl:gap-10">
           {/* Left column — copy */}
           <div className="max-w-[560px]">
-            <h1 className="text-[2.5rem] font-bold leading-[0.98] tracking-[-0.03em] text-white sm:text-[3.25rem] lg:text-[3.75rem] xl:text-[4.25rem]">
+            <h1 className="text-[2.65rem] font-bold leading-[0.92] tracking-[-0.03em] text-white sm:text-[3.4rem] lg:text-[4rem] xl:text-[4.5rem]">
               FROM DRONE
               <br />
               TO INTELLIGENCE
@@ -102,9 +105,9 @@ export default function HomeHero() {
           </div>
 
           {/* Layer 4 — floating dashboard, lower-right */}
-          <div className="relative min-h-[280px] sm:min-h-[320px] lg:min-h-[460px]">
-            <div className="absolute bottom-0 left-1/2 z-20 w-[108%] max-w-[680px] -translate-x-1/2 lg:left-auto lg:right-0 lg:w-[112%] lg:max-w-[720px] lg:translate-x-[6%] xl:translate-x-[8%]">
-              <div className="rounded-xl border border-white/10 bg-[#0c1424]/98 p-1.5 shadow-[0_32px_80px_rgba(0,0,0,0.55),0_12px_32px_rgba(0,0,0,0.35)] backdrop-blur-sm sm:rounded-2xl sm:p-2">
+          <div className="relative min-h-[300px] sm:min-h-[340px] lg:min-h-[500px]">
+            <div className="absolute -bottom-4 left-1/2 z-20 w-[140%] max-w-[936px] -translate-x-1/2 scale-[1.05] sm:scale-100 lg:-bottom-6 lg:left-auto lg:right-0 lg:w-[146%] lg:max-w-[936px] lg:translate-x-[12%] xl:translate-x-[14%]">
+              <div className="rounded-xl border border-white/10 bg-[#0c1424]/98 p-1.5 shadow-[0_48px_100px_rgba(0,0,0,0.65),0_20px_48px_rgba(0,0,0,0.45)] backdrop-blur-sm sm:rounded-2xl sm:p-2">
                 <DashboardMockup />
               </div>
             </div>
