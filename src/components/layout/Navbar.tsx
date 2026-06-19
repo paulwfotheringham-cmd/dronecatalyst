@@ -31,23 +31,23 @@ export default function Navbar() {
             : "sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-xl"
         }
       >
-        <div className="mx-auto max-w-[1600px] px-12 lg:grid lg:h-[96px] lg:grid-cols-[minmax(280px,1fr)_auto_minmax(280px,1fr)] lg:items-center lg:px-20 xl:px-24">
-          <div className="flex h-[76px] items-center justify-between lg:h-full lg:contents">
-            {/* Left zone — logo */}
-            <div className="flex items-center justify-start lg:pr-14">
-              <Logo height={46} />
+        <div className="mx-auto flex h-20 max-w-[1400px] items-center px-6 sm:px-8 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:px-10">
+          <div className="flex w-full items-center justify-between lg:contents">
+            {/* Logo */}
+            <div className="flex items-center justify-start">
+              <Logo height={48} />
             </div>
 
-            {/* Center zone — navigation */}
+            {/* Centered navigation */}
             <nav
               aria-label="Main navigation"
-              className="hidden items-center justify-center gap-24 lg:flex xl:gap-28"
+              className="hidden items-center justify-center gap-12 lg:flex xl:gap-14"
             >
               {NAV.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`inline-flex items-center gap-1 whitespace-nowrap px-[14px] py-2.5 text-[14px] font-medium ${
+                  className={`inline-flex items-center gap-1 whitespace-nowrap text-[14px] font-medium ${
                     isHome ? "text-white/90" : "text-muted hover:text-foreground"
                   }`}
                 >
@@ -69,8 +69,8 @@ export default function Navbar() {
               ))}
             </nav>
 
-            {/* Right zone — contact */}
-            <div className="flex items-center justify-end gap-3 lg:pl-14">
+            {/* Contact — far right */}
+            <div className="flex items-center justify-end gap-3">
               <Link
                 href="/contact"
                 className={`hidden h-[36px] items-center rounded-md px-[16px] text-[14px] font-semibold lg:inline-flex ${
