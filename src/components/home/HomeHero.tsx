@@ -1,8 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import DashboardMockup from "./DashboardMockup";
 
-const HERO_IMAGE = "/images/site-intelligence.jpg";
+const HERO_ARTWORK = "/images/hero-artwork.png";
 
 export default function HomeHero() {
   return (
@@ -62,31 +61,18 @@ export default function HomeHero() {
             </div>
           </div>
 
-          {/* Right column — platform first, project imagery supporting */}
-          <div className="relative mx-auto w-full max-w-[560px] pb-8 sm:pb-10 lg:mx-0 lg:max-w-none lg:pb-12">
-            <div className="relative min-h-[340px] sm:min-h-[380px] lg:min-h-[420px]">
-              {/* Real project imagery — tertiary layer */}
-              <div className="absolute inset-x-0 top-0 z-0 aspect-[4/3] overflow-hidden rounded-2xl border border-white/[0.06] bg-[#0c1222] shadow-[0_24px_48px_rgba(0,0,0,0.35)] sm:rounded-3xl">
-                <Image
-                  src={HERO_IMAGE}
-                  alt="Aerial view of a large-scale quarry and industrial earthworks site"
-                  fill
-                  priority
-                  className="object-cover brightness-[0.88]"
-                  sizes="(max-width: 1024px) 100vw, 560px"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#050816]/80 via-[#050816]/20 to-transparent" />
-                <div className="absolute inset-0 bg-gradient-to-br from-[#050816]/30 via-transparent to-[#071428]/40" />
-              </div>
-
-              {/* Platform dashboard — primary focal point */}
-              <div className="absolute left-1/2 top-[18%] z-10 w-[175%] max-w-[1008px] -translate-x-1/2 sm:top-[20%] lg:top-[22%] lg:w-[188%]">
-                <div className="rounded-xl border border-white/12 bg-[#0c1424] p-1.5 shadow-[0_40px_80px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.04)] sm:rounded-2xl sm:p-2">
-                  <div className="overflow-hidden rounded-lg sm:rounded-xl">
-                    <DashboardMockup />
-                  </div>
-                </div>
-              </div>
+          {/* Right column — single composed hero artwork */}
+          <div className="relative mx-auto w-full max-w-[640px] lg:mx-0 lg:max-w-none">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0c1222] shadow-[0_32px_80px_rgba(0,0,0,0.5)] sm:rounded-3xl lg:aspect-[5/4]">
+              <Image
+                src={HERO_ARTWORK}
+                alt="Drone surveying an industrial quarry site with aerial intelligence platform dashboard"
+                fill
+                priority
+                className="object-cover object-center"
+                sizes="(max-width: 1024px) 100vw, 640px"
+              />
+              <div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-[#050816]/10" />
             </div>
           </div>
         </div>
