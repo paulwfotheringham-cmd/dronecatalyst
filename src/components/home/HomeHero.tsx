@@ -10,10 +10,10 @@ export default function HomeHero() {
       {/* Background */}
       <div className="pointer-events-none absolute inset-0" aria-hidden>
         <div className="absolute inset-0 bg-gradient-to-br from-[#050816] via-[#071428] to-[#0a1628]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_20%_0%,rgba(37,99,235,0.18),transparent_55%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_90%_80%,rgba(37,99,235,0.08),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_20%_0%,rgba(37,99,235,0.22),transparent_55%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_90%_80%,rgba(37,99,235,0.12),transparent_50%)]" />
         <div
-          className="absolute inset-0 opacity-[0.03]"
+          className="absolute inset-0 opacity-[0.035]"
           style={{
             backgroundImage: `
               linear-gradient(rgba(148,163,184,0.5) 1px, transparent 1px),
@@ -22,6 +22,8 @@ export default function HomeHero() {
             backgroundSize: "72px 72px",
           }}
         />
+        <div className="absolute -left-1/4 top-0 h-[520px] w-[520px] animate-[pulse_10s_ease-in-out_infinite] rounded-full bg-[#2563eb]/10 blur-[120px]" />
+        <div className="absolute -right-1/4 bottom-0 h-[480px] w-[480px] animate-[pulse_12s_ease-in-out_infinite_2s] rounded-full bg-[#1d4ed8]/10 blur-[100px]" />
       </div>
 
       <div className="relative mx-auto max-w-[1280px] px-6 pb-20 pt-[104px] sm:px-8 lg:px-8 lg:pb-32 lg:pt-[120px]">
@@ -61,25 +63,25 @@ export default function HomeHero() {
           </div>
 
           {/* Right column — platform first, project imagery supporting */}
-          <div className="relative mx-auto w-full max-w-[560px] pb-10 sm:pb-12 lg:mx-0 lg:max-w-none lg:pb-14">
-            <div className="relative min-h-[360px] sm:min-h-[400px] lg:min-h-[440px]">
-              {/* Real project imagery — tertiary layer, receded */}
-              <div className="absolute inset-x-[6%] top-[4%] z-0 aspect-[4/3] overflow-hidden rounded-2xl border border-white/[0.05] bg-[#0c1222] shadow-[0_16px_40px_rgba(0,0,0,0.3)] sm:inset-x-[4%] sm:rounded-3xl lg:inset-x-[8%]">
+          <div className="relative mx-auto w-full max-w-[560px] pb-8 sm:pb-10 lg:mx-0 lg:max-w-none lg:pb-12">
+            <div className="relative min-h-[340px] sm:min-h-[380px] lg:min-h-[420px]">
+              {/* Real project imagery — tertiary layer */}
+              <div className="absolute inset-x-0 top-0 z-0 aspect-[4/3] overflow-hidden rounded-2xl border border-white/[0.06] bg-[#0c1222] shadow-[0_24px_48px_rgba(0,0,0,0.35)] sm:rounded-3xl">
                 <Image
                   src={HERO_IMAGE}
                   alt="Aerial view of a large-scale quarry and industrial earthworks site"
                   fill
                   priority
-                  className="object-cover"
-                  sizes="(max-width: 1024px) 90vw, 480px"
+                  className="object-cover brightness-[0.88]"
+                  sizes="(max-width: 1024px) 100vw, 560px"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#050816]/90 via-[#050816]/25 to-[#050816]/10" />
-                <div className="absolute inset-0 bg-[#050816]/15" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#050816]/80 via-[#050816]/20 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-br from-[#050816]/30 via-transparent to-[#071428]/40" />
               </div>
 
-              {/* Platform dashboard — primary focal point, ~25% larger overlap */}
-              <div className="absolute left-1/2 top-[12%] z-10 w-[220%] max-w-[1260px] -translate-x-1/2 sm:top-[14%] lg:top-[16%] lg:w-[235%]">
-                <div className="rounded-xl border border-white/12 bg-[#0c1424] p-2 shadow-[0_48px_96px_rgba(0,0,0,0.6),0_12px_40px_rgba(0,0,0,0.35)] sm:rounded-2xl sm:p-2.5">
+              {/* Platform dashboard — primary focal point */}
+              <div className="absolute left-1/2 top-[18%] z-10 w-[175%] max-w-[1008px] -translate-x-1/2 sm:top-[20%] lg:top-[22%] lg:w-[188%]">
+                <div className="rounded-xl border border-white/12 bg-[#0c1424] p-1.5 shadow-[0_40px_80px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.04)] sm:rounded-2xl sm:p-2">
                   <div className="overflow-hidden rounded-lg sm:rounded-xl">
                     <DashboardMockup />
                   </div>

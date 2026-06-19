@@ -1,7 +1,3 @@
-import Image from "next/image";
-
-const SITE_THUMB = "/images/site-intelligence.jpg";
-
 export default function DashboardMockup() {
   return (
     <div className="w-full overflow-hidden rounded-md border border-white/10 bg-[#0c1424] shadow-[0_32px_64px_rgba(0,0,0,0.5)]">
@@ -52,15 +48,7 @@ export default function DashboardMockup() {
             </div>
             <div className="rounded border border-white/8 bg-white/[0.04] p-2">
               <p className="text-[7px] text-white/40">Site Overview</p>
-              <div className="relative mt-1 h-9 overflow-hidden rounded-sm">
-                <Image
-                  src={SITE_THUMB}
-                  alt=""
-                  fill
-                  className="object-cover object-center"
-                  sizes="120px"
-                />
-              </div>
+              <div className="mt-1 h-9 rounded-sm bg-gradient-to-br from-emerald-900/50 via-slate-700/40 to-slate-800/60" />
             </div>
           </div>
           <div className="mt-1.5 grid grid-cols-3 gap-1.5">
