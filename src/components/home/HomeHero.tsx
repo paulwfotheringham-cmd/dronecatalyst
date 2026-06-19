@@ -2,36 +2,15 @@ import Image from "next/image";
 import Link from "next/link";
 import GeospatialDashboard from "./GeospatialDashboard";
 
-const QUARRY_IMAGE = "/images/hero-quarry-terraces.png";
-const DRONE_IMAGE = "/images/hero-drone-survey.png";
-
-function SurveyScanCone() {
-  return (
-    <svg
-      viewBox="0 0 240 360"
-      className="pointer-events-none absolute right-[14%] top-[16%] z-[12] h-[48%] w-[34%] opacity-45 lg:right-[12%] lg:top-[14%]"
-      aria-hidden
-    >
-      <defs>
-        <linearGradient id="surveyCone" x1="120" y1="0" x2="120" y2="360" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.55" />
-          <stop offset="55%" stopColor="#2563eb" stopOpacity="0.22" />
-          <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path d="M120 8 L52 360 L188 360 Z" fill="url(#surveyCone)" />
-      <line x1="120" y1="8" x2="120" y2="360" stroke="#93c5fd" strokeWidth="0.75" opacity="0.35" />
-    </svg>
-  );
-}
+const HERO_IMAGE = "/images/hero/drone-quarry-scan.webp";
 
 export default function HomeHero() {
   return (
     <section className="relative overflow-hidden bg-[#020617]">
-      {/* Quarry background — full hero width */}
+      {/* Composed hero asset — full width */}
       <div className="pointer-events-none absolute inset-0" aria-hidden>
         <Image
-          src={QUARRY_IMAGE}
+          src={HERO_IMAGE}
           alt=""
           fill
           priority
@@ -40,13 +19,13 @@ export default function HomeHero() {
         />
       </div>
 
-      {/* Left navy gradient for text readability */}
+      {/* Dark blue gradient — left text readability, right image visible */}
       <div
-        className="pointer-events-none absolute inset-y-0 left-0 z-[1] w-[68%]"
+        className="pointer-events-none absolute inset-0 z-[1]"
         aria-hidden
         style={{
           background:
-            "linear-gradient(to right, rgba(2, 6, 18, 0.99) 0%, rgba(3, 7, 20, 0.98) 22%, rgba(5, 8, 22, 0.94) 40%, rgba(5, 8, 22, 0.72) 54%, rgba(5, 8, 22, 0.28) 68%, transparent 100%)",
+            "linear-gradient(to right, rgba(2, 6, 18, 0.9) 0%, rgba(3, 7, 20, 0.88) 22%, rgba(5, 8, 22, 0.62) 42%, rgba(5, 8, 22, 0.18) 58%, transparent 72%)",
         }}
       />
 
@@ -90,25 +69,8 @@ export default function HomeHero() {
             </div>
           </div>
 
-          {/* Right column — composed marketing visual */}
+          {/* Right column — dashboard intelligence layer */}
           <div className="relative min-h-[400px] sm:min-h-[460px] lg:min-h-[580px] xl:min-h-[620px]">
-            <SurveyScanCone />
-
-            {/* Foreground drone — primary focal point */}
-            <div className="pointer-events-none absolute right-[0%] top-[0%] z-20 w-[46%] min-w-[180px] max-w-[340px] sm:right-[2%] lg:right-[4%] lg:top-[-2%] lg:w-[48%] lg:max-w-[360px]">
-              <div className="relative aspect-[4/3] drop-shadow-[0_20px_50px_rgba(0,0,0,0.55)]">
-                <Image
-                  src={DRONE_IMAGE}
-                  alt="Survey drone capturing site intelligence"
-                  fill
-                  priority
-                  className="object-contain object-center"
-                  sizes="(max-width: 1024px) 46vw, 360px"
-                />
-              </div>
-            </div>
-
-            {/* Dashboard — secondary intelligence layer */}
             <div className="absolute bottom-0 right-0 z-30 w-full sm:w-[94%] lg:w-[61%] lg:min-w-[440px] xl:w-[62%]">
               <GeospatialDashboard />
             </div>
