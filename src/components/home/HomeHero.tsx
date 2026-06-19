@@ -3,27 +3,64 @@ import Link from "next/link";
 
 const HERO_ARTWORK = "/images/hero-artwork.png";
 
+function HeroDroneAccent() {
+  return (
+    <svg
+      viewBox="0 0 160 96"
+      className="h-full w-full drop-shadow-[0_12px_32px_rgba(0,0,0,0.45)]"
+      fill="none"
+      aria-hidden
+    >
+      <ellipse cx="80" cy="34" rx="18" ry="10" fill="#1e293b" stroke="#94a3b8" strokeWidth="1" />
+      <ellipse cx="80" cy="34" rx="10" ry="5" fill="#0f172a" />
+      <rect x="76" y="38" width="8" height="10" rx="2" fill="#334155" />
+      {[
+        { x: 28, y: 28 },
+        { x: 132, y: 28 },
+        { x: 28, y: 52 },
+        { x: 132, y: 52 },
+      ].map((arm, i) => (
+        <g key={i}>
+          <line x1="80" y1="34" x2={arm.x} y2={arm.y} stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" />
+          <circle cx={arm.x} cy={arm.y} r="14" stroke="#475569" strokeWidth="1.5" fill="#0f172a" opacity="0.9" />
+          <ellipse cx={arm.x} cy={arm.y} rx="14" ry="3.5" stroke="#64748b" strokeWidth="0.75" opacity="0.45" />
+        </g>
+      ))}
+    </svg>
+  );
+}
+
 export default function HomeHero() {
   return (
-    <section className="relative overflow-x-hidden bg-[#050816]">
-      {/* Background */}
+    <section className="relative overflow-hidden bg-[#050816]">
+      {/* Integrated hero visual — full-width scene with left-to-right blend */}
       <div className="pointer-events-none absolute inset-0" aria-hidden>
-        <div className="absolute inset-0 bg-gradient-to-br from-[#050816] via-[#071428] to-[#0a1628]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_20%_0%,rgba(37,99,235,0.14),transparent_55%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_90%_80%,rgba(37,99,235,0.08),transparent_50%)]" />
+        <Image
+          src={HERO_ARTWORK}
+          alt=""
+          fill
+          priority
+          className="object-cover object-[62%_center] contrast-[1.1] saturate-[1.08]"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#050816] from-0% via-[#050816]/88 via-32% to-[#050816]/10 to-72%" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#071428]/95 via-[#050816]/45 via-38% to-transparent to-80%" />
         <div
-          className="absolute inset-0 opacity-[0.03]"
+          className="absolute inset-0 opacity-35"
           style={{
-            backgroundImage: `
-              linear-gradient(rgba(148,163,184,0.5) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(148,163,184,0.5) 1px, transparent 1px)
-            `,
-            backgroundSize: "72px 72px",
+            background:
+              "radial-gradient(ellipse 50% 60% at 10% 20%, rgba(37,99,235,0.35), transparent 70%)",
           }}
         />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#050816]/50 via-transparent to-[#050816]/15" />
       </div>
 
-      <div className="relative mx-auto max-w-[1280px] px-6 pb-12 pt-[104px] sm:px-8 lg:px-6 lg:pb-16 lg:pt-[120px]">
+      {/* Subtle drone — right side only */}
+      <div className="pointer-events-none absolute right-[6%] top-[16%] z-[1] hidden h-[120px] w-[168px] opacity-90 lg:block xl:right-[10%] xl:top-[14%] xl:h-[136px] xl:w-[190px]">
+        <HeroDroneAccent />
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-[1280px] px-6 pb-12 pt-[104px] sm:px-8 lg:px-6 lg:pb-16 lg:pt-[120px]">
         <div className="grid items-center gap-8 lg:grid-cols-[44%_56%] lg:gap-8 xl:gap-10">
           {/* Left column */}
           <div className="max-w-[560px]">
@@ -37,7 +74,11 @@ export default function HomeHero() {
               Data. Insight. Visibility.
             </p>
 
-            <p className="mt-6 max-w-[520px] text-base leading-[1.7] text-white/70 sm:text-[17px]">
+            <p className="mt-5 text-[15px] leading-[1.65] text-white/88 sm:text-[17px]">
+              We do more than just fly.
+            </p>
+
+            <p className="mt-4 max-w-[520px] text-base leading-[1.7] text-white/70 sm:text-[17px]">
               Drone Catalyst captures, processes and delivers aerial intelligence through
               a secure cloud platform, giving you access to your projects, reports and
               insights anytime, anywhere.
@@ -59,25 +100,8 @@ export default function HomeHero() {
             </div>
           </div>
 
-          {/* Right column — product showcase visual */}
-          <div className="relative mx-auto w-full overflow-visible lg:mx-0 lg:-mr-8 xl:-mr-12">
-            <div
-              className="pointer-events-none absolute -inset-x-3 -inset-y-2 rounded-[2rem] bg-[#070d18]/50 shadow-[0_40px_100px_rgba(0,0,0,0.45)] sm:-inset-x-4 sm:-inset-y-3 sm:rounded-[2.25rem] lg:-inset-x-5 lg:-inset-y-4"
-              aria-hidden
-            />
-            <div className="relative aspect-[4/3] origin-center scale-[1.08] sm:origin-left sm:scale-[1.12] lg:aspect-[5/4] lg:origin-left lg:scale-[1.38] xl:scale-[1.38]">
-              <div className="relative h-full w-full overflow-hidden rounded-[1.625rem] shadow-[0_28px_72px_rgba(0,0,0,0.5),0_8px_24px_rgba(0,0,0,0.28)] sm:rounded-[1.875rem] lg:rounded-[2rem]">
-                <Image
-                  src={HERO_ARTWORK}
-                  alt="Drone surveying an industrial quarry site with aerial intelligence platform dashboard"
-                  fill
-                  priority
-                  className="object-cover object-center contrast-[1.12] saturate-[1.1]"
-                  sizes="(max-width: 1024px) 100vw, 900px"
-                />
-              </div>
-            </div>
-          </div>
+          {/* Right column — visual continues through integrated background */}
+          <div className="relative hidden min-h-[420px] lg:block xl:min-h-[480px]" aria-hidden />
         </div>
       </div>
     </section>
