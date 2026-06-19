@@ -18,8 +18,8 @@ export default function Logo({ className = "", height = 32 }: LogoProps) {
         width={width}
         height={height}
         priority
-        className="h-auto w-auto max-h-8 object-contain sm:max-h-9"
-        style={{ height, width: "auto", maxWidth: "min(200px, 55vw)" }}
+        className="h-auto w-auto object-contain"
+        style={{ height, width: "auto", maxWidth: "min(240px, 55vw)" }}
       />
     </Link>
   );

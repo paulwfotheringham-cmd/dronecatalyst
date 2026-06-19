@@ -31,62 +31,72 @@ export default function Navbar() {
             : "sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-xl"
         }
       >
-        <div className="mx-auto flex h-[64px] max-w-[1280px] items-center justify-between px-8">
-          <Logo />
+        <div className="mx-auto max-w-[1440px] px-10 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:px-14 xl:px-16">
+          <div className="flex h-[64px] items-center justify-between lg:contents">
+            {/* Left zone — logo */}
+            <div className="flex items-center justify-start">
+              <Logo height={38} />
+            </div>
 
-          <nav aria-label="Main navigation" className="hidden items-center gap-[4px] lg:flex">
-            {NAV.map((link) => (
+            {/* Center zone — navigation */}
+            <nav
+              aria-label="Main navigation"
+              className="hidden items-center justify-center gap-10 lg:flex"
+            >
+              {NAV.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`inline-flex items-center gap-1 px-[14px] py-2 text-[14px] font-medium ${
+                    isHome ? "text-white/90" : "text-muted hover:text-foreground"
+                  }`}
+                >
+                  {link.label}
+                  {link.chevron && (
+                    <svg
+                      width="10"
+                      height="10"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      aria-hidden
+                    >
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                  )}
+                </Link>
+              ))}
+            </nav>
+
+            {/* Right zone — contact */}
+            <div className="flex items-center justify-end gap-3">
               <Link
-                key={link.href}
-                href={link.href}
-                className={`inline-flex items-center gap-1 px-[14px] py-2 text-[14px] font-medium ${
-                  isHome ? "text-white/90" : "text-muted hover:text-foreground"
+                href="/contact"
+                className={`hidden h-[36px] items-center rounded-md px-[16px] text-[14px] font-semibold lg:inline-flex ${
+                  isHome
+                    ? "bg-white text-[#0b2d63]"
+                    : "border border-[#cfe0ff] bg-[#EEF5FF] text-[#0b2d63]"
                 }`}
               >
-                {link.label}
-                {link.chevron && (
-                  <svg
-                    width="10"
-                    height="10"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    aria-hidden
-                  >
-                    <path d="M6 9l6 6 6-6" />
-                  </svg>
-                )}
+                Contact Us
               </Link>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-3">
-            <Link
-              href="/contact"
-              className={`hidden h-[36px] items-center rounded-md px-[16px] text-[14px] font-semibold lg:inline-flex ${
-                isHome
-                  ? "bg-white text-[#0b2d63]"
-                  : "border border-[#cfe0ff] bg-[#EEF5FF] text-[#0b2d63]"
-              }`}
-            >
-              Contact Us
-            </Link>
-            <button
-              type="button"
-              aria-label="Open menu"
-              aria-expanded={menuOpen}
-              onClick={() => setMenuOpen(true)}
-              className={`flex h-10 w-10 items-center justify-center rounded-lg border lg:hidden ${
-                isHome
-                  ? "border-white/25 text-white"
-                  : "border-border text-muted"
-              }`}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M4 7h16M4 12h16M4 17h16" />
-              </svg>
-            </button>
+              <button
+                type="button"
+                aria-label="Open menu"
+                aria-expanded={menuOpen}
+                onClick={() => setMenuOpen(true)}
+                className={`flex h-10 w-10 items-center justify-center rounded-lg border lg:hidden ${
+                  isHome
+                    ? "border-white/25 text-white"
+                    : "border-border text-muted"
+                }`}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M4 7h16M4 12h16M4 17h16" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </header>
