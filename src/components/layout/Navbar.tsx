@@ -31,23 +31,23 @@ export default function Navbar() {
             : "sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-xl"
         }
       >
-        <div className="mx-auto max-w-[1536px] px-12 lg:grid lg:h-[88px] lg:grid-cols-[minmax(260px,1fr)_auto_minmax(260px,1fr)] lg:items-center lg:px-16 xl:px-20">
-          <div className="flex h-[72px] items-center justify-between lg:h-full lg:contents">
+        <div className="mx-auto max-w-[1600px] px-12 lg:grid lg:h-[96px] lg:grid-cols-[minmax(280px,1fr)_auto_minmax(280px,1fr)] lg:items-center lg:px-20 xl:px-24">
+          <div className="flex h-[76px] items-center justify-between lg:h-full lg:contents">
             {/* Left zone — logo */}
-            <div className="flex items-center justify-start lg:pr-12">
-              <Logo height={44} />
+            <div className="flex items-center justify-start lg:pr-14">
+              <Logo height={46} />
             </div>
 
             {/* Center zone — navigation */}
             <nav
               aria-label="Main navigation"
-              className="hidden items-center justify-center gap-20 lg:flex xl:gap-24"
+              className="hidden items-center justify-center gap-24 lg:flex xl:gap-28"
             >
               {NAV.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`inline-flex items-center gap-1 whitespace-nowrap px-[14px] py-2 text-[14px] font-medium ${
+                  className={`inline-flex items-center gap-1 whitespace-nowrap px-[14px] py-2.5 text-[14px] font-medium ${
                     isHome ? "text-white/90" : "text-muted hover:text-foreground"
                   }`}
                 >
@@ -70,7 +70,7 @@ export default function Navbar() {
             </nav>
 
             {/* Right zone — contact */}
-            <div className="flex items-center justify-end gap-3 lg:pl-12">
+            <div className="flex items-center justify-end gap-3 lg:pl-14">
               <Link
                 href="/contact"
                 className={`hidden h-[36px] items-center rounded-md px-[16px] text-[14px] font-semibold lg:inline-flex ${
