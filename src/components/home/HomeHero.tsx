@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import GeospatialDashboard from "./GeospatialDashboard";
+import HeroScanOverlay from "./HeroScanOverlay";
 
 const HERO_IMAGE = "/images/hero/drone-quarry-scan.webp";
 
@@ -19,6 +20,8 @@ export default function HomeHero() {
         />
       </div>
 
+      <HeroScanOverlay />
+
       {/* Gradient — heavy left only, quarry stays clear on right */}
       <div
         className="pointer-events-none absolute inset-0 z-[3]"
@@ -29,7 +32,7 @@ export default function HomeHero() {
         }}
       />
 
-      <div className="relative z-10 mx-auto max-w-[1400px] px-6 pb-24 pt-[104px] sm:px-8 lg:px-10 lg:pb-32 lg:pt-[120px]">
+      <div className="relative z-10 mx-auto max-w-[1400px] px-6 pb-32 pt-[104px] sm:px-8 lg:px-10 lg:pb-40 lg:pt-[120px]">
         <div className="grid items-center gap-12 lg:grid-cols-[42%_58%] lg:gap-10 xl:gap-12">
           {/* Left column */}
           <div className="relative max-w-[560px]">
@@ -69,9 +72,9 @@ export default function HomeHero() {
             </div>
           </div>
 
-          {/* Right column — drone + quarry upper; dashboard lower-right */}
-          <div className="relative min-h-[520px] sm:min-h-[580px] lg:min-h-[640px]">
-            <div className="absolute bottom-0 right-0 z-10 translate-y-6 sm:translate-y-8 lg:translate-x-2 lg:translate-y-12 xl:translate-y-14">
+          {/* Right column — drone scan upper; horizontal dashboard lower */}
+          <div className="relative min-h-[480px] sm:min-h-[540px] lg:min-h-[600px]">
+            <div className="absolute bottom-0 right-0 left-0 z-10 flex justify-end translate-y-10 sm:translate-y-12 lg:translate-y-16 xl:translate-y-20">
               <GeospatialDashboard />
             </div>
           </div>
