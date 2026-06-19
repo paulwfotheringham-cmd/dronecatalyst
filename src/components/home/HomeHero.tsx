@@ -7,14 +7,14 @@ const HERO_IMAGE = "/images/hero/drone-quarry-scan.webp";
 export default function HomeHero() {
   return (
     <section className="relative overflow-x-hidden bg-[#020617]">
-      {/* Composed hero asset — pan down to reveal full drone */}
+      {/* Composed hero asset — smaller drone, shifted left and fully visible */}
       <div className="pointer-events-none absolute inset-0" aria-hidden>
         <Image
           src={HERO_IMAGE}
           alt=""
           fill
           priority
-          className="object-cover object-[62%_28%]"
+          className="object-cover object-[48%_24%]"
           sizes="100vw"
         />
       </div>
@@ -70,8 +70,8 @@ export default function HomeHero() {
           </div>
 
           {/* Right column — drone + quarry upper; dashboard lower-right */}
-          <div className="relative min-h-[460px] sm:min-h-[520px] lg:min-h-[580px]">
-            <div className="absolute bottom-0 right-0 z-10 translate-y-6 sm:translate-y-8 lg:translate-x-4 lg:translate-y-14 xl:translate-y-16">
+          <div className="relative min-h-[520px] sm:min-h-[580px] lg:min-h-[640px]">
+            <div className="absolute bottom-0 right-0 z-10 translate-y-6 sm:translate-y-8 lg:translate-x-2 lg:translate-y-12 xl:translate-y-14">
               <GeospatialDashboard />
             </div>
           </div>
