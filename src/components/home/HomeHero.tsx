@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import GeospatialDashboard from "./GeospatialDashboard";
 
-const SITE_IMAGE = "/images/site-intelligence.jpg";
+const HERO_BACKGROUND = "/images/hero-survey-background.png";
 
 export default function HomeHero() {
   return (
@@ -10,11 +10,11 @@ export default function HomeHero() {
       {/* Full-bleed site background */}
       <div className="pointer-events-none absolute inset-0" aria-hidden>
         <Image
-          src={SITE_IMAGE}
+          src={HERO_BACKGROUND}
           alt=""
           fill
           priority
-          className="object-cover object-center brightness-[0.42] contrast-[1.15] saturate-[0.85]"
+          className="object-cover object-[72%_38%] brightness-[0.42] contrast-[1.15] saturate-[0.88]"
           sizes="100vw"
         />
         <div className="absolute inset-0 bg-[#020617]/35" />
