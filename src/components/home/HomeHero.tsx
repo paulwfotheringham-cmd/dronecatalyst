@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import GeospatialDashboard from "./GeospatialDashboard";
+import HeroScanOverlay from "./HeroScanOverlay";
 
 const HERO_IMAGE = "/images/hero/drone-quarry-scan.webp";
 
@@ -19,13 +20,15 @@ export default function HomeHero() {
         />
       </div>
 
+      <HeroScanOverlay />
+
       {/* Dark blue gradient — left text readability, right image visible */}
       <div
-        className="pointer-events-none absolute inset-0 z-[1]"
+        className="pointer-events-none absolute inset-0 z-[3]"
         aria-hidden
         style={{
           background:
-            "linear-gradient(to right, rgba(2, 6, 18, 0.9) 0%, rgba(3, 7, 20, 0.88) 22%, rgba(5, 8, 22, 0.62) 42%, rgba(5, 8, 22, 0.18) 58%, transparent 72%)",
+            "linear-gradient(to right, rgba(2, 6, 18, 0.9) 0%, rgba(3, 7, 20, 0.88) 22%, rgba(5, 8, 22, 0.55) 40%, rgba(5, 8, 22, 0.12) 55%, transparent 68%)",
         }}
       />
 
@@ -70,8 +73,8 @@ export default function HomeHero() {
           </div>
 
           {/* Right column — dashboard intelligence layer */}
-          <div className="relative min-h-[400px] sm:min-h-[460px] lg:min-h-[580px] xl:min-h-[620px]">
-            <div className="absolute bottom-0 right-0 z-30 w-full sm:w-[94%] lg:w-[61%] lg:min-w-[440px] xl:w-[62%]">
+          <div className="relative min-h-[440px] sm:min-h-[520px] lg:min-h-[640px] xl:min-h-[680px]">
+            <div className="absolute -bottom-2 -right-1 z-30 w-full sm:-bottom-3 sm:-right-2 sm:w-[96%] lg:-bottom-5 lg:-right-4 lg:w-[64%] lg:min-w-[460px] xl:w-[65%]">
               <GeospatialDashboard />
             </div>
           </div>
