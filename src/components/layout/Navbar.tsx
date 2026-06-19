@@ -31,23 +31,23 @@ export default function Navbar() {
             : "sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-xl"
         }
       >
-        <div className="mx-auto max-w-[1440px] px-10 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:px-14 xl:px-16">
-          <div className="flex h-[64px] items-center justify-between lg:contents">
+        <div className="mx-auto max-w-[1536px] px-12 lg:grid lg:h-[72px] lg:grid-cols-[minmax(220px,1fr)_auto_minmax(220px,1fr)] lg:items-center lg:px-16 xl:px-20">
+          <div className="flex h-[64px] items-center justify-between lg:h-full lg:contents">
             {/* Left zone — logo */}
-            <div className="flex items-center justify-start">
-              <Logo height={38} />
+            <div className="flex items-center justify-start lg:pr-8">
+              <Logo height={40} />
             </div>
 
             {/* Center zone — navigation */}
             <nav
               aria-label="Main navigation"
-              className="hidden items-center justify-center gap-10 lg:flex"
+              className="hidden items-center justify-center gap-12 lg:flex xl:gap-14"
             >
               {NAV.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`inline-flex items-center gap-1 px-[14px] py-2 text-[14px] font-medium ${
+                  className={`inline-flex items-center gap-1 whitespace-nowrap px-[14px] py-2 text-[14px] font-medium ${
                     isHome ? "text-white/90" : "text-muted hover:text-foreground"
                   }`}
                 >
@@ -70,7 +70,7 @@ export default function Navbar() {
             </nav>
 
             {/* Right zone — contact */}
-            <div className="flex items-center justify-end gap-3">
+            <div className="flex items-center justify-end gap-3 lg:pl-8">
               <Link
                 href="/contact"
                 className={`hidden h-[36px] items-center rounded-md px-[16px] text-[14px] font-semibold lg:inline-flex ${
