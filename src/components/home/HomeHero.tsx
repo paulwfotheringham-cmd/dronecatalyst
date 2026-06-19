@@ -7,7 +7,7 @@ const HERO_IMAGE = "/images/hero/drone-quarry-scan.webp";
 
 export default function HomeHero() {
   return (
-    <section className="relative overflow-hidden bg-[#020617]">
+    <section className="relative overflow-x-hidden bg-[#020617]">
       {/* Composed hero asset — full width */}
       <div className="pointer-events-none absolute inset-0" aria-hidden>
         <Image
@@ -28,11 +28,11 @@ export default function HomeHero() {
         aria-hidden
         style={{
           background:
-            "linear-gradient(to right, rgba(2, 6, 18, 0.9) 0%, rgba(3, 7, 20, 0.88) 22%, rgba(5, 8, 22, 0.55) 40%, rgba(5, 8, 22, 0.12) 55%, transparent 68%)",
+            "linear-gradient(to right, rgba(2, 6, 18, 0.9) 0%, rgba(3, 7, 20, 0.88) 22%, rgba(5, 8, 22, 0.55) 38%, rgba(5, 8, 22, 0.08) 50%, transparent 62%)",
         }}
       />
 
-      <div className="relative z-10 mx-auto max-w-[1400px] px-6 pb-20 pt-[104px] sm:px-8 lg:px-10 lg:pb-24 lg:pt-[120px]">
+      <div className="relative z-10 mx-auto max-w-[1400px] px-6 pb-28 pt-[104px] sm:px-8 lg:px-10 lg:pb-36 lg:pt-[120px]">
         <div className="grid items-center gap-12 lg:grid-cols-[42%_58%] lg:gap-10 xl:gap-12">
           {/* Left column */}
           <div className="relative max-w-[560px]">
@@ -72,9 +72,9 @@ export default function HomeHero() {
             </div>
           </div>
 
-          {/* Right column — dashboard intelligence layer */}
-          <div className="relative min-h-[440px] sm:min-h-[520px] lg:min-h-[640px] xl:min-h-[680px]">
-            <div className="absolute -bottom-2 -right-1 z-30 w-full sm:-bottom-3 sm:-right-2 sm:w-[96%] lg:-bottom-5 lg:-right-4 lg:w-[64%] lg:min-w-[460px] xl:w-[65%]">
+          {/* Right column — scan zone upper, dashboard output lower-right */}
+          <div className="relative min-h-[520px] sm:min-h-[600px] lg:min-h-[720px] xl:min-h-[760px]">
+            <div className="absolute bottom-0 right-0 z-10 w-[92%] translate-y-4 sm:w-[88%] sm:translate-y-6 lg:w-[54%] lg:translate-x-6 lg:translate-y-10 lg:min-w-[480px] xl:w-[52%] xl:translate-x-8 xl:translate-y-12">
               <GeospatialDashboard />
             </div>
           </div>

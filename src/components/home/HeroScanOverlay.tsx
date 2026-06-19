@@ -1,10 +1,9 @@
 export default function HeroScanOverlay() {
   return (
     <div
-      className="pointer-events-none absolute inset-0 z-[2] hidden sm:block"
+      className="pointer-events-none absolute inset-0 z-[4] hidden sm:block"
       aria-hidden
     >
-      {/* LiDAR cone — drone to quarry */}
       <svg
         className="absolute inset-0 h-full w-full"
         viewBox="0 0 1400 800"
@@ -12,18 +11,36 @@ export default function HeroScanOverlay() {
         fill="none"
       >
         <defs>
-          <linearGradient id="scanCone" x1="72%" y1="8%" x2="58%" y2="72%">
-            <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.55" />
-            <stop offset="45%" stopColor="#2563eb" stopOpacity="0.28" />
+          <linearGradient id="scanConeOuter" x1="68%" y1="6%" x2="52%" y2="58%">
+            <stop offset="0%" stopColor="#7dd3fc" stopOpacity="0.75" />
+            <stop offset="35%" stopColor="#38bdf8" stopOpacity="0.5" />
+            <stop offset="70%" stopColor="#2563eb" stopOpacity="0.22" />
             <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
           </linearGradient>
+          <linearGradient id="scanConeCore" x1="68%" y1="8%" x2="55%" y2="52%">
+            <stop offset="0%" stopColor="#bae6fd" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="#38bdf8" stopOpacity="0.55" />
+            <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
+          </linearGradient>
+          <radialGradient id="scanImpact" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.85" />
+            <stop offset="45%" stopColor="#2563eb" stopOpacity="0.45" />
+            <stop offset="100%" stopColor="#1e3a8a" stopOpacity="0" />
+          </radialGradient>
           <linearGradient id="scanLine" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#38bdf8" stopOpacity="0" />
-            <stop offset="50%" stopColor="#60a5fa" stopOpacity="1" />
+            <stop offset="50%" stopColor="#e0f2fe" stopOpacity="1" />
             <stop offset="100%" stopColor="#38bdf8" stopOpacity="0" />
           </linearGradient>
-          <filter id="scanGlow">
-            <feGaussianBlur stdDeviation="3" result="blur" />
+          <filter id="scanGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="impactGlow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="6" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
@@ -31,80 +48,116 @@ export default function HeroScanOverlay() {
           </filter>
         </defs>
 
-        {/* Scan cone from drone position to quarry surface */}
+        {/* Wide outer scan cone — drone to quarry */}
         <path
-          d="M1008,72 L1180,520 L860,580 L780,420 Z"
-          fill="url(#scanCone)"
-          className="animate-[scanPulse_3s_ease-in-out_infinite]"
+          d="M968,58 L1340,420 L1040,480 L720,240 Z"
+          fill="url(#scanConeOuter)"
+          className="animate-[scanPulse_2.5s_ease-in-out_infinite]"
+        />
+        {/* Bright inner beam core */}
+        <path
+          d="M988,68 L1180,380 L1020,410 L860,180 Z"
+          fill="url(#scanConeCore)"
+          filter="url(#scanGlow)"
+          className="animate-[scanPulse_2.5s_ease-in-out_infinite]"
+        />
+        {/* Beam edge lines for readability */}
+        <line
+          x1="988"
+          y1="68"
+          x2="1020"
+          y2="410"
+          stroke="#7dd3fc"
+          strokeOpacity="0.7"
+          strokeWidth="2"
+          filter="url(#scanGlow)"
+        />
+        <line
+          x1="988"
+          y1="68"
+          x2="860"
+          y2="180"
+          stroke="#7dd3fc"
+          strokeOpacity="0.55"
+          strokeWidth="1.5"
+          filter="url(#scanGlow)"
         />
 
-        {/* Terrain mesh on quarry — visible immediately */}
-        <g opacity="0.85" filter="url(#scanGlow)">
-          {[0, 1, 2, 3, 4, 5, 6].map((row) => (
+        {/* Ground impact heatmap — where beam hits quarry */}
+        <ellipse
+          cx="980"
+          cy="400"
+          rx="165"
+          ry="72"
+          fill="url(#scanImpact)"
+          filter="url(#impactGlow)"
+        />
+
+        {/* LiDAR terrain mesh at scan impact */}
+        <g filter="url(#scanGlow)">
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((row) => (
             <line
               key={`h-${row}`}
-              x1={820 + row * 18}
-              y1={380 + row * 22}
-              x2={1180 - row * 8}
-              y2={420 + row * 28}
-              stroke="#38bdf8"
-              strokeOpacity={0.35 + row * 0.05}
-              strokeWidth="1"
+              x1={820 + row * 14}
+              y1={340 + row * 16}
+              x2={1140 - row * 6}
+              y2={360 + row * 18}
+              stroke="#7dd3fc"
+              strokeOpacity={0.45 + row * 0.04}
+              strokeWidth="1.5"
             />
           ))}
-          {[0, 1, 2, 3, 4, 5, 6, 7].map((col) => (
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((col) => (
             <line
               key={`v-${col}`}
-              x1={860 + col * 42}
-              y1={360}
-              x2={820 + col * 38}
-              y2={560}
-              stroke="#2563eb"
-              strokeOpacity="0.4"
-              strokeWidth="1"
+              x1={840 + col * 32}
+              y1="330"
+              x2={800 + col * 30}
+              y2="470"
+              stroke="#38bdf8"
+              strokeOpacity="0.55"
+              strokeWidth="1.5"
             />
           ))}
           {[
-            [920, 440],
-            [980, 460],
-            [1040, 430],
-            [1100, 480],
-            [960, 510],
-            [1080, 520],
-            [1140, 450],
-            [880, 490],
+            [880, 370], [920, 385], [960, 360], [1000, 390], [1040, 375],
+            [1080, 400], [1120, 385], [900, 410], [980, 420], [1060, 415],
+            [940, 395], [1020, 405], [860, 390], [1100, 370],
           ].map(([cx, cy], i) => (
-            <circle key={i} cx={cx} cy={cy} r="2.5" fill="#60a5fa" opacity="0.9" />
+            <circle key={i} cx={cx} cy={cy} r="3" fill="#e0f2fe" opacity="0.95" />
           ))}
         </g>
 
-        {/* Animated scan sweep */}
-        <g className="animate-[scanSweep_2.4s_ease-in-out_infinite]">
+        {/* Animated scan sweep across impact zone */}
+        <g className="animate-[scanSweep_2s_ease-in-out_infinite]">
           <rect
             x="820"
-            y="380"
-            width="360"
-            height="3"
+            y="340"
+            width="340"
+            height="4"
+            rx="2"
             fill="url(#scanLine)"
             filter="url(#scanGlow)"
           />
         </g>
 
-        {/* Connection line — quarry scan to dashboard zone */}
+        {/* Data flow — scan output to dashboard below-right */}
         <path
-          d="M1050,560 Q1120,620 1220,680"
-          stroke="#3b82f6"
-          strokeOpacity="0.35"
-          strokeWidth="1.5"
-          strokeDasharray="6 8"
+          d="M1040,470 C1080,530 1180,620 1280,710"
+          stroke="#60a5fa"
+          strokeOpacity="0.5"
+          strokeWidth="2"
+          strokeDasharray="8 10"
+          filter="url(#scanGlow)"
           className="animate-[dashFlow_2s_linear_infinite]"
         />
+        <circle cx="1040" cy="470" r="6" fill="#38bdf8" opacity="0.9" filter="url(#scanGlow)" />
       </svg>
 
-      {/* Point cloud shimmer */}
-      <div className="absolute right-[8%] top-[42%] h-[28%] w-[32%] opacity-70">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(56,189,248,0.12)_0%,transparent_70%)]" />
-        <div className="scan-point-cloud absolute inset-0" />
+      {/* Point cloud at impact zone — upper quarry, not dashboard area */}
+      <div className="absolute right-[14%] top-[34%] h-[22%] w-[38%]">
+        <div className="absolute inset-0 rounded-[40%] bg-[radial-gradient(ellipse_at_center,rgba(56,189,248,0.28)_0%,rgba(37,99,235,0.12)_45%,transparent_72%)]" />
+        <div className="scan-point-cloud absolute inset-0 opacity-90" />
       </div>
     </div>
   );

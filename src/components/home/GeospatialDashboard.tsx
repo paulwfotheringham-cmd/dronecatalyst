@@ -12,231 +12,327 @@ function GlassCard({
 }) {
   return (
     <div
-      className={`rounded-2xl border border-white/[0.14] bg-gradient-to-br from-white/[0.1] to-white/[0.03] shadow-[0_20px_50px_rgba(0,0,0,0.45),0_8px_24px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-xl ${className}`}
+      className={`rounded-xl border border-white/[0.16] bg-gradient-to-br from-white/[0.12] via-white/[0.06] to-white/[0.02] shadow-[0_24px_60px_rgba(0,0,0,0.55),0_12px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.14),inset_0_-1px_0_rgba(0,0,0,0.2)] backdrop-blur-2xl ${className}`}
     >
       {children}
     </div>
   );
 }
 
-function TerrainHeatmap() {
+function TerrainModel3D() {
   return (
-    <div className="relative h-full min-h-[148px] overflow-hidden rounded-xl bg-[#020617]/40">
-      <svg viewBox="0 0 280 148" className="h-full w-full" aria-hidden>
+    <div className="relative min-h-[200px] overflow-hidden rounded-xl border border-[#2563eb]/20 bg-[#020617]/60">
+      <svg viewBox="0 0 640 200" className="h-[200px] w-full" aria-hidden>
         <defs>
-          <linearGradient id="heatLow" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#1e3a8a" />
-            <stop offset="50%" stopColor="#2563eb" />
-            <stop offset="100%" stopColor="#38bdf8" />
+          <linearGradient id="terrainBase" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#1e293b" />
+          </linearGradient>
+          <linearGradient id="heatSurface" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0%" stopColor="#1e3a8a" stopOpacity="0.9" />
+            <stop offset="35%" stopColor="#2563eb" stopOpacity="0.85" />
+            <stop offset="65%" stopColor="#3b82f6" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.75" />
           </linearGradient>
         </defs>
-        {/* 3D terrain wireframe */}
-        {[0, 1, 2, 3, 4, 5].map((i) => (
+        <rect width="640" height="200" fill="url(#terrainBase)" />
+        {/* Perspective grid */}
+        {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
           <path
-            key={`row-${i}`}
-            d={`M20,${120 - i * 8} Q80,${100 - i * 12} 140,${90 - i * 10} T260,${75 - i * 8}`}
+            key={`trow-${i}`}
+            d={`M40,${170 - i * 6} Q200,${140 - i * 14} 360,${120 - i * 12} T620,${100 - i * 8}`}
             fill="none"
-            stroke="rgba(96,165,250,0.35)"
+            stroke="rgba(96,165,250,0.25)"
             strokeWidth="1"
           />
         ))}
-        {[0, 1, 2, 3, 4].map((i) => (
+        {[0, 1, 2, 3, 4, 5, 6].map((i) => (
           <line
-            key={`col-${i}`}
-            x1={40 + i * 55}
-            y1="148"
-            x2={60 + i * 50}
-            y2="55"
-            stroke="rgba(37,99,235,0.3)"
+            key={`tcol-${i}`}
+            x1={80 + i * 85}
+            y1="200"
+            x2={120 + i * 75}
+            y2="70"
+            stroke="rgba(37,99,235,0.22)"
             strokeWidth="1"
           />
         ))}
-        {/* Heatmap elevation zones */}
-        <ellipse cx="110" cy="95" rx="48" ry="22" fill="#2563eb" opacity="0.35" />
-        <ellipse cx="175" cy="82" rx="38" ry="18" fill="#3b82f6" opacity="0.45" />
-        <ellipse cx="210" cy="105" rx="32" ry="14" fill="#38bdf8" opacity="0.5" />
+        {/* Elevated terrain surface */}
         <path
-          d="M60,110 L100,85 L145,95 L190,72 L240,88 L260,100 L260,148 L60,148 Z"
-          fill="url(#heatLow)"
-          opacity="0.55"
+          d="M60,145 L160,110 L280,95 L400,78 L520,92 L600,108 L600,175 L60,175 Z"
+          fill="url(#heatSurface)"
+          opacity="0.88"
         />
-      </svg>
-      <div className="absolute bottom-2 left-3 flex items-center gap-2">
-        <span className="h-2 w-2 rounded-full bg-[#38bdf8]" />
-        <span className="text-[9px] font-medium text-white/60">Elevation model</span>
-      </div>
-      <div className="absolute bottom-2 right-3 flex gap-1">
-        {["#1e3a8a", "#2563eb", "#3b82f6", "#38bdf8"].map((c) => (
-          <span key={c} className="h-3 w-3 rounded-sm" style={{ backgroundColor: c }} />
+        <path
+          d="M60,145 L160,110 L280,95 L400,78 L520,92 L600,108"
+          fill="none"
+          stroke="#7dd3fc"
+          strokeWidth="2"
+          opacity="0.7"
+        />
+        {/* Contour lines */}
+        {[0, 1, 2, 3].map((i) => (
+          <path
+            key={`contour-${i}`}
+            d={`M${100 + i * 20},${130 - i * 8} Q280,${105 - i * 10} 460,${115 - i * 6} T580,${100 - i * 5}`}
+            fill="none"
+            stroke="rgba(224,242,254,0.35)"
+            strokeWidth="1"
+            strokeDasharray="4 6"
+          />
         ))}
+        {/* Scan markers */}
+        <circle cx="280" cy="95" r="5" fill="#e0f2fe" opacity="0.95" />
+        <circle cx="400" cy="78" r="4" fill="#38bdf8" />
+        <circle cx="520" cy="92" r="4" fill="#60a5fa" />
+      </svg>
+      <div className="absolute left-4 top-3 flex items-center gap-2 rounded-md border border-white/10 bg-black/40 px-2 py-1 backdrop-blur-sm">
+        <span className="h-2 w-2 rounded-full bg-[#38bdf8] shadow-[0_0_8px_#38bdf8]" />
+        <span className="text-[10px] font-medium tracking-wide text-white/80">LiDAR point cloud</span>
       </div>
+      <div className="absolute bottom-3 left-4 flex items-center gap-3">
+        <span className="text-[9px] uppercase tracking-wider text-white/45">Elevation</span>
+        <div className="flex h-2 w-24 overflow-hidden rounded-sm">
+          {["#1e3a8a", "#2563eb", "#3b82f6", "#60a5fa", "#38bdf8"].map((c) => (
+            <span key={c} className="h-full flex-1" style={{ backgroundColor: c }} />
+          ))}
+        </div>
+        <span className="font-mono text-[9px] text-[#60a5fa]">142m – 318m</span>
+      </div>
+      <div className="absolute bottom-3 right-4 rounded-md border border-white/10 bg-black/40 px-2 py-1 font-mono text-[9px] text-white/60 backdrop-blur-sm">
+        842K pts · 2.4cm GSD
+      </div>
+    </div>
+  );
+}
+
+function SiteMapPanel() {
+  return (
+    <div className="relative min-h-[160px] overflow-hidden rounded-xl border border-white/10">
+      <Image src={SITE_MAP} alt="" fill className="object-cover" sizes="560px" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#020617]/80 via-[#020617]/20 to-[#020617]/30" />
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(37,99,235,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(37,99,235,0.12)_1px,transparent_1px)] bg-[size:20px_20px]" />
+      {/* Survey polygon overlay */}
+      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 400 160" preserveAspectRatio="none" aria-hidden>
+        <polygon
+          points="60,100 140,60 260,70 340,90 300,130 120,140"
+          fill="rgba(37,99,235,0.15)"
+          stroke="#60a5fa"
+          strokeWidth="1.5"
+          strokeDasharray="6 4"
+        />
+        <line x1="140" y1="60" x2="140" y2="140" stroke="#38bdf8" strokeOpacity="0.4" strokeWidth="1" />
+        <line x1="260" y1="70" x2="260" y2="130" stroke="#38bdf8" strokeOpacity="0.4" strokeWidth="1" />
+      </svg>
+      <div className="absolute left-[34%] top-[38%] h-3.5 w-3.5 rounded-full border-2 border-white bg-[#2563eb] shadow-[0_0_16px_rgba(37,99,235,0.9)]" />
+      <div className="absolute left-[52%] top-[52%] h-3.5 w-3.5 rounded-full border-2 border-white bg-[#60a5fa] shadow-[0_0_16px_rgba(96,165,250,0.9)]" />
+      <div className="absolute left-[68%] top-[44%] h-3.5 w-3.5 rounded-full border-2 border-white bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.8)]" />
+      <div className="absolute left-3 top-3 rounded-md border border-white/10 bg-black/50 px-2.5 py-1 backdrop-blur-sm">
+        <p className="text-[10px] font-semibold text-white">Site Intelligence</p>
+        <p className="text-[9px] text-[#60a5fa]">Orthomosaic · 3 zones active</p>
+      </div>
+      <div className="absolute bottom-3 left-3 flex items-center gap-2 rounded-md border border-white/10 bg-black/50 px-2 py-1 backdrop-blur-sm">
+        <span className="h-2 w-2 rounded-full bg-[#2563eb]" />
+        <span className="text-[9px] text-white/70">Survey boundary</span>
+        <span className="h-2 w-2 rounded-full bg-amber-400" />
+        <span className="text-[9px] text-white/70">Flagged</span>
+      </div>
+      <div className="absolute bottom-3 right-3 font-mono text-[9px] text-white/50">1:2,500</div>
     </div>
   );
 }
 
 export default function GeospatialDashboard() {
   return (
-    <div className="overflow-hidden rounded-[20px] border border-white/20 bg-[#07111f]/75 p-4 shadow-[0_80px_180px_rgba(0,0,0,0.88),0_32px_64px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.06),inset_0_1px_0_rgba(255,255,255,0.14)] backdrop-blur-2xl sm:p-5">
-      <div className="mb-4 flex items-center justify-between px-0.5">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#60a5fa]">
-            Intelligence Platform
-          </p>
-          <p className="mt-1 text-[15px] font-semibold text-white">Westport Logistics Hub</p>
+    <div className="origin-bottom-right scale-[1.17] overflow-hidden rounded-[22px] border border-white/25 bg-[#060d18]/85 p-5 shadow-[0_100px_200px_rgba(0,0,0,0.92),0_40px_80px_rgba(0,0,0,0.65),0_0_80px_rgba(37,99,235,0.08),inset_0_1px_0_rgba(255,255,255,0.16)] backdrop-blur-3xl sm:p-6">
+      {/* Window chrome */}
+      <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-4">
+        <div className="flex items-center gap-3">
+          <div className="flex gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
+            <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
+            <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
+          </div>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#60a5fa]">
+              Intelligence Platform
+            </p>
+            <p className="mt-0.5 text-base font-semibold text-white">Westport Logistics Hub</p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="hidden h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400 sm:inline-block" />
-          <div className="rounded-full border border-[#2563eb]/35 bg-[#2563eb]/15 px-3 py-1 text-[10px] font-medium text-[#93c5fd]">
+          <span className="hidden font-mono text-[9px] text-white/40 sm:inline">SYNC 12s ago</span>
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+          <div className="rounded-full border border-[#2563eb]/40 bg-[#2563eb]/20 px-3.5 py-1 text-[10px] font-semibold text-[#93c5fd]">
             Live
           </div>
         </div>
       </div>
 
-      {/* Primary row — progress + terrain heatmap */}
-      <div className="grid gap-4 lg:grid-cols-[1.15fr_1fr]">
+      {/* Tab bar */}
+      <div className="mb-4 flex gap-1 rounded-lg border border-white/8 bg-white/[0.04] p-1">
+        {["Overview", "Analytics", "Terrain", "Reports"].map((tab, i) => (
+          <span
+            key={tab}
+            className={`rounded-md px-3 py-1.5 text-[10px] font-medium ${
+              i === 0
+                ? "bg-[#2563eb]/25 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
+                : "text-white/45"
+            }`}
+          >
+            {tab}
+          </span>
+        ))}
+      </div>
+
+      {/* Hero terrain panel */}
+      <GlassCard className="mb-4 p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <div>
+            <p className="text-sm font-semibold text-white">3D Terrain Model</p>
+            <p className="mt-0.5 text-[10px] text-white/50">Processed from today&apos;s LiDAR survey</p>
+          </div>
+          <span className="rounded-md border border-[#2563eb]/30 bg-[#2563eb]/10 px-2 py-1 font-mono text-[9px] text-[#60a5fa]">
+            DEM v2.4
+          </span>
+        </div>
+        <TerrainModel3D />
+      </GlassCard>
+
+      {/* Analytics row */}
+      <div className="mb-4 grid gap-4 lg:grid-cols-[1.2fr_1fr]">
         <GlassCard className="p-5">
           <div className="mb-4 flex items-end justify-between">
             <div>
               <p className="text-sm font-semibold text-white">Earthworks Progress</p>
-              <p className="mt-1.5 text-[2rem] font-bold leading-none text-white">68.4%</p>
+              <p className="mt-2 text-[2.25rem] font-bold leading-none tracking-tight text-white">68.4%</p>
             </div>
-            <p className="rounded-lg bg-[#2563eb]/15 px-2.5 py-1 text-[11px] font-medium text-[#60a5fa]">
-              +4.2% vs plan
-            </p>
+            <div className="text-right">
+              <p className="rounded-lg bg-emerald-500/15 px-2.5 py-1 text-[11px] font-semibold text-emerald-300">
+                +4.2% vs plan
+              </p>
+              <p className="mt-1 font-mono text-[9px] text-white/40">Target: 72% by Q3</p>
+            </div>
           </div>
-          <svg viewBox="0 0 360 140" className="h-[140px] w-full" aria-hidden>
+          <svg viewBox="0 0 400 160" className="h-[160px] w-full" aria-hidden>
             <defs>
               <linearGradient id="heroProgressFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#2563eb" stopOpacity="0.5" />
+                <stop offset="0%" stopColor="#2563eb" stopOpacity="0.55" />
                 <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
               </linearGradient>
             </defs>
-            {[0, 1, 2, 3, 4, 5].map((i) => (
-              <line
-                key={i}
-                x1="0"
-                y1={18 + i * 22}
-                x2="360"
-                y2={18 + i * 22}
-                stroke="rgba(255,255,255,0.07)"
-                strokeWidth="1"
-              />
-            ))}
-            <path
-              d="M0,118 L45,106 L90,94 L135,82 L180,68 L225,54 L270,40 L315,26 L360,14 L360,140 L0,140 Z"
-              fill="url(#heroProgressFill)"
-            />
-            <polyline
-              points="0,118 45,106 90,94 135,82 180,68 225,54 270,40 315,26 360,14"
-              fill="none"
-              stroke="#3b82f6"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <circle cx="360" cy="14" r="5" fill="#60a5fa" />
-          </svg>
-        </GlassCard>
-
-        <GlassCard className="p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <p className="text-sm font-semibold text-white">3D Terrain Model</p>
-            <p className="text-[10px] text-[#60a5fa]">LiDAR capture</p>
-          </div>
-          <TerrainHeatmap />
-        </GlassCard>
-      </div>
-
-      {/* Secondary row */}
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
-        <GlassCard className="p-4">
-          <p className="text-xs font-semibold text-white">Volume Analytics</p>
-          <p className="mt-1.5 text-xl font-bold text-white">842K m³</p>
-          <svg viewBox="0 0 280 96" className="mt-4 h-[96px] w-full" aria-hidden>
             {[0, 1, 2, 3, 4, 5, 6].map((i) => (
               <line
                 key={i}
                 x1="0"
-                y1={12 + i * 14}
-                x2="280"
-                y2={12 + i * 14}
+                y1={16 + i * 22}
+                x2="400"
+                y2={16 + i * 22}
                 stroke="rgba(255,255,255,0.06)"
                 strokeWidth="1"
               />
             ))}
+            <path
+              d="M0,136 L50,122 L100,108 L150,92 L200,74 L250,58 L300,42 L350,28 L400,14 L400,160 L0,160 Z"
+              fill="url(#heroProgressFill)"
+            />
+            <polyline
+              points="0,136 50,122 100,108 150,92 200,74 250,58 300,42 350,28 400,14"
+              fill="none"
+              stroke="#3b82f6"
+              strokeWidth="3.5"
+              strokeLinecap="round"
+            />
+            <circle cx="400" cy="14" r="6" fill="#60a5fa" stroke="#e0f2fe" strokeWidth="2" />
+          </svg>
+        </GlassCard>
+
+        <GlassCard className="p-5">
+          <p className="text-sm font-semibold text-white">Volume Analytics</p>
+          <p className="mt-2 text-2xl font-bold text-white">842K m³</p>
+          <p className="mt-1 font-mono text-[9px] text-white/40">Cut 412K · Fill 430K</p>
+          <svg viewBox="0 0 300 110" className="mt-4 h-[110px] w-full" aria-hidden>
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <line
+                key={i}
+                x1="0"
+                y1={14 + i * 18}
+                x2="300"
+                y2={14 + i * 18}
+                stroke="rgba(255,255,255,0.05)"
+                strokeWidth="1"
+              />
+            ))}
             {[
-              { x: 18, h: 36 },
-              { x: 54, h: 52 },
-              { x: 90, h: 44 },
-              { x: 126, h: 68 },
-              { x: 162, h: 58 },
-              { x: 198, h: 76 },
-              { x: 234, h: 64 },
+              { x: 20, h: 42, fill: "#1e40af" },
+              { x: 58, h: 62, fill: "#2563eb" },
+              { x: 96, h: 50, fill: "#3b82f6" },
+              { x: 134, h: 78, fill: "#2563eb" },
+              { x: 172, h: 68, fill: "#3b82f6" },
+              { x: 210, h: 88, fill: "#60a5fa" },
+              { x: 248, h: 72, fill: "#3b82f6" },
             ].map((bar) => (
               <rect
                 key={bar.x}
                 x={bar.x}
-                y={88 - bar.h}
-                width="22"
+                y={102 - bar.h}
+                width="26"
                 height={bar.h}
                 rx="4"
-                fill="#2563eb"
-                opacity="0.92"
+                fill={bar.fill}
               />
             ))}
           </svg>
         </GlassCard>
-
-        <GlassCard className="overflow-hidden p-0">
-          <div className="border-b border-white/10 px-4 py-3">
-            <p className="text-xs font-semibold text-white">Site Intelligence</p>
-          </div>
-          <div className="relative aspect-[16/11]">
-            <Image src={SITE_MAP} alt="" fill className="object-cover" sizes="320px" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#020617]/60 via-[#020617]/10 to-transparent" />
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(37,99,235,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(37,99,235,0.08)_1px,transparent_1px)] bg-[size:24px_24px]" />
-            <div className="absolute left-[38%] top-[42%] h-3 w-3 rounded-full border-2 border-white bg-[#2563eb] shadow-[0_0_12px_rgba(37,99,235,0.8)]" />
-            <div className="absolute left-[56%] top-[58%] h-3 w-3 rounded-full border-2 border-white bg-[#60a5fa] shadow-[0_0_12px_rgba(96,165,250,0.8)]" />
-          </div>
-        </GlassCard>
       </div>
 
-      {/* Metrics row */}
-      <div className="mt-4 grid grid-cols-3 gap-3">
-        <GlassCard className="p-3.5">
-          <p className="text-[10px] font-medium text-white/50">Reports</p>
-          <p className="mt-2 text-[15px] font-semibold text-white">12 active</p>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
-            <div className="h-full w-[75%] rounded-full bg-[#2563eb]" />
-          </div>
-          <p className="mt-1.5 text-[10px] text-[#60a5fa]">3 pending review</p>
-        </GlassCard>
+      {/* Site map */}
+      <GlassCard className="mb-4 overflow-hidden p-0">
+        <SiteMapPanel />
+      </GlassCard>
 
-        <GlassCard className="p-3.5">
-          <p className="text-[10px] font-medium text-white/50">Issues</p>
-          <p className="mt-2 text-[15px] font-semibold text-white">3 flagged</p>
-          <div className="mt-2 flex gap-1">
-            {[1, 2, 3].map((n) => (
-              <span key={n} className="h-1.5 flex-1 rounded-full bg-amber-400/70" />
-            ))}
-          </div>
-          <p className="mt-1.5 text-[10px] text-amber-300/90">Zone B, D, F</p>
-        </GlassCard>
-
-        <GlassCard className="p-3.5">
-          <p className="text-[10px] font-medium text-white/50">Survey Coverage</p>
-          <p className="mt-2 text-[15px] font-semibold text-white">96.8%</p>
-          <svg viewBox="0 0 80 24" className="mt-2 h-6 w-full" aria-hidden>
-            <polyline
-              points="0,18 12,14 24,16 36,10 48,12 60,6 72,8 80,4"
-              fill="none"
-              stroke="#3b82f6"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </svg>
-          <p className="mt-1 text-[10px] text-[#60a5fa]">On schedule</p>
-        </GlassCard>
+      {/* KPI strip */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          { label: "Reports", value: "12 active", sub: "3 pending", bar: 75 },
+          { label: "Issues", value: "3 flagged", sub: "Zone B, D, F", warn: true },
+          { label: "Survey Coverage", value: "96.8%", sub: "On schedule", spark: true },
+          { label: "Cut / Fill Δ", value: "+18K m³", sub: "Within tolerance", bar: 60 },
+        ].map((kpi) => (
+          <GlassCard key={kpi.label} className="p-3.5">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-white/45">{kpi.label}</p>
+            <p className="mt-2 text-[15px] font-semibold text-white">{kpi.value}</p>
+            {kpi.bar !== undefined && (
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className={`h-full rounded-full ${kpi.warn ? "bg-amber-400" : "bg-[#2563eb]"}`}
+                  style={{ width: `${kpi.bar}%` }}
+                />
+              </div>
+            )}
+            {kpi.spark && (
+              <svg viewBox="0 0 80 20" className="mt-2 h-5 w-full" aria-hidden>
+                <polyline
+                  points="0,16 10,12 20,14 30,8 40,10 50,5 60,7 70,3 80,6"
+                  fill="none"
+                  stroke="#3b82f6"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+            )}
+            {kpi.warn && (
+              <div className="mt-2 flex gap-1">
+                {[1, 2, 3].map((n) => (
+                  <span key={n} className="h-1.5 flex-1 rounded-full bg-amber-400/80" />
+                ))}
+              </div>
+            )}
+            <p className={`mt-1.5 text-[10px] ${kpi.warn ? "text-amber-300/90" : "text-[#60a5fa]"}`}>
+              {kpi.sub}
+            </p>
+          </GlassCard>
+        ))}
       </div>
     </div>
   );
