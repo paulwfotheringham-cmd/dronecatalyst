@@ -31,17 +31,17 @@ export default function Navbar() {
             : "sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-xl"
         }
       >
-        <div className="mx-auto max-w-[1536px] px-12 lg:grid lg:h-[72px] lg:grid-cols-[minmax(220px,1fr)_auto_minmax(220px,1fr)] lg:items-center lg:px-16 xl:px-20">
-          <div className="flex h-[64px] items-center justify-between lg:h-full lg:contents">
+        <div className="mx-auto max-w-[1536px] px-12 lg:grid lg:h-[80px] lg:grid-cols-[minmax(240px,1fr)_auto_minmax(240px,1fr)] lg:items-center lg:px-16 xl:px-20">
+          <div className="flex h-[68px] items-center justify-between lg:h-full lg:contents">
             {/* Left zone — logo */}
-            <div className="flex items-center justify-start lg:pr-8">
-              <Logo height={40} />
+            <div className="flex items-center justify-start lg:pr-10">
+              <Logo height={44} />
             </div>
 
             {/* Center zone — navigation */}
             <nav
               aria-label="Main navigation"
-              className="hidden items-center justify-center gap-12 lg:flex xl:gap-14"
+              className="hidden items-center justify-center gap-16 lg:flex xl:gap-20"
             >
               {NAV.map((link) => (
                 <Link
@@ -70,7 +70,7 @@ export default function Navbar() {
             </nav>
 
             {/* Right zone — contact */}
-            <div className="flex items-center justify-end gap-3 lg:pl-8">
+            <div className="flex items-center justify-end gap-3 lg:pl-10">
               <Link
                 href="/contact"
                 className={`hidden h-[36px] items-center rounded-md px-[16px] text-[14px] font-semibold lg:inline-flex ${

@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
+import DashboardMockup from "./DashboardMockup";
 
-const HERO_ARTWORK = "/images/hero-artwork.png";
+const MINE_IMAGE = "/images/site-intelligence.jpg";
 
 function HeroDroneAccent() {
   return (
@@ -33,36 +34,36 @@ function HeroDroneAccent() {
 export default function HomeHero() {
   return (
     <section className="relative overflow-hidden bg-[#050816]">
-      {/* Integrated hero visual — full-width scene with left-to-right blend */}
+      {/* Layer 1 — full-width mine scene */}
       <div className="pointer-events-none absolute inset-0" aria-hidden>
         <Image
-          src={HERO_ARTWORK}
+          src={MINE_IMAGE}
           alt=""
           fill
           priority
-          className="object-cover object-[62%_center] contrast-[1.1] saturate-[1.08]"
+          className="object-cover object-center"
           sizes="100vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#050816] from-0% via-[#050816]/88 via-32% to-[#050816]/10 to-72%" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#071428]/95 via-[#050816]/45 via-38% to-transparent to-80%" />
-        <div
-          className="absolute inset-0 opacity-35"
-          style={{
-            background:
-              "radial-gradient(ellipse 50% 60% at 10% 20%, rgba(37,99,235,0.35), transparent 70%)",
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#050816]/50 via-transparent to-[#050816]/15" />
       </div>
 
-      {/* Subtle drone — right side only */}
-      <div className="pointer-events-none absolute right-[6%] top-[16%] z-[1] hidden h-[120px] w-[168px] opacity-90 lg:block xl:right-[10%] xl:top-[14%] xl:h-[136px] xl:w-[190px]">
+      {/* Layer 2 — left-side readability overlay only */}
+      <div
+        className="pointer-events-none absolute inset-y-0 left-0 z-[1] w-full max-w-[820px]"
+        aria-hidden
+        style={{
+          background:
+            "linear-gradient(to right, rgba(5, 8, 22, 0.94) 0%, rgba(5, 8, 22, 0.88) 18%, rgba(5, 8, 22, 0.62) 42%, rgba(5, 8, 22, 0.22) 58%, transparent 72%)",
+        }}
+      />
+
+      {/* Layer 3 — drone, upper-right */}
+      <div className="pointer-events-none absolute right-[6%] top-[28%] z-[2] hidden h-[120px] w-[168px] opacity-90 lg:block xl:right-[9%] xl:top-[30%] xl:h-[136px] xl:w-[190px]">
         <HeroDroneAccent />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-[1280px] px-6 pb-12 pt-[104px] sm:px-8 lg:px-6 lg:pb-16 lg:pt-[120px]">
-        <div className="grid items-center gap-8 lg:grid-cols-[44%_56%] lg:gap-8 xl:gap-10">
-          {/* Left column */}
+      <div className="relative z-10 mx-auto max-w-[1280px] px-6 pb-16 pt-[104px] sm:px-8 lg:px-6 lg:pb-20 lg:pt-[120px]">
+        <div className="grid items-start gap-10 lg:grid-cols-[44%_56%] lg:gap-8 xl:gap-10">
+          {/* Left column — copy */}
           <div className="max-w-[560px]">
             <h1 className="text-[2.5rem] font-bold leading-[0.98] tracking-[-0.03em] text-white sm:text-[3.25rem] lg:text-[3.75rem] xl:text-[4.25rem]">
               FROM DRONE
@@ -100,8 +101,14 @@ export default function HomeHero() {
             </div>
           </div>
 
-          {/* Right column — visual continues through integrated background */}
-          <div className="relative hidden min-h-[420px] lg:block xl:min-h-[480px]" aria-hidden />
+          {/* Layer 4 — floating dashboard, lower-right */}
+          <div className="relative min-h-[280px] sm:min-h-[320px] lg:min-h-[460px]">
+            <div className="absolute bottom-0 left-1/2 z-20 w-[108%] max-w-[680px] -translate-x-1/2 lg:left-auto lg:right-0 lg:w-[112%] lg:max-w-[720px] lg:translate-x-[6%] xl:translate-x-[8%]">
+              <div className="rounded-xl border border-white/10 bg-[#0c1424]/98 p-1.5 shadow-[0_32px_80px_rgba(0,0,0,0.55),0_12px_32px_rgba(0,0,0,0.35)] backdrop-blur-sm sm:rounded-2xl sm:p-2">
+                <DashboardMockup />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
