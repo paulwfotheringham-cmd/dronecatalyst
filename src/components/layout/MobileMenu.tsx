@@ -62,6 +62,13 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
         >
           Contact Us
         </Link>
+        <Link
+          href="/test1"
+          onClick={onClose}
+          className="mt-3 inline-flex items-center justify-center rounded-md border border-[#cfe0ff] px-4 py-3 text-sm font-semibold text-[#0b2d63]"
+        >
+          Login
+        </Link>
       </nav>
     </div>
   );
