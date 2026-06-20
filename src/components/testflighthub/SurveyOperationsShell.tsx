@@ -3,18 +3,31 @@
 import { useState } from "react";
 import { Menu } from "lucide-react";
 
+import {
+  surveyViewTitles,
+  type SurveyOperationsView,
+} from "@/lib/survey-operations-mock-data";
+
 import SurveyOperationsSidebar from "./SurveyOperationsSidebar";
 
 export default function SurveyOperationsShell({
   children,
   title = "Operations Dashboard",
   subtitle = "Survey Operations",
+  activeView,
+  onViewChange,
 }: {
   children: React.ReactNode;
   title?: string;
   subtitle?: string;
+  activeView?: SurveyOperationsView;
+  onViewChange?: (view: SurveyOperationsView) => void;
 }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const resolvedTitle =
+    activeView != null ? surveyViewTitles[activeView].title : title;
+  const resolvedSubtitle =
+    activeView != null ? surveyViewTitles[activeView].subtitle : subtitle;
 
   return (
     <div className="flex h-full min-h-0 w-full">
@@ -30,6 +43,8 @@ export default function SurveyOperationsShell({
       <SurveyOperationsSidebar
         mobileOpen={mobileNavOpen}
         onClose={() => setMobileNavOpen(false)}
+        activeView={activeView}
+        onViewChange={onViewChange}
       />
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[#020617]">
@@ -45,9 +60,9 @@ export default function SurveyOperationsShell({
             </button>
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#60a5fa]">
-                {subtitle}
+                {resolvedSubtitle}
               </p>
-              <h1 className="text-base font-semibold text-white sm:text-lg">{title}</h1>
+              <h1 className="text-base font-semibold text-white sm:text-lg">{resolvedTitle}</h1>
             </div>
           </div>
           <div className="hidden items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-300 sm:inline-flex">

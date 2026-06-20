@@ -1,26 +1,182 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { useSearchParams } from "next/navigation";
 
+import {
+  createInitialMissions,
+  createMissionEvent,
+  type ManagedMission,
+} from "@/lib/mission-management-data";
+import {
+  isSurveyOperationsView,
+  type SurveyOperationsView,
+} from "@/lib/survey-operations-mock-data";
 import type { Telemetry } from "@/lib/telemetry";
 
 import FleetPanel from "./FleetPanel";
-import FlightHubSandbox from "./FlightHubSandbox";
+import FlightHubSandbox, { type FlightHubSandboxHandle } from "./FlightHubSandbox";
+import MissionManagementWorkspace from "./MissionManagementWorkspace";
 import MissionOverviewPanel from "./MissionOverviewPanel";
 import RecentMissionsPanel from "./RecentMissionsPanel";
+import SurveyOperationsPlaceholder from "./SurveyOperationsPlaceholder";
 import SurveyOperationsShell from "./SurveyOperationsShell";
 
+function readInitialView(searchParams: ReturnType<typeof useSearchParams>): SurveyOperationsView {
+  const viewParam = searchParams.get("view");
+  return isSurveyOperationsView(viewParam) ? viewParam : "dashboard";
+}
+
 export default function SurveyOperationsDashboard() {
+  const searchParams = useSearchParams();
+  const [activeView, setActiveView] = useState<SurveyOperationsView>(() =>
+    readInitialView(searchParams),
+  );
   const [liveTelemetry, setLiveTelemetry] = useState<Telemetry | null>(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [missions, setMissions] = useState<ManagedMission[]>(() => createInitialMissions());
+  const [selectedMissionId, setSelectedMissionId] = useState("mission-1");
+  const [runningMissionId, setRunningMissionId] = useState<string | null>(null);
+  const sandboxRef = useRef<FlightHubSandboxHandle>(null);
+  const activeMissionIdRef = useRef<string | null>(null);
+  const lowBatteryWarnedRef = useRef<Set<string>>(new Set());
+  const waypointMilestonesRef = useRef<Map<string, number>>(new Map());
+  const dashboardSandboxHostRef = useRef<HTMLDivElement>(null);
+  const missionsSandboxHostRef = useRef<HTMLDivElement>(null);
+  const hiddenSandboxHostRef = useRef<HTMLDivElement>(null);
+  const [sandboxHost, setSandboxHost] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const viewParam = searchParams.get("view");
+    if (isSurveyOperationsView(viewParam)) {
+      setActiveView(viewParam);
+    } else if (!viewParam) {
+      setActiveView("dashboard");
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (activeView === "dashboard") {
+      url.searchParams.delete("view");
+    } else {
+      url.searchParams.set("view", activeView);
+    }
+    window.history.replaceState({}, "", url.toString());
+  }, [activeView]);
+
+  useLayoutEffect(() => {
+    const host =
+      activeView === "dashboard"
+        ? dashboardSandboxHostRef.current
+        : activeView === "missions"
+          ? missionsSandboxHostRef.current
+          : hiddenSandboxHostRef.current;
+
+    setSandboxHost(host);
+  }, [activeView]);
 
   const handleTelemetryChange = useCallback((telemetry: Telemetry | null, running: boolean) => {
     setLiveTelemetry(telemetry);
     setIsRunning(running);
   }, []);
 
+  const handleViewChange = useCallback((view: SurveyOperationsView) => {
+    setActiveView(view);
+  }, []);
+
+  useEffect(() => {
+    const activeMission = missions.find(
+      (mission) =>
+        mission.id === runningMissionId &&
+        mission.status === "IN PROGRESS" &&
+        !mission.paused &&
+        isRunning,
+    );
+
+    activeMissionIdRef.current = activeMission?.id ?? null;
+  }, [missions, runningMissionId, isRunning]);
+
+  useEffect(() => {
+    if (!isRunning || !activeMissionIdRef.current) return;
+
+    const interval = setInterval(() => {
+      setMissions((currentMissions) =>
+        currentMissions.map((mission) => {
+          if (
+            mission.id !== activeMissionIdRef.current ||
+            mission.status !== "IN PROGRESS" ||
+            mission.paused
+          ) {
+            return mission;
+          }
+
+          const nextProgress = Math.min(99, mission.progressPct + 2 + Math.random() * 4);
+          const previousMilestone = waypointMilestonesRef.current.get(mission.id) ?? 0;
+          const nextMilestone = Math.floor(nextProgress / 25) * 25;
+          let events = mission.events;
+
+          if (nextMilestone > previousMilestone && nextMilestone > 0 && nextMilestone < 100) {
+            waypointMilestonesRef.current.set(mission.id, nextMilestone);
+            events = [
+              ...events,
+              createMissionEvent(
+                "Waypoint Reached",
+                new Date(),
+                `Progress checkpoint ${nextMilestone}%`,
+              ),
+            ];
+          }
+
+          return {
+            ...mission,
+            progressPct: nextProgress,
+            events,
+          };
+        }),
+      );
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [isRunning, runningMissionId]);
+
+  useEffect(() => {
+    if (!liveTelemetry || !activeMissionIdRef.current) return;
+    if (liveTelemetry.batteryPct >= 30) return;
+
+    const missionId = activeMissionIdRef.current;
+    if (lowBatteryWarnedRef.current.has(missionId)) return;
+
+    lowBatteryWarnedRef.current.add(missionId);
+    setMissions((currentMissions) =>
+      currentMissions.map((mission) => {
+        if (mission.id !== missionId) return mission;
+
+        return {
+          ...mission,
+          events: [
+            ...mission.events,
+            createMissionEvent(
+              "Low Battery Warning",
+              new Date(),
+              `Battery at ${liveTelemetry.batteryPct.toFixed(0)}%`,
+            ),
+          ],
+        };
+      }),
+    );
+  }, [liveTelemetry]);
+
+  const sandbox =
+    sandboxHost &&
+    createPortal(
+      <FlightHubSandbox ref={sandboxRef} onTelemetryChange={handleTelemetryChange} />,
+      sandboxHost,
+    );
+
   return (
-    <SurveyOperationsShell>
+    <SurveyOperationsShell activeView={activeView} onViewChange={handleViewChange}>
       <div className="relative px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
         <div
           className="pointer-events-none absolute inset-0"
@@ -32,20 +188,66 @@ export default function SurveyOperationsDashboard() {
         />
 
         <div className="relative space-y-6">
-          <MissionOverviewPanel />
+          {activeView === "dashboard" && (
+            <>
+              <MissionOverviewPanel />
 
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-            <div className="space-y-6">
-              <FlightHubSandbox onTelemetryChange={handleTelemetryChange} />
-            </div>
+              <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+                <div ref={dashboardSandboxHostRef} className="space-y-6" />
+                <div className="space-y-6">
+                  <FleetPanel liveTelemetry={liveTelemetry} isRunning={isRunning} />
+                  <RecentMissionsPanel />
+                </div>
+              </div>
+            </>
+          )}
 
-            <div className="space-y-6">
-              <FleetPanel liveTelemetry={liveTelemetry} isRunning={isRunning} />
-              <RecentMissionsPanel />
-            </div>
-          </div>
+          {activeView === "missions" && (
+            <>
+              <MissionManagementWorkspace
+                missions={missions}
+                selectedMissionId={selectedMissionId}
+                onSelectMission={setSelectedMissionId}
+                onMissionsChange={setMissions}
+                sandboxRef={sandboxRef}
+                onRunningMissionChange={setRunningMissionId}
+              />
+              <div ref={missionsSandboxHostRef} className="space-y-6" />
+            </>
+          )}
+
+          {activeView === "clients" && (
+            <SurveyOperationsPlaceholder
+              title="Clients"
+              description="Client records and contact management will appear here in a future phase."
+            />
+          )}
+
+          {activeView === "sites" && (
+            <SurveyOperationsPlaceholder
+              title="Sites"
+              description="Registered survey sites and geofences will be managed from this view."
+            />
+          )}
+
+          {activeView === "fleet" && (
+            <SurveyOperationsPlaceholder
+              title="Fleet"
+              description="Fleet-wide asset status and hangar assignments will be expanded in a later phase."
+            />
+          )}
+
+          {activeView === "flight-logs" && (
+            <SurveyOperationsPlaceholder
+              title="Flight Logs"
+              description="Historical flight logs and export tools will be connected here."
+            />
+          )}
         </div>
       </div>
+
+      <div ref={hiddenSandboxHostRef} className="hidden" aria-hidden />
+      {sandbox}
     </SurveyOperationsShell>
   );
 }

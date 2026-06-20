@@ -78,24 +78,73 @@ export const recentMissions = [
   },
 ] as const;
 
+export type SurveyOperationsView =
+  | "dashboard"
+  | "clients"
+  | "sites"
+  | "missions"
+  | "fleet"
+  | "flight-logs";
+
 export const surveyNavItems = [
-  { label: "Dashboard", icon: "LayoutDashboard", href: "/testflighthub" },
-  { label: "Clients", icon: "Building2", href: "/testflighthub" },
-  { label: "Sites", icon: "MapPin", href: "/testflighthub" },
-  { label: "Missions", icon: "Target", href: "/testflighthub" },
-  { label: "Fleet", icon: "Plane", href: "/testflighthub" },
-  { label: "Live Telemetry", icon: "Radio", href: "/telemetry" },
-  { label: "Flight Logs", icon: "ScrollText", href: "/testflighthub" },
+  { label: "Dashboard", icon: "LayoutDashboard", view: "dashboard" as const, href: "/testflighthub" },
+  { label: "Clients", icon: "Building2", view: "clients" as const, href: "/testflighthub" },
+  { label: "Sites", icon: "MapPin", view: "sites" as const, href: "/testflighthub" },
+  { label: "Missions", icon: "Target", view: "missions" as const, href: "/testflighthub" },
+  { label: "Fleet", icon: "Plane", view: "fleet" as const, href: "/testflighthub" },
+  { label: "Live Telemetry", icon: "Radio", view: null, href: "/telemetry" },
+  { label: "Flight Logs", icon: "ScrollText", view: "flight-logs" as const, href: "/testflighthub" },
 ] as const;
 
-export function isSurveyNavItemActive(pathname: string, label: string, href: string) {
+const surveyOperationsViews: SurveyOperationsView[] = [
+  "dashboard",
+  "clients",
+  "sites",
+  "missions",
+  "fleet",
+  "flight-logs",
+];
+
+export function isSurveyOperationsView(value: string | null): value is SurveyOperationsView {
+  return surveyOperationsViews.includes(value as SurveyOperationsView);
+}
+
+export function getSurveyNavHref(view: SurveyOperationsView | null, href: string) {
   if (href === "/telemetry") {
+    return href;
+  }
+
+  if (!view || view === "dashboard") {
+    return "/testflighthub";
+  }
+
+  return `/testflighthub?view=${view}`;
+}
+
+export function isSurveyNavItemActive(
+  pathname: string,
+  item: (typeof surveyNavItems)[number],
+  activeView?: SurveyOperationsView | null,
+) {
+  if (item.href === "/telemetry") {
     return pathname === "/telemetry";
   }
 
-  if (label === "Dashboard") {
-    return pathname === "/testflighthub";
+  if (pathname === "/testflighthub" && activeView != null) {
+    return item.view === activeView;
   }
 
-  return false;
+  return item.view === "dashboard" && pathname === "/testflighthub";
 }
+
+export const surveyViewTitles: Record<
+  SurveyOperationsView,
+  { title: string; subtitle: string }
+> = {
+  dashboard: { title: "Operations Dashboard", subtitle: "Survey Operations" },
+  clients: { title: "Client Directory", subtitle: "Survey Operations" },
+  sites: { title: "Site Registry", subtitle: "Survey Operations" },
+  missions: { title: "Mission Management", subtitle: "Survey Operations" },
+  fleet: { title: "Fleet Overview", subtitle: "Survey Operations" },
+  "flight-logs": { title: "Flight Logs", subtitle: "Survey Operations" },
+};

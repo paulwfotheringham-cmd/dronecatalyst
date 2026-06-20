@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 
 import {
   DRONE_ID,
@@ -105,216 +105,256 @@ function TelemetryField({ label, value }: { label: string; value: string }) {
   );
 }
 
+export type FlightHubSandboxHandle = {
+  generateTestDrone: () => Promise<void>;
+  startSimulation: () => Promise<void>;
+  stopSimulation: () => Promise<void>;
+  resetFlight: () => Promise<void>;
+  startMissionFlow: () => Promise<void>;
+  hasTelemetry: () => boolean;
+  isSimulationRunning: () => boolean;
+};
+
 type FlightHubSandboxProps = {
   onTelemetryChange?: (telemetry: Telemetry | null, isRunning: boolean) => void;
 };
 
-export default function FlightHubSandbox({ onTelemetryChange }: FlightHubSandboxProps) {
-  const [telemetry, setTelemetry] = useState<Telemetry | null>(null);
-  const [flightPath, setFlightPath] = useState<LatLng[]>([]);
-  const [isRunning, setIsRunning] = useState(false);
+const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProps>(
+  function FlightHubSandbox({ onTelemetryChange }, ref) {
+    const [telemetry, setTelemetry] = useState<Telemetry | null>(null);
+    const [flightPath, setFlightPath] = useState<LatLng[]>([]);
+    const [isRunning, setIsRunning] = useState(false);
+    const telemetryRef = useRef<Telemetry | null>(null);
 
-  useEffect(() => {
-    onTelemetryChange?.(telemetry, isRunning);
-  }, [telemetry, isRunning, onTelemetryChange]);
+    useEffect(() => {
+      telemetryRef.current = telemetry;
+    }, [telemetry]);
 
-  useEffect(() => {
-    if (!telemetry || !isRunning) return;
+    useEffect(() => {
+      onTelemetryChange?.(telemetry, isRunning);
+    }, [telemetry, isRunning, onTelemetryChange]);
 
-    const point = toLatLng(telemetry);
+    useEffect(() => {
+      if (!telemetry || !isRunning) return;
 
-    setFlightPath((currentPath) => {
-      const lastPoint = currentPath[currentPath.length - 1];
-      if (lastPoint && lastPoint[0] === point[0] && lastPoint[1] === point[1]) {
-        return currentPath;
+      const point = toLatLng(telemetry);
+
+      setFlightPath((currentPath) => {
+        const lastPoint = currentPath[currentPath.length - 1];
+        if (lastPoint && lastPoint[0] === point[0] && lastPoint[1] === point[1]) {
+          return currentPath;
+        }
+
+        return [...currentPath, point];
+      });
+    }, [telemetry, isRunning]);
+
+    useEffect(() => {
+      let cancelled = false;
+
+      async function loadLatestTelemetry() {
+        const latest = await fetchLatestTelemetry();
+        if (cancelled || !latest) return;
+
+        setTelemetry(latest);
+        setFlightPath([toLatLng(latest)]);
+        setIsRunning(latest.status === "IN FLIGHT");
       }
 
-      return [...currentPath, point];
-    });
-  }, [telemetry, isRunning]);
+      void loadLatestTelemetry();
 
-  useEffect(() => {
-    let cancelled = false;
+      return () => {
+        cancelled = true;
+      };
+    }, []);
 
-    async function loadLatestTelemetry() {
-      const latest = await fetchLatestTelemetry();
-      if (cancelled || !latest) return;
+    const persistTelemetry = useCallback(async (next: Telemetry) => {
+      try {
+        await saveTelemetry(next);
+      } catch {
+        // Persistence runs silently in the background.
+      }
+    }, []);
 
-      setTelemetry(latest);
-      setFlightPath([toLatLng(latest)]);
-      setIsRunning(latest.status === "IN FLIGHT");
-    }
+    const generateTestDrone = useCallback(async () => {
+      const initial = createInitialTelemetry();
+      const initialPoint = toLatLng(initial);
+      setIsRunning(false);
+      setTelemetry(initial);
+      setFlightPath([initialPoint]);
+      await persistTelemetry(initial);
+    }, [persistTelemetry]);
 
-    void loadLatestTelemetry();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const persistTelemetry = useCallback(async (next: Telemetry) => {
-    try {
-      await saveTelemetry(next);
-    } catch {
-      // Persistence runs silently in the background.
-    }
-  }, []);
-
-  const generateTestDrone = useCallback(async () => {
-    const initial = createInitialTelemetry();
-    const initialPoint = toLatLng(initial);
-    setIsRunning(false);
-    setTelemetry(initial);
-    setFlightPath([initialPoint]);
-    await persistTelemetry(initial);
-  }, [persistTelemetry]);
-
-  const startSimulation = useCallback(async () => {
-    setTelemetry((prev) => {
-      if (!prev) return prev;
-      const next = { ...prev, status: "IN FLIGHT" as const, lastUpdated: new Date() };
-      void persistTelemetry(next);
-      return next;
-    });
-    setIsRunning(true);
-  }, [persistTelemetry]);
-
-  const stopSimulation = useCallback(async () => {
-    setIsRunning(false);
-    setTelemetry((prev) => {
-      if (!prev) return prev;
-      const next = { ...prev, status: "STOPPED" as const, lastUpdated: new Date() };
-      void persistTelemetry(next);
-      return next;
-    });
-  }, [persistTelemetry]);
-
-  const resetFlight = useCallback(async () => {
-    try {
-      await clearTelemetryForDrone();
-    } catch {
-      // Reset still clears local state even if the API call fails.
-    }
-
-    setTelemetry(null);
-    setFlightPath([]);
-    setIsRunning(false);
-  }, []);
-
-  useEffect(() => {
-    if (!isRunning) return;
-
-    const interval = setInterval(() => {
+    const startSimulation = useCallback(async () => {
       setTelemetry((prev) => {
         if (!prev) return prev;
-        const next = jitterTelemetry(prev);
+        const next = { ...prev, status: "IN FLIGHT" as const, lastUpdated: new Date() };
         void persistTelemetry(next);
         return next;
       });
-    }, 3000);
+      setIsRunning(true);
+    }, [persistTelemetry]);
 
-    return () => clearInterval(interval);
-  }, [isRunning, persistTelemetry]);
+    const stopSimulation = useCallback(async () => {
+      setIsRunning(false);
+      setTelemetry((prev) => {
+        if (!prev) return prev;
+        const next = { ...prev, status: "STOPPED" as const, lastUpdated: new Date() };
+        void persistTelemetry(next);
+        return next;
+      });
+    }, [persistTelemetry]);
 
-  const hasTelemetry = telemetry !== null;
+    const resetFlight = useCallback(async () => {
+      try {
+        await clearTelemetryForDrone();
+      } catch {
+        // Reset still clears local state even if the API call fails.
+      }
 
-  return (
-    <>
-      <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-8">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#60a5fa]">
-            FlightHub Simulator
-          </p>
-          <h2 className="mt-1 text-lg font-semibold text-white">Simulator Controls</h2>
-          <p className="mt-2 text-sm text-white/60">
-            Generate a test drone, start or stop the live simulation, and verify telemetry writes to
-            Supabase.
-          </p>
-        </div>
+      setTelemetry(null);
+      setFlightPath([]);
+      setIsRunning(false);
+    }, []);
 
-        <div className="mt-6 flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={() => void generateTestDrone()}
-            className="inline-flex h-11 items-center justify-center rounded-xl bg-[#2563eb] px-5 text-sm font-semibold text-white shadow-[0_0_32px_rgba(37,99,235,0.35)] transition-colors hover:bg-[#1d4ed8]"
-          >
-            Generate Test Drone
-          </button>
-          <button
-            type="button"
-            onClick={() => void startSimulation()}
-            disabled={!hasTelemetry || isRunning}
-            className="inline-flex h-11 items-center justify-center rounded-xl border border-emerald-500/40 bg-emerald-500/15 px-5 text-sm font-semibold text-emerald-300 transition-colors hover:border-emerald-400/60 hover:bg-emerald-500/25 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            Start Simulation
-          </button>
-          <button
-            type="button"
-            onClick={() => void stopSimulation()}
-            disabled={!hasTelemetry || !isRunning}
-            className="inline-flex h-11 items-center justify-center rounded-xl border border-red-500/40 bg-red-500/15 px-5 text-sm font-semibold text-red-300 transition-colors hover:border-red-400/60 hover:bg-red-500/25 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            Stop Simulation
-          </button>
-          <button
-            type="button"
-            onClick={() => void resetFlight()}
-            disabled={!hasTelemetry}
-            className="inline-flex h-11 items-center justify-center rounded-xl border border-white/15 bg-white/[0.04] px-5 text-sm font-semibold text-white transition-colors hover:border-white/25 hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            Reset Flight
-          </button>
-        </div>
-      </section>
+    const startMissionFlow = useCallback(async () => {
+      if (telemetryRef.current === null) {
+        await generateTestDrone();
+      }
+      await startSimulation();
+    }, [generateTestDrone, startSimulation]);
 
-      <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-8">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+    useImperativeHandle(
+      ref,
+      () => ({
+        generateTestDrone,
+        startSimulation,
+        stopSimulation,
+        resetFlight,
+        startMissionFlow,
+        hasTelemetry: () => telemetryRef.current !== null,
+        isSimulationRunning: () => isRunning,
+      }),
+      [generateTestDrone, startSimulation, stopSimulation, resetFlight, startMissionFlow, isRunning],
+    );
+
+    useEffect(() => {
+      if (!isRunning) return;
+
+      const interval = setInterval(() => {
+        setTelemetry((prev) => {
+          if (!prev) return prev;
+          const next = jitterTelemetry(prev);
+          void persistTelemetry(next);
+          return next;
+        });
+      }, 3000);
+
+      return () => clearInterval(interval);
+    }, [isRunning, persistTelemetry]);
+
+    const hasTelemetry = telemetry !== null;
+
+    return (
+      <>
+        <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-8">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#60a5fa]">
-              Live Feed
+              FlightHub Simulator
             </p>
-            <h2 className="mt-1 text-lg font-semibold text-white">Live Telemetry</h2>
+            <h2 className="mt-1 text-lg font-semibold text-white">Simulator Controls</h2>
+            <p className="mt-2 text-sm text-white/60">
+              Generate a test drone, start or stop the live simulation, and verify telemetry writes to
+              Supabase.
+            </p>
           </div>
-          {telemetry && (
-            <span
-              className={`rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
-                telemetry.status === "IN FLIGHT"
-                  ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-300"
-                  : "border-white/20 bg-white/10 text-white/60"
-              }`}
+
+          <div className="mt-6 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => void generateTestDrone()}
+              className="inline-flex h-11 items-center justify-center rounded-xl bg-[#2563eb] px-5 text-sm font-semibold text-white shadow-[0_0_32px_rgba(37,99,235,0.35)] transition-colors hover:bg-[#1d4ed8]"
             >
-              {telemetry.status === "IN FLIGHT" ? "IN FLIGHT" : "STOPPED"}
-            </span>
-          )}
-        </div>
-
-        {!telemetry ? (
-          <p className="mt-6 text-base text-white/60">
-            No telemetry received yet. Use Generate Test Drone to begin a new session.
-          </p>
-        ) : (
-          <div className="mt-6 grid gap-3 sm:grid-cols-2">
-            <TelemetryField label="Drone ID" value={telemetry.droneId} />
-            <TelemetryField label="Status" value={telemetry.status} />
-            <TelemetryField label="Latitude" value={formatCoord(telemetry.latitude, 6)} />
-            <TelemetryField label="Longitude" value={formatCoord(telemetry.longitude, 6)} />
-            <TelemetryField label="Altitude (ft)" value={telemetry.altitudeFt.toFixed(1)} />
-            <TelemetryField label="Speed (mph)" value={telemetry.speedMph.toFixed(1)} />
-            <TelemetryField label="Battery (%)" value={telemetry.batteryPct.toFixed(1)} />
-            <TelemetryField label="Last Updated" value={formatTimestamp(telemetry.lastUpdated)} />
-          </div>
-        )}
-      </section>
-
-      {telemetry && (
-        <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-8">
-          <h2 className="text-lg font-semibold text-white">Flight Path Map</h2>
-
-          <div className="mt-4">
-            <FlightPathMap position={toLatLng(telemetry)} path={flightPath} />
+              Generate Test Drone
+            </button>
+            <button
+              type="button"
+              onClick={() => void startSimulation()}
+              disabled={!hasTelemetry || isRunning}
+              className="inline-flex h-11 items-center justify-center rounded-xl border border-emerald-500/40 bg-emerald-500/15 px-5 text-sm font-semibold text-emerald-300 transition-colors hover:border-emerald-400/60 hover:bg-emerald-500/25 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Start Simulation
+            </button>
+            <button
+              type="button"
+              onClick={() => void stopSimulation()}
+              disabled={!hasTelemetry || !isRunning}
+              className="inline-flex h-11 items-center justify-center rounded-xl border border-red-500/40 bg-red-500/15 px-5 text-sm font-semibold text-red-300 transition-colors hover:border-red-400/60 hover:bg-red-500/25 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Stop Simulation
+            </button>
+            <button
+              type="button"
+              onClick={() => void resetFlight()}
+              disabled={!hasTelemetry}
+              className="inline-flex h-11 items-center justify-center rounded-xl border border-white/15 bg-white/[0.04] px-5 text-sm font-semibold text-white transition-colors hover:border-white/25 hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Reset Flight
+            </button>
           </div>
         </section>
-      )}
-    </>
-  );
-}
+
+        <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-8">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#60a5fa]">
+                Live Feed
+              </p>
+              <h2 className="mt-1 text-lg font-semibold text-white">Live Telemetry</h2>
+            </div>
+            {telemetry && (
+              <span
+                className={`rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
+                  telemetry.status === "IN FLIGHT"
+                    ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-300"
+                    : "border-white/20 bg-white/10 text-white/60"
+                }`}
+              >
+                {telemetry.status === "IN FLIGHT" ? "IN FLIGHT" : "STOPPED"}
+              </span>
+            )}
+          </div>
+
+          {!telemetry ? (
+            <p className="mt-6 text-base text-white/60">
+              No telemetry received yet. Use Generate Test Drone to begin a new session.
+            </p>
+          ) : (
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <TelemetryField label="Drone ID" value={telemetry.droneId} />
+              <TelemetryField label="Status" value={telemetry.status} />
+              <TelemetryField label="Latitude" value={formatCoord(telemetry.latitude, 6)} />
+              <TelemetryField label="Longitude" value={formatCoord(telemetry.longitude, 6)} />
+              <TelemetryField label="Altitude (ft)" value={telemetry.altitudeFt.toFixed(1)} />
+              <TelemetryField label="Speed (mph)" value={telemetry.speedMph.toFixed(1)} />
+              <TelemetryField label="Battery (%)" value={telemetry.batteryPct.toFixed(1)} />
+              <TelemetryField label="Last Updated" value={formatTimestamp(telemetry.lastUpdated)} />
+            </div>
+          )}
+        </section>
+
+        {telemetry && (
+          <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-8">
+            <h2 className="text-lg font-semibold text-white">Flight Path Map</h2>
+
+            <div className="mt-4">
+              <FlightPathMap position={toLatLng(telemetry)} path={flightPath} />
+            </div>
+          </section>
+        )}
+      </>
+    );
+  },
+);
+
+export default FlightHubSandbox;
