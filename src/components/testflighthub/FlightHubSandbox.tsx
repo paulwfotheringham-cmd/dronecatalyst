@@ -119,14 +119,6 @@ export default function FlightHubSandbox({ onTelemetryChange }: FlightHubSandbox
   }, [telemetry, isRunning, onTelemetryChange]);
 
   useEffect(() => {
-    if (flightPath.length === 0) return;
-
-    const latest = flightPath[flightPath.length - 1];
-    console.log("[FlightPathMap] flightPath.length:", flightPath.length);
-    console.log("[FlightPathMap] latest latitude/longitude:", latest[0], latest[1]);
-  }, [flightPath]);
-
-  useEffect(() => {
     if (!telemetry || !isRunning) return;
 
     const point = toLatLng(telemetry);
@@ -137,10 +129,7 @@ export default function FlightHubSandbox({ onTelemetryChange }: FlightHubSandbox
         return currentPath;
       }
 
-      const updatedPath = [...currentPath, point];
-      console.log("[FlightPathMap] appended point:", point);
-      console.log("[FlightPathMap] flightPath.length:", updatedPath.length);
-      return updatedPath;
+      return [...currentPath, point];
     });
   }, [telemetry, isRunning]);
 
@@ -321,27 +310,8 @@ export default function FlightHubSandbox({ onTelemetryChange }: FlightHubSandbox
         <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-8">
           <h2 className="text-lg font-semibold text-white">Flight Path Map</h2>
 
-          <div className="mt-4 flex flex-wrap gap-4 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm">
-            <p className="text-white/60">
-              flightPath.length:{" "}
-              <span className="font-mono font-semibold text-white">{flightPath.length}</span>
-            </p>
-            <p className="font-mono text-white/70">
-              Current: {telemetry.latitude.toFixed(6)}, {telemetry.longitude.toFixed(6)}
-            </p>
-            {isRunning && (
-              <p className="text-emerald-300">Simulation active · new point every 3s</p>
-            )}
-          </div>
-
           <div className="mt-4">
-            <FlightPathMap
-              position={toLatLng(telemetry)}
-              path={flightPath}
-              pathPointCount={flightPath.length}
-              currentLatitude={telemetry.latitude}
-              currentLongitude={telemetry.longitude}
-            />
+            <FlightPathMap position={toLatLng(telemetry)} path={flightPath} />
           </div>
         </section>
       )}

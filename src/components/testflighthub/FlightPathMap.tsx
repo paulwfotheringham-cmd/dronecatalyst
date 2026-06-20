@@ -63,8 +63,6 @@ function FlightPathPolyline({ path }: { path: LatLng[] }) {
     const latLngs = path.length >= 2 ? path : [];
     polylineRef.current.setLatLngs(latLngs);
     polylineRef.current.bringToFront();
-
-    console.log("[FlightPathMap] polyline points:", latLngs.length);
   }, [map, path]);
 
   useEffect(() => {
@@ -103,20 +101,10 @@ function UpdatingMarker({ position, icon }: { position: LatLng; icon: L.DivIcon 
 export type FlightPathMapProps = {
   position: LatLng;
   path: LatLng[];
-  pathPointCount?: number;
-  currentLatitude?: number;
-  currentLongitude?: number;
 };
 
-export default function FlightPathMap({
-  position,
-  path,
-  pathPointCount,
-  currentLatitude,
-  currentLongitude,
-}: FlightPathMapProps) {
+export default function FlightPathMap({ position, path }: FlightPathMapProps) {
   const startPosition = path[0] ?? position;
-  const pointCount = pathPointCount ?? path.length;
 
   return (
     <div className="overflow-hidden rounded-xl border border-white/10">
