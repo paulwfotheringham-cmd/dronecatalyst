@@ -26,11 +26,20 @@ function MapViewSync({ position, path }: { position: LatLng; path: LatLng[] }) {
 
   useEffect(() => {
     if (path.length >= 2) {
-      map.fitBounds(L.latLngBounds(path), { padding: [36, 36], maxZoom: 17, animate: true });
+      const bounds = L.latLngBounds(path);
+      const center = bounds.getCenter();
+      const span = Math.max(
+        bounds.getNorthEast().lat - bounds.getSouthWest().lat,
+        bounds.getNorthEast().lng - bounds.getSouthWest().lng,
+      );
+
+      // Keep a high fixed zoom for small simulated movements so the route is clearly visible.
+      const zoom = span < 0.002 ? 18 : span < 0.01 ? 17 : 16;
+      map.setView(center, zoom, { animate: true });
       return;
     }
 
-    map.setView(position, map.getZoom() || 16, { animate: true });
+    map.setView(position, 18, { animate: true });
   }, [map, path, position]);
 
   return null;
@@ -43,13 +52,19 @@ function FlightPathPolyline({ path }: { path: LatLng[] }) {
   useEffect(() => {
     if (!polylineRef.current) {
       polylineRef.current = L.polyline([], {
-        color: "#3b82f6",
-        weight: 4,
-        opacity: 0.9,
+        color: "#38bdf8",
+        weight: 5,
+        opacity: 1,
+        lineCap: "round",
+        lineJoin: "round",
       }).addTo(map);
     }
 
-    polylineRef.current.setLatLngs(path.length >= 2 ? path : []);
+    const latLngs = path.length >= 2 ? path : [];
+    polylineRef.current.setLatLngs(latLngs);
+    polylineRef.current.bringToFront();
+
+    console.log("[FlightPathMap] polyline points:", latLngs.length);
   }, [map, path]);
 
   useEffect(() => {
@@ -105,21 +120,9 @@ export default function FlightPathMap({
 
   return (
     <div className="overflow-hidden rounded-xl border border-white/10">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-white/[0.03] px-4 py-3 text-sm">
-        <p className="text-white/60">
-          Total path points:{" "}
-          <span className="font-mono font-semibold text-white">{pointCount}</span>
-        </p>
-        <p className="font-mono text-white/70">
-          Current:{" "}
-          {(currentLatitude ?? position[0]).toFixed(6)},{" "}
-          {(currentLongitude ?? position[1]).toFixed(6)}
-        </p>
-      </div>
-
       <MapContainer
         center={position}
-        zoom={16}
+        zoom={18}
         scrollWheelZoom={false}
         className="h-[320px] w-full"
         style={{ background: "#0f172a" }}

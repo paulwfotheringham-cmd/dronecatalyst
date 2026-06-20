@@ -127,6 +127,24 @@ export default function FlightHubSandbox({ onTelemetryChange }: FlightHubSandbox
   }, [flightPath]);
 
   useEffect(() => {
+    if (!telemetry || !isRunning) return;
+
+    const point = toLatLng(telemetry);
+
+    setFlightPath((currentPath) => {
+      const lastPoint = currentPath[currentPath.length - 1];
+      if (lastPoint && lastPoint[0] === point[0] && lastPoint[1] === point[1]) {
+        return currentPath;
+      }
+
+      const updatedPath = [...currentPath, point];
+      console.log("[FlightPathMap] appended point:", point);
+      console.log("[FlightPathMap] flightPath.length:", updatedPath.length);
+      return updatedPath;
+    });
+  }, [telemetry, isRunning]);
+
+  useEffect(() => {
     let cancelled = false;
 
     async function loadLatestTelemetry() {
@@ -200,11 +218,7 @@ export default function FlightHubSandbox({ onTelemetryChange }: FlightHubSandbox
     const interval = setInterval(() => {
       setTelemetry((prev) => {
         if (!prev) return prev;
-
         const next = jitterTelemetry(prev);
-        const nextPoint = toLatLng(next);
-
-        setFlightPath((currentPath) => [...currentPath, nextPoint]);
         void persistTelemetry(next);
         return next;
       });
@@ -306,6 +320,19 @@ export default function FlightHubSandbox({ onTelemetryChange }: FlightHubSandbox
       {telemetry && (
         <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-8">
           <h2 className="text-lg font-semibold text-white">Flight Path Map</h2>
+
+          <div className="mt-4 flex flex-wrap gap-4 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm">
+            <p className="text-white/60">
+              flightPath.length:{" "}
+              <span className="font-mono font-semibold text-white">{flightPath.length}</span>
+            </p>
+            <p className="font-mono text-white/70">
+              Current: {telemetry.latitude.toFixed(6)}, {telemetry.longitude.toFixed(6)}
+            </p>
+            {isRunning && (
+              <p className="text-emerald-300">Simulation active · new point every 3s</p>
+            )}
+          </div>
 
           <div className="mt-4">
             <FlightPathMap
