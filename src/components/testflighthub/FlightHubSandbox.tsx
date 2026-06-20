@@ -24,7 +24,7 @@ type LatLng = [number, number];
 function createInitialTelemetry(): Telemetry {
   return {
     droneId: DRONE_ID,
-    status: "IN FLIGHT",
+    status: "STOPPED",
     latitude: 31.9523,
     longitude: 115.8613,
     altitudeFt: 285,
@@ -42,6 +42,7 @@ function jitterTelemetry(prev: Telemetry): Telemetry {
 
   return {
     ...prev,
+    status: "IN FLIGHT",
     latitude: prev.latitude + latDelta,
     longitude: prev.longitude + lngDelta,
     altitudeFt: Math.max(120, Math.min(400, prev.altitudeFt + altDelta)),
@@ -144,12 +145,22 @@ export default function FlightHubSandbox({ onTelemetryChange }: FlightHubSandbox
     }
   }, []);
 
-  const startSimulation = useCallback(async () => {
+  const generateTestDrone = useCallback(async () => {
     const initial = createInitialTelemetry();
+    setIsRunning(false);
     setTelemetry(initial);
     setFlightHistory([toLatLng(initial)]);
-    setIsRunning(true);
     await persistTelemetry(initial);
+  }, [persistTelemetry]);
+
+  const startSimulation = useCallback(async () => {
+    setTelemetry((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, status: "IN FLIGHT" as const, lastUpdated: new Date() };
+      void persistTelemetry(next);
+      return next;
+    });
+    setIsRunning(true);
   }, [persistTelemetry]);
 
   const stopSimulation = useCallback(async () => {
@@ -190,8 +201,57 @@ export default function FlightHubSandbox({ onTelemetryChange }: FlightHubSandbox
     return () => clearInterval(interval);
   }, [isRunning, persistTelemetry]);
 
+  const hasTelemetry = telemetry !== null;
+
   return (
     <>
+      <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-8">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#60a5fa]">
+            FlightHub Simulator
+          </p>
+          <h2 className="mt-1 text-lg font-semibold text-white">Simulator Controls</h2>
+          <p className="mt-2 text-sm text-white/60">
+            Generate a test drone, start or stop the live simulation, and verify telemetry writes to
+            Supabase.
+          </p>
+        </div>
+
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={() => void generateTestDrone()}
+            className="inline-flex h-11 items-center justify-center rounded-xl bg-[#2563eb] px-5 text-sm font-semibold text-white shadow-[0_0_32px_rgba(37,99,235,0.35)] transition-colors hover:bg-[#1d4ed8]"
+          >
+            Generate Test Drone
+          </button>
+          <button
+            type="button"
+            onClick={() => void startSimulation()}
+            disabled={!hasTelemetry || isRunning}
+            className="inline-flex h-11 items-center justify-center rounded-xl border border-emerald-500/40 bg-emerald-500/15 px-5 text-sm font-semibold text-emerald-300 transition-colors hover:border-emerald-400/60 hover:bg-emerald-500/25 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Start Simulation
+          </button>
+          <button
+            type="button"
+            onClick={() => void stopSimulation()}
+            disabled={!hasTelemetry || !isRunning}
+            className="inline-flex h-11 items-center justify-center rounded-xl border border-red-500/40 bg-red-500/15 px-5 text-sm font-semibold text-red-300 transition-colors hover:border-red-400/60 hover:bg-red-500/25 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Stop Simulation
+          </button>
+          <button
+            type="button"
+            onClick={() => void resetFlight()}
+            disabled={!hasTelemetry}
+            className="inline-flex h-11 items-center justify-center rounded-xl border border-white/15 bg-white/[0.04] px-5 text-sm font-semibold text-white transition-colors hover:border-white/25 hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Reset Flight
+          </button>
+        </div>
+      </section>
+
       <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -214,53 +274,25 @@ export default function FlightHubSandbox({ onTelemetryChange }: FlightHubSandbox
         </div>
 
         {!telemetry ? (
-          <>
-            <p className="mt-4 text-base text-white/60">No telemetry received yet.</p>
-            <button
-              type="button"
-              onClick={() => void startSimulation()}
-              className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-[#2563eb] px-5 text-sm font-semibold text-white shadow-[0_0_32px_rgba(37,99,235,0.35)] transition-colors hover:bg-[#1d4ed8]"
-            >
-              Generate Test Drone
-            </button>
-          </>
+          <p className="mt-6 text-base text-white/60">
+            No telemetry received yet. Use Generate Test Drone to begin a new session.
+          </p>
         ) : (
-          <>
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <TelemetryField label="Drone ID" value={telemetry.droneId} />
-              <TelemetryField label="Status" value={telemetry.status} />
-              <TelemetryField label="Latitude" value={formatCoord(telemetry.latitude, 6)} />
-              <TelemetryField label="Longitude" value={formatCoord(telemetry.longitude, 6)} />
-              <TelemetryField label="Altitude (ft)" value={telemetry.altitudeFt.toFixed(1)} />
-              <TelemetryField label="Speed (mph)" value={telemetry.speedMph.toFixed(1)} />
-              <TelemetryField label="Battery (%)" value={telemetry.batteryPct.toFixed(1)} />
-              <TelemetryField label="Last Updated" value={formatTimestamp(telemetry.lastUpdated)} />
-            </div>
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              {isRunning && (
-                <button
-                  type="button"
-                  onClick={() => void stopSimulation()}
-                  className="inline-flex h-11 items-center justify-center rounded-xl border border-red-500/40 bg-red-500/15 px-5 text-sm font-semibold text-red-300 transition-colors hover:border-red-400/60 hover:bg-red-500/25"
-                >
-                  Stop Simulation
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => void resetFlight()}
-                className="inline-flex h-11 items-center justify-center rounded-xl border border-white/15 bg-white/[0.04] px-5 text-sm font-semibold text-white transition-colors hover:border-white/25 hover:bg-white/[0.08]"
-              >
-                Reset Flight
-              </button>
-            </div>
-          </>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            <TelemetryField label="Drone ID" value={telemetry.droneId} />
+            <TelemetryField label="Status" value={telemetry.status} />
+            <TelemetryField label="Latitude" value={formatCoord(telemetry.latitude, 6)} />
+            <TelemetryField label="Longitude" value={formatCoord(telemetry.longitude, 6)} />
+            <TelemetryField label="Altitude (ft)" value={telemetry.altitudeFt.toFixed(1)} />
+            <TelemetryField label="Speed (mph)" value={telemetry.speedMph.toFixed(1)} />
+            <TelemetryField label="Battery (%)" value={telemetry.batteryPct.toFixed(1)} />
+            <TelemetryField label="Last Updated" value={formatTimestamp(telemetry.lastUpdated)} />
+          </div>
         )}
       </section>
 
       {telemetry && (
-        <section className="mt-6 rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-8">
+        <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-8">
           <h2 className="text-lg font-semibold text-white">Flight Path Map</h2>
 
           <div className="mt-4">
