@@ -1,7 +1,8 @@
+import Link from "next/link";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { NAV_ITEMS, project } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
-import { X, Zap } from "lucide-react";
+import { FlaskConical, X, Zap } from "lucide-react";
 import { DashboardIcon } from "./icons";
 
 type SidebarProps = {
@@ -75,6 +76,17 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
           ))}
         </nav>
       </ScrollArea>
+
+      <div className="shrink-0 border-t border-white/[0.08] px-2 py-3 lg:px-3 lg:py-4">
+        <Link
+          href="/testflighthub"
+          onClick={onClose}
+          className="flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-left text-[13px] text-white/45 transition-colors hover:bg-[#0D1B2A]/60 hover:text-white/75"
+        >
+          <FlaskConical className="h-4 w-4 shrink-0" />
+          <span className="flex-1">Test Lab</span>
+        </Link>
+      </div>
     </aside>
   );
 }
