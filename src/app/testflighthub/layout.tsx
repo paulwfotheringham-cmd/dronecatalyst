@@ -1,9 +1,16 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 
 export const metadata: Metadata = {
-  title: "DroneCatalyst FlightHub Test",
-  description: "FlightHub integration sandbox for DroneCatalyst telemetry testing.",
+  title: "Survey Operations Dashboard | DroneCatalyst",
+  description:
+    "Drone surveying operations dashboard with live FlightHub telemetry, fleet status, and mission overview.",
   robots: { index: false, follow: false },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function TestFlightHubLayout({
@@ -11,5 +18,9 @@ export default function TestFlightHubLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return (
+    <div className="fixed inset-0 z-[100] flex h-dvh max-h-dvh flex-col overflow-hidden overscroll-none bg-[#020617] text-white supports-[height:100dvh]:h-dvh">
+      {children}
+    </div>
+  );
 }

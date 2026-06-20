@@ -104,10 +104,18 @@ function TelemetryField({ label, value }: { label: string; value: string }) {
   );
 }
 
-export default function FlightHubSandbox() {
+type FlightHubSandboxProps = {
+  onTelemetryChange?: (telemetry: Telemetry | null, isRunning: boolean) => void;
+};
+
+export default function FlightHubSandbox({ onTelemetryChange }: FlightHubSandboxProps) {
   const [telemetry, setTelemetry] = useState<Telemetry | null>(null);
   const [flightHistory, setFlightHistory] = useState<LatLng[]>([]);
   const [isRunning, setIsRunning] = useState(false);
+
+  useEffect(() => {
+    onTelemetryChange?.(telemetry, isRunning);
+  }, [telemetry, isRunning, onTelemetryChange]);
 
   useEffect(() => {
     let cancelled = false;
@@ -184,9 +192,14 @@ export default function FlightHubSandbox() {
 
   return (
     <>
-      <section className="mt-10 rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-8">
+      <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold text-white">Mock FlightHub Data</h2>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#60a5fa]">
+              Live Feed
+            </p>
+            <h2 className="mt-1 text-lg font-semibold text-white">Live Telemetry</h2>
+          </div>
           {telemetry && (
             <span
               className={`rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
