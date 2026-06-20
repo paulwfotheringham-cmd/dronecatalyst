@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import {
   DRONE_ID,
@@ -55,24 +55,6 @@ function toLatLng(telemetry: Telemetry): LatLng {
   return [telemetry.latitude, telemetry.longitude];
 }
 
-function haversineFeet([lat1, lon1]: LatLng, [lat2, lon2]: LatLng) {
-  const toRad = (deg: number) => (deg * Math.PI) / 180;
-  const earthRadiusFt = 20902231;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-  return 2 * earthRadiusFt * Math.asin(Math.sqrt(a));
-}
-
-function calculateDistanceFeet(path: LatLng[]) {
-  if (path.length < 2) return 0;
-  return path.slice(1).reduce((total, point, index) => {
-    return total + haversineFeet(path[index], point);
-  }, 0);
-}
-
 function formatCoord(value: number, decimals: number) {
   return value.toFixed(decimals);
 }
@@ -86,21 +68,18 @@ function formatTimestamp(date: Date) {
   });
 }
 
-async function fetchTelemetryHistory() {
+async function fetchLatestTelemetry(): Promise<Telemetry | null> {
   const response = await fetch(`/api/telemetry?drone_id=${encodeURIComponent(DRONE_ID)}`);
-  if (response.status === 503) {
-    return { rows: [] as TelemetryRow[], configured: false };
-  }
-  if (!response.ok) {
-    const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-    throw new Error(payload?.error ?? "Failed to load telemetry history");
-  }
+  if (!response.ok) return null;
+
   const rows = (await response.json()) as TelemetryRow[];
-  return { rows, configured: true };
+  if (rows.length === 0) return null;
+
+  return rowToTelemetry(rows[rows.length - 1]);
 }
 
 async function saveTelemetry(telemetry: Telemetry) {
-  const response = await fetch("/api/telemetry", {
+  await fetch("/api/telemetry", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -108,23 +87,12 @@ async function saveTelemetry(telemetry: Telemetry) {
       lastUpdated: telemetry.lastUpdated.toISOString(),
     }),
   });
-
-  if (!response.ok) {
-    const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-    throw new Error(payload?.error ?? "Failed to save telemetry");
-  }
 }
 
-async function clearTelemetryHistory() {
-  const response = await fetch(
-    `/api/telemetry?drone_id=${encodeURIComponent(DRONE_ID)}`,
-    { method: "DELETE" },
-  );
-
-  if (!response.ok) {
-    const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-    throw new Error(payload?.error ?? "Failed to reset telemetry history");
-  }
+async function clearTelemetryForDrone() {
+  await fetch(`/api/telemetry?drone_id=${encodeURIComponent(DRONE_ID)}`, {
+    method: "DELETE",
+  });
 }
 
 function TelemetryField({ label, value }: { label: string; value: string }) {
@@ -140,42 +108,20 @@ export default function FlightHubSandbox() {
   const [telemetry, setTelemetry] = useState<Telemetry | null>(null);
   const [flightHistory, setFlightHistory] = useState<LatLng[]>([]);
   const [isRunning, setIsRunning] = useState(false);
-  const [isHydrating, setIsHydrating] = useState(true);
-  const [dbConfigured, setDbConfigured] = useState(true);
-  const [dbError, setDbError] = useState<string | null>(null);
-
-  const totalPoints = flightHistory.length;
-  const distanceFeet = useMemo(() => calculateDistanceFeet(flightHistory), [flightHistory]);
 
   useEffect(() => {
     let cancelled = false;
 
-    async function hydrateFromDatabase() {
-      try {
-        const { rows, configured } = await fetchTelemetryHistory();
-        if (cancelled) return;
+    async function loadLatestTelemetry() {
+      const latest = await fetchLatestTelemetry();
+      if (cancelled || !latest) return;
 
-        setDbConfigured(configured);
-        if (rows.length === 0) return;
-
-        const history = rows.map((row) => [row.latitude, row.longitude] as LatLng);
-        const latest = rowToTelemetry(rows[rows.length - 1]);
-
-        setTelemetry(latest);
-        setFlightHistory(history);
-        setIsRunning(latest.status === "IN FLIGHT");
-      } catch (error) {
-        if (!cancelled) {
-          setDbError(error instanceof Error ? error.message : "Failed to load saved telemetry");
-        }
-      } finally {
-        if (!cancelled) {
-          setIsHydrating(false);
-        }
-      }
+      setTelemetry(latest);
+      setFlightHistory([toLatLng(latest)]);
+      setIsRunning(latest.status === "IN FLIGHT");
     }
 
-    void hydrateFromDatabase();
+    void loadLatestTelemetry();
 
     return () => {
       cancelled = true;
@@ -183,15 +129,12 @@ export default function FlightHubSandbox() {
   }, []);
 
   const persistTelemetry = useCallback(async (next: Telemetry) => {
-    if (!dbConfigured) return;
-
     try {
       await saveTelemetry(next);
-      setDbError(null);
-    } catch (error) {
-      setDbError(error instanceof Error ? error.message : "Failed to save telemetry");
+    } catch {
+      // Persistence runs silently in the background.
     }
-  }, [dbConfigured]);
+  }, []);
 
   const startSimulation = useCallback(async () => {
     const initial = createInitialTelemetry();
@@ -212,20 +155,16 @@ export default function FlightHubSandbox() {
   }, [persistTelemetry]);
 
   const resetFlight = useCallback(async () => {
-    if (dbConfigured) {
-      try {
-        await clearTelemetryHistory();
-        setDbError(null);
-      } catch (error) {
-        setDbError(error instanceof Error ? error.message : "Failed to reset telemetry history");
-        return;
-      }
+    try {
+      await clearTelemetryForDrone();
+    } catch {
+      // Reset still clears local state even if the API call fails.
     }
 
     setTelemetry(null);
     setFlightHistory([]);
     setIsRunning(false);
-  }, [dbConfigured]);
+  }, []);
 
   useEffect(() => {
     if (!isRunning) return;
@@ -245,24 +184,6 @@ export default function FlightHubSandbox() {
 
   return (
     <>
-      {isHydrating && (
-        <p className="mt-6 text-sm text-white/50">Loading saved telemetry...</p>
-      )}
-
-      {!isHydrating && !dbConfigured && (
-        <p className="mt-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-          Supabase is not configured. Telemetry will not persist between refreshes until{" "}
-          <code className="text-amber-50">SUPABASE_URL</code> and{" "}
-          <code className="text-amber-50">SUPABASE_ANON_KEY</code> are set.
-        </p>
-      )}
-
-      {dbError && (
-        <p className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-          {dbError}
-        </p>
-      )}
-
       <section className="mt-10 rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-white">Mock FlightHub Data</h2>
@@ -285,8 +206,7 @@ export default function FlightHubSandbox() {
             <button
               type="button"
               onClick={() => void startSimulation()}
-              disabled={isHydrating}
-              className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-[#2563eb] px-5 text-sm font-semibold text-white shadow-[0_0_32px_rgba(37,99,235,0.35)] transition-colors hover:bg-[#1d4ed8] disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-[#2563eb] px-5 text-sm font-semibold text-white shadow-[0_0_32px_rgba(37,99,235,0.35)] transition-colors hover:bg-[#1d4ed8]"
             >
               Generate Test Drone
             </button>
@@ -328,21 +248,7 @@ export default function FlightHubSandbox() {
 
       {telemetry && (
         <section className="mt-6 rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-8">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-white">Flight Path Map</h2>
-            <div className="flex flex-wrap gap-4 text-sm">
-              <p className="text-white/60">
-                Total Points Collected:{" "}
-                <span className="font-mono font-semibold text-white">{totalPoints}</span>
-              </p>
-              <p className="text-white/60">
-                Distance Traveled (ft):{" "}
-                <span className="font-mono font-semibold text-white">
-                  {distanceFeet.toFixed(1)}
-                </span>
-              </p>
-            </div>
-          </div>
+          <h2 className="text-lg font-semibold text-white">Flight Path Map</h2>
 
           <div className="mt-4">
             <FlightPathMap position={toLatLng(telemetry)} path={flightHistory} />
