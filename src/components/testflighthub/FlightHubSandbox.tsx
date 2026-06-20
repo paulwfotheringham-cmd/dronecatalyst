@@ -111,12 +111,20 @@ type FlightHubSandboxProps = {
 
 export default function FlightHubSandbox({ onTelemetryChange }: FlightHubSandboxProps) {
   const [telemetry, setTelemetry] = useState<Telemetry | null>(null);
-  const [flightHistory, setFlightHistory] = useState<LatLng[]>([]);
+  const [flightPath, setFlightPath] = useState<LatLng[]>([]);
   const [isRunning, setIsRunning] = useState(false);
 
   useEffect(() => {
     onTelemetryChange?.(telemetry, isRunning);
   }, [telemetry, isRunning, onTelemetryChange]);
+
+  useEffect(() => {
+    if (flightPath.length === 0) return;
+
+    const latest = flightPath[flightPath.length - 1];
+    console.log("[FlightPathMap] flightPath.length:", flightPath.length);
+    console.log("[FlightPathMap] latest latitude/longitude:", latest[0], latest[1]);
+  }, [flightPath]);
 
   useEffect(() => {
     let cancelled = false;
@@ -126,7 +134,7 @@ export default function FlightHubSandbox({ onTelemetryChange }: FlightHubSandbox
       if (cancelled || !latest) return;
 
       setTelemetry(latest);
-      setFlightHistory([toLatLng(latest)]);
+      setFlightPath([toLatLng(latest)]);
       setIsRunning(latest.status === "IN FLIGHT");
     }
 
@@ -147,9 +155,10 @@ export default function FlightHubSandbox({ onTelemetryChange }: FlightHubSandbox
 
   const generateTestDrone = useCallback(async () => {
     const initial = createInitialTelemetry();
+    const initialPoint = toLatLng(initial);
     setIsRunning(false);
     setTelemetry(initial);
-    setFlightHistory([toLatLng(initial)]);
+    setFlightPath([initialPoint]);
     await persistTelemetry(initial);
   }, [persistTelemetry]);
 
@@ -181,7 +190,7 @@ export default function FlightHubSandbox({ onTelemetryChange }: FlightHubSandbox
     }
 
     setTelemetry(null);
-    setFlightHistory([]);
+    setFlightPath([]);
     setIsRunning(false);
   }, []);
 
@@ -191,8 +200,11 @@ export default function FlightHubSandbox({ onTelemetryChange }: FlightHubSandbox
     const interval = setInterval(() => {
       setTelemetry((prev) => {
         if (!prev) return prev;
+
         const next = jitterTelemetry(prev);
-        setFlightHistory((history) => [...history, toLatLng(next)]);
+        const nextPoint = toLatLng(next);
+
+        setFlightPath((currentPath) => [...currentPath, nextPoint]);
         void persistTelemetry(next);
         return next;
       });
@@ -296,7 +308,13 @@ export default function FlightHubSandbox({ onTelemetryChange }: FlightHubSandbox
           <h2 className="text-lg font-semibold text-white">Flight Path Map</h2>
 
           <div className="mt-4">
-            <FlightPathMap position={toLatLng(telemetry)} path={flightHistory} />
+            <FlightPathMap
+              position={toLatLng(telemetry)}
+              path={flightPath}
+              pathPointCount={flightPath.length}
+              currentLatitude={telemetry.latitude}
+              currentLongitude={telemetry.longitude}
+            />
           </div>
         </section>
       )}
