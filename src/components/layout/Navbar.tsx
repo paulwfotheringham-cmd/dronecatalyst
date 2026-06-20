@@ -83,11 +83,7 @@ export default function Navbar() {
               </Link>
               <Link
                 href="/test1"
-                className={`hidden h-[36px] items-center rounded-md px-[16px] text-[14px] font-semibold lg:inline-flex ${
-                  isHome
-                    ? "border border-white/40 text-white hover:bg-white/10"
-                    : "border border-[#cfe0ff] text-[#0b2d63] hover:bg-[#EEF5FF]"
-                }`}
+                className="hidden h-[36px] items-center rounded-md bg-[#0b2d63] px-[16px] text-[14px] font-semibold text-white hover:bg-[#082652] lg:inline-flex"
               >
                 Login
               </Link>
