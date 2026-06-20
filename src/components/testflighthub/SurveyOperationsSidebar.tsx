@@ -1,12 +1,16 @@
 "use client";
 
-import { surveyNavItems } from "@/lib/survey-operations-mock-data";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+import { isSurveyNavItemActive, surveyNavItems } from "@/lib/survey-operations-mock-data";
 import { cn } from "@/lib/utils";
 import {
   Building2,
   LayoutDashboard,
   MapPin,
   Plane,
+  Radio,
   ScrollText,
   Target,
   X,
@@ -19,6 +23,7 @@ const iconMap = {
   MapPin,
   Target,
   Plane,
+  Radio,
   ScrollText,
 } as const;
 
@@ -31,6 +36,8 @@ export default function SurveyOperationsSidebar({
   mobileOpen = false,
   onClose,
 }: SurveyOperationsSidebarProps) {
+  const pathname = usePathname() ?? "";
+
   return (
     <aside
       className={cn(
@@ -68,22 +75,24 @@ export default function SurveyOperationsSidebar({
       <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto px-2 py-3 lg:px-3 lg:py-4">
         {surveyNavItems.map((item) => {
           const Icon = iconMap[item.icon];
+          const active = isSurveyNavItemActive(pathname, item.label, item.href);
+
           return (
-            <button
+            <Link
               key={item.label}
-              type="button"
-              aria-current={"active" in item && item.active ? "page" : undefined}
+              href={item.href}
+              aria-current={active ? "page" : undefined}
               onClick={onClose}
               className={cn(
                 "flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-left text-[13px] transition-colors",
-                "active" in item && item.active
+                active
                   ? "bg-[#0D1B2A] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
                   : "text-white/45 hover:bg-[#0D1B2A]/60 hover:text-white/75",
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />
               <span className="flex-1">{item.label}</span>
-            </button>
+            </Link>
           );
         })}
       </nav>

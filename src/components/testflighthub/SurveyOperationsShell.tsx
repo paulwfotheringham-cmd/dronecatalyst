@@ -7,8 +7,12 @@ import SurveyOperationsSidebar from "./SurveyOperationsSidebar";
 
 export default function SurveyOperationsShell({
   children,
+  title = "Operations Dashboard",
+  subtitle = "Survey Operations",
 }: {
   children: React.ReactNode;
+  title?: string;
+  subtitle?: string;
 }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -41,11 +45,9 @@ export default function SurveyOperationsShell({
             </button>
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#60a5fa]">
-                Survey Operations
+                {subtitle}
               </p>
-              <h1 className="text-base font-semibold text-white sm:text-lg">
-                Operations Dashboard
-              </h1>
+              <h1 className="text-base font-semibold text-white sm:text-lg">{title}</h1>
             </div>
           </div>
           <div className="hidden items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-300 sm:inline-flex">

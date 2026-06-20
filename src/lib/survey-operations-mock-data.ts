@@ -79,10 +79,23 @@ export const recentMissions = [
 ] as const;
 
 export const surveyNavItems = [
-  { label: "Dashboard", icon: "LayoutDashboard", active: true },
-  { label: "Clients", icon: "Building2" },
-  { label: "Sites", icon: "MapPin" },
-  { label: "Missions", icon: "Target" },
-  { label: "Fleet", icon: "Plane" },
-  { label: "Flight Logs", icon: "ScrollText" },
+  { label: "Dashboard", icon: "LayoutDashboard", href: "/testflighthub" },
+  { label: "Clients", icon: "Building2", href: "/testflighthub" },
+  { label: "Sites", icon: "MapPin", href: "/testflighthub" },
+  { label: "Missions", icon: "Target", href: "/testflighthub" },
+  { label: "Fleet", icon: "Plane", href: "/testflighthub" },
+  { label: "Live Telemetry", icon: "Radio", href: "/telemetry" },
+  { label: "Flight Logs", icon: "ScrollText", href: "/testflighthub" },
 ] as const;
+
+export function isSurveyNavItemActive(pathname: string, label: string, href: string) {
+  if (href === "/telemetry") {
+    return pathname === "/telemetry";
+  }
+
+  if (label === "Dashboard") {
+    return pathname === "/testflighthub";
+  }
+
+  return false;
+}
