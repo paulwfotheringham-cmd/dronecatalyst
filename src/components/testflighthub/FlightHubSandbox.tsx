@@ -3,6 +3,13 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import {
+  DRONE_ID,
+  rowToTelemetry,
+  type Telemetry,
+  type TelemetryRow,
+} from "@/lib/telemetry";
+
 const FlightPathMap = dynamic(() => import("./FlightPathMap"), {
   ssr: false,
   loading: () => (
@@ -12,20 +19,7 @@ const FlightPathMap = dynamic(() => import("./FlightPathMap"), {
   ),
 });
 
-const DRONE_ID = "DC-TEST-001";
-
 type LatLng = [number, number];
-
-type Telemetry = {
-  droneId: string;
-  status: "IN FLIGHT" | "STOPPED";
-  latitude: number;
-  longitude: number;
-  altitudeFt: number;
-  speedMph: number;
-  batteryPct: number;
-  lastUpdated: Date;
-};
 
 function createInitialTelemetry(): Telemetry {
   return {
@@ -92,6 +86,47 @@ function formatTimestamp(date: Date) {
   });
 }
 
+async function fetchTelemetryHistory() {
+  const response = await fetch(`/api/telemetry?drone_id=${encodeURIComponent(DRONE_ID)}`);
+  if (response.status === 503) {
+    return { rows: [] as TelemetryRow[], configured: false };
+  }
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(payload?.error ?? "Failed to load telemetry history");
+  }
+  const rows = (await response.json()) as TelemetryRow[];
+  return { rows, configured: true };
+}
+
+async function saveTelemetry(telemetry: Telemetry) {
+  const response = await fetch("/api/telemetry", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      ...telemetry,
+      lastUpdated: telemetry.lastUpdated.toISOString(),
+    }),
+  });
+
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(payload?.error ?? "Failed to save telemetry");
+  }
+}
+
+async function clearTelemetryHistory() {
+  const response = await fetch(
+    `/api/telemetry?drone_id=${encodeURIComponent(DRONE_ID)}`,
+    { method: "DELETE" },
+  );
+
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(payload?.error ?? "Failed to reset telemetry history");
+  }
+}
+
 function TelemetryField({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
@@ -105,29 +140,92 @@ export default function FlightHubSandbox() {
   const [telemetry, setTelemetry] = useState<Telemetry | null>(null);
   const [flightHistory, setFlightHistory] = useState<LatLng[]>([]);
   const [isRunning, setIsRunning] = useState(false);
+  const [isHydrating, setIsHydrating] = useState(true);
+  const [dbConfigured, setDbConfigured] = useState(true);
+  const [dbError, setDbError] = useState<string | null>(null);
 
   const totalPoints = flightHistory.length;
   const distanceFeet = useMemo(() => calculateDistanceFeet(flightHistory), [flightHistory]);
 
-  const startSimulation = useCallback(() => {
+  useEffect(() => {
+    let cancelled = false;
+
+    async function hydrateFromDatabase() {
+      try {
+        const { rows, configured } = await fetchTelemetryHistory();
+        if (cancelled) return;
+
+        setDbConfigured(configured);
+        if (rows.length === 0) return;
+
+        const history = rows.map((row) => [row.latitude, row.longitude] as LatLng);
+        const latest = rowToTelemetry(rows[rows.length - 1]);
+
+        setTelemetry(latest);
+        setFlightHistory(history);
+        setIsRunning(latest.status === "IN FLIGHT");
+      } catch (error) {
+        if (!cancelled) {
+          setDbError(error instanceof Error ? error.message : "Failed to load saved telemetry");
+        }
+      } finally {
+        if (!cancelled) {
+          setIsHydrating(false);
+        }
+      }
+    }
+
+    void hydrateFromDatabase();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const persistTelemetry = useCallback(async (next: Telemetry) => {
+    if (!dbConfigured) return;
+
+    try {
+      await saveTelemetry(next);
+      setDbError(null);
+    } catch (error) {
+      setDbError(error instanceof Error ? error.message : "Failed to save telemetry");
+    }
+  }, [dbConfigured]);
+
+  const startSimulation = useCallback(async () => {
     const initial = createInitialTelemetry();
     setTelemetry(initial);
     setFlightHistory([toLatLng(initial)]);
     setIsRunning(true);
-  }, []);
+    await persistTelemetry(initial);
+  }, [persistTelemetry]);
 
-  const stopSimulation = useCallback(() => {
+  const stopSimulation = useCallback(async () => {
     setIsRunning(false);
-    setTelemetry((prev) =>
-      prev ? { ...prev, status: "STOPPED", lastUpdated: new Date() } : prev,
-    );
-  }, []);
+    setTelemetry((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, status: "STOPPED" as const, lastUpdated: new Date() };
+      void persistTelemetry(next);
+      return next;
+    });
+  }, [persistTelemetry]);
 
-  const resetFlight = useCallback(() => {
+  const resetFlight = useCallback(async () => {
+    if (dbConfigured) {
+      try {
+        await clearTelemetryHistory();
+        setDbError(null);
+      } catch (error) {
+        setDbError(error instanceof Error ? error.message : "Failed to reset telemetry history");
+        return;
+      }
+    }
+
     setTelemetry(null);
     setFlightHistory([]);
     setIsRunning(false);
-  }, []);
+  }, [dbConfigured]);
 
   useEffect(() => {
     if (!isRunning) return;
@@ -137,15 +235,34 @@ export default function FlightHubSandbox() {
         if (!prev) return prev;
         const next = jitterTelemetry(prev);
         setFlightHistory((history) => [...history, toLatLng(next)]);
+        void persistTelemetry(next);
         return next;
       });
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [isRunning]);
+  }, [isRunning, persistTelemetry]);
 
   return (
     <>
+      {isHydrating && (
+        <p className="mt-6 text-sm text-white/50">Loading saved telemetry...</p>
+      )}
+
+      {!isHydrating && !dbConfigured && (
+        <p className="mt-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+          Supabase is not configured. Telemetry will not persist between refreshes until{" "}
+          <code className="text-amber-50">SUPABASE_URL</code> and{" "}
+          <code className="text-amber-50">SUPABASE_ANON_KEY</code> are set.
+        </p>
+      )}
+
+      {dbError && (
+        <p className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+          {dbError}
+        </p>
+      )}
+
       <section className="mt-10 rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-white">Mock FlightHub Data</h2>
@@ -167,8 +284,9 @@ export default function FlightHubSandbox() {
             <p className="mt-4 text-base text-white/60">No telemetry received yet.</p>
             <button
               type="button"
-              onClick={startSimulation}
-              className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-[#2563eb] px-5 text-sm font-semibold text-white shadow-[0_0_32px_rgba(37,99,235,0.35)] transition-colors hover:bg-[#1d4ed8]"
+              onClick={() => void startSimulation()}
+              disabled={isHydrating}
+              className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-[#2563eb] px-5 text-sm font-semibold text-white shadow-[0_0_32px_rgba(37,99,235,0.35)] transition-colors hover:bg-[#1d4ed8] disabled:cursor-not-allowed disabled:opacity-50"
             >
               Generate Test Drone
             </button>
@@ -190,7 +308,7 @@ export default function FlightHubSandbox() {
               {isRunning && (
                 <button
                   type="button"
-                  onClick={stopSimulation}
+                  onClick={() => void stopSimulation()}
                   className="inline-flex h-11 items-center justify-center rounded-xl border border-red-500/40 bg-red-500/15 px-5 text-sm font-semibold text-red-300 transition-colors hover:border-red-400/60 hover:bg-red-500/25"
                 >
                   Stop Simulation
@@ -198,7 +316,7 @@ export default function FlightHubSandbox() {
               )}
               <button
                 type="button"
-                onClick={resetFlight}
+                onClick={() => void resetFlight()}
                 className="inline-flex h-11 items-center justify-center rounded-xl border border-white/15 bg-white/[0.04] px-5 text-sm font-semibold text-white transition-colors hover:border-white/25 hover:bg-white/[0.08]"
               >
                 Reset Flight
