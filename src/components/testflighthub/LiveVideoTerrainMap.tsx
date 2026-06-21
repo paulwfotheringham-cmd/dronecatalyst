@@ -17,16 +17,17 @@ type LiveVideoTerrainMapProps = {
   terrainStyle?: MapTerrainStyle;
 };
 
-function zoomForAltitude(altitudeFt: number, terrainStyle: MapTerrainStyle) {
-  if (terrainStyle === "urban") {
-    if (altitudeFt >= 360) return 16;
-    if (altitudeFt >= 280) return 17;
-    return 18;
-  }
+type CameraMotion = {
+  heading: number;
+  bank: number;
+  shakeX: number;
+  shakeY: number;
+};
 
-  if (altitudeFt >= 360) return 17;
-  if (altitudeFt >= 280) return 18;
-  return 19;
+function zoomForAltitude(altitudeFt: number) {
+  if (altitudeFt >= 360) return 18;
+  if (altitudeFt >= 280) return 19;
+  return 20;
 }
 
 function bearingDegrees(from: LatLng, to: LatLng) {
@@ -63,20 +64,38 @@ function mphToMps(speedMph: number) {
   return speedMph * 0.44704;
 }
 
+function applyCameraTransform(stage: HTMLDivElement, motion: CameraMotion, scale: number) {
+  stage.style.transform = [
+    `rotateX(52deg)`,
+    `rotateZ(${(-motion.heading + motion.bank).toFixed(2)}deg)`,
+    `scale(${scale.toFixed(3)})`,
+    `translate3d(${motion.shakeX.toFixed(2)}px, ${(motion.shakeY - 6).toFixed(2)}px, 0)`,
+  ].join(" ");
+}
+
 function ChaseCamera({
   telemetry,
   terrainStyle,
+  stageRef,
 }: {
   telemetry: Telemetry;
   terrainStyle: MapTerrainStyle;
+  stageRef: React.RefObject<HTMLDivElement | null>;
 }) {
   const map = useMap();
   const telemetryRef = useRef(telemetry);
   const displayPositionRef = useRef<LatLng>([telemetry.latitude, telemetry.longitude]);
   const targetPositionRef = useRef<LatLng>([telemetry.latitude, telemetry.longitude]);
-  const headingRef = useRef(45);
+  const headingRef = useRef(0);
+  const lastHeadingRef = useRef(0);
   const lastTelemetryPositionRef = useRef<LatLng>([telemetry.latitude, telemetry.longitude]);
   const initializedRef = useRef(false);
+  const motionRef = useRef<CameraMotion>({
+    heading: 0,
+    bank: 0,
+    shakeX: 0,
+    shakeY: 0,
+  });
 
   useEffect(() => {
     telemetryRef.current = telemetry;
@@ -94,9 +113,9 @@ function ChaseCamera({
     if (!initializedRef.current) {
       displayPositionRef.current = nextTarget;
       initializedRef.current = true;
-      map.setView(nextTarget, zoomForAltitude(telemetry.altitudeFt, terrainStyle), { animate: false });
+      map.setView(nextTarget, zoomForAltitude(telemetry.altitudeFt), { animate: false });
     }
-  }, [map, telemetry, terrainStyle]);
+  }, [map, telemetry]);
 
   useEffect(() => {
     map.dragging.disable();
@@ -112,6 +131,7 @@ function ChaseCamera({
 
     let frameId = 0;
     let lastTimestamp = performance.now();
+    const scale = terrainStyle === "urban" ? 1.78 : 1.72;
 
     const tick = (timestamp: number) => {
       const deltaSeconds = Math.min((timestamp - lastTimestamp) / 1000, 0.05);
@@ -122,20 +142,33 @@ function ChaseCamera({
       const display = displayPositionRef.current;
       const heading = headingRef.current;
       const speedMps = mphToMps(current.speedMph);
+      const headingDelta = Math.abs(heading - lastHeadingRef.current);
+      lastHeadingRef.current = heading;
 
       const forwardStep = movePoint(display[0], display[1], heading, speedMps * deltaSeconds);
       const towardTarget: LatLng = [
-        display[0] + (target[0] - display[0]) * Math.min(deltaSeconds * 1.8, 0.35),
-        display[1] + (target[1] - display[1]) * Math.min(deltaSeconds * 1.8, 0.35),
+        display[0] + (target[0] - display[0]) * Math.min(deltaSeconds * 2.2, 0.4),
+        display[1] + (target[1] - display[1]) * Math.min(deltaSeconds * 2.2, 0.4),
       ];
 
       displayPositionRef.current = [
-        forwardStep[0] * 0.72 + towardTarget[0] * 0.28,
-        forwardStep[1] * 0.72 + towardTarget[1] * 0.28,
+        forwardStep[0] * 0.78 + towardTarget[0] * 0.22,
+        forwardStep[1] * 0.78 + towardTarget[1] * 0.22,
       ];
 
-      const zoom = zoomForAltitude(current.altitudeFt, terrainStyle);
-      map.setView(displayPositionRef.current, zoom, { animate: false });
+      const shakeIntensity = 0.12 + speedMps * 0.018 + headingDelta * 2.5;
+      motionRef.current = {
+        heading,
+        bank: Math.sin(timestamp * 0.0018) * 1.4 + headingDelta * 12,
+        shakeX: Math.sin(timestamp * 0.011) * shakeIntensity,
+        shakeY: Math.cos(timestamp * 0.009) * shakeIntensity * 0.7,
+      };
+
+      if (stageRef.current) {
+        applyCameraTransform(stageRef.current, motionRef.current, scale);
+      }
+
+      map.setView(displayPositionRef.current, zoomForAltitude(current.altitudeFt), { animate: false });
 
       frameId = window.requestAnimationFrame(tick);
     };
@@ -145,7 +178,7 @@ function ChaseCamera({
     return () => {
       window.cancelAnimationFrame(frameId);
     };
-  }, [map, terrainStyle]);
+  }, [map, stageRef, terrainStyle]);
 
   return null;
 }
@@ -155,6 +188,7 @@ export default function LiveVideoTerrainMap({
   terrainStyle = "satellite",
 }: LiveVideoTerrainMapProps) {
   const initialPosition: LatLng = [telemetry.latitude, telemetry.longitude];
+  const stageRef = useRef<HTMLDivElement>(null);
   const shellClassName =
     terrainStyle === "urban"
       ? "live-video-map-shell live-video-map-shell--urban"
@@ -162,19 +196,21 @@ export default function LiveVideoTerrainMap({
 
   return (
     <div className={`${shellClassName} absolute inset-0 overflow-hidden`}>
-      <div className="live-video-map-stage absolute inset-0">
-        <MapContainer
-          center={initialPosition}
-          zoom={zoomForAltitude(telemetry.altitudeFt, terrainStyle)}
-          scrollWheelZoom={false}
-          zoomControl={false}
-          attributionControl={false}
-          className="h-full w-full"
-          style={{ background: terrainStyle === "urban" ? "#eef2f7" : "#2f3f2c" }}
-        >
-          <MapTileLayers style={terrainStyle} showAttribution={false} />
-          <ChaseCamera telemetry={telemetry} terrainStyle={terrainStyle} />
-        </MapContainer>
+      <div className="live-video-camera-rig absolute inset-0">
+        <div ref={stageRef} className="live-video-map-stage absolute inset-0">
+          <MapContainer
+            center={initialPosition}
+            zoom={zoomForAltitude(telemetry.altitudeFt)}
+            scrollWheelZoom={false}
+            zoomControl={false}
+            attributionControl={false}
+            className="h-full w-full"
+            style={{ background: "#1a2418" }}
+          >
+            <MapTileLayers style={terrainStyle} showAttribution={false} videoMode />
+            <ChaseCamera telemetry={telemetry} terrainStyle={terrainStyle} stageRef={stageRef} />
+          </MapContainer>
+        </div>
       </div>
     </div>
   );

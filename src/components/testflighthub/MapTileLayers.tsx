@@ -11,9 +11,41 @@ import {
 type MapTileLayersProps = {
   style: MapTerrainStyle;
   showAttribution?: boolean;
+  /** Photorealistic stack tuned for the FPV live video feed. */
+  videoMode?: boolean;
 };
 
-export default function MapTileLayers({ style, showAttribution = true }: MapTileLayersProps) {
+export default function MapTileLayers({
+  style,
+  showAttribution = true,
+  videoMode = false,
+}: MapTileLayersProps) {
+  if (videoMode) {
+    return (
+      <>
+        <TileLayer
+          attribution={showAttribution ? SATELLITE_MAP_ATTRIBUTION : undefined}
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+          maxZoom={20}
+        />
+        {style === "urban" ? (
+          <TileLayer
+            attribution={showAttribution ? URBAN_MAP_ATTRIBUTION : undefined}
+            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+            maxZoom={20}
+            opacity={0.42}
+          />
+        ) : (
+          <TileLayer
+            url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
+            maxZoom={17}
+            opacity={0.28}
+          />
+        )}
+      </>
+    );
+  }
+
   if (style === "urban") {
     return (
       <>

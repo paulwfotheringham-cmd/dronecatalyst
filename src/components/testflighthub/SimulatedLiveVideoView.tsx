@@ -29,7 +29,7 @@ function formatHudTime(date: Date) {
   });
 }
 
-function VideoGrainOverlay() {
+function VideoEffectsOverlay() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -59,11 +59,18 @@ function VideoGrainOverlay() {
       seed += 1;
 
       context.clearRect(0, 0, width, height);
-      context.fillStyle = "rgba(255,255,255,0.025)";
-      for (let index = 0; index < 90; index += 1) {
+
+      context.fillStyle = "rgba(255,255,255,0.028)";
+      for (let index = 0; index < 110; index += 1) {
         const x = ((index * 83 + seed * 11) % width) | 0;
         const y = ((index * 47 + seed * 17) % height) | 0;
         context.fillRect(x, y, 1, 1);
+      }
+
+      if (seed % 47 === 0) {
+        const blockY = ((seed * 19) % (height - 24)) | 0;
+        context.fillStyle = "rgba(255,255,255,0.015)";
+        context.fillRect(0, blockY, width, 8);
       }
 
       frameId = window.requestAnimationFrame(draw);
@@ -80,7 +87,7 @@ function VideoGrainOverlay() {
   return (
     <canvas
       ref={canvasRef}
-      className="pointer-events-none absolute inset-0 h-full w-full opacity-40 mix-blend-soft-light"
+      className="pointer-events-none absolute inset-0 h-full w-full opacity-50 mix-blend-overlay"
       aria-hidden
     />
   );
@@ -123,28 +130,31 @@ export default function SimulatedLiveVideoView({
       </div>
 
       <div
-        className={`relative w-full flex-1 overflow-hidden bg-[#020617] ${
+        className={`live-video-viewport relative w-full flex-1 overflow-hidden bg-[#020617] ${
           compact ? "min-h-0" : "aspect-video"
         }`}
       >
         <LiveVideoTerrainMap telemetry={telemetry} terrainStyle={terrainStyle} />
 
         <div
-          className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#0c1f3f]/55 via-transparent to-[#020617]/70"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-b from-sky-900/35 via-transparent to-[#020617]/55"
           aria-hidden
         />
+        <div className="live-video-horizon pointer-events-none absolute inset-x-0 top-[18%]" aria-hidden />
         <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_35%,rgba(0,0,0,0.55)_100%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_28%,rgba(0,0,0,0.62)_100%)]"
           aria-hidden
         />
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[length:100%_3px] opacity-25" />
-        <VideoGrainOverlay />
+        <div className="live-video-lens-ring pointer-events-none absolute inset-5 rounded-[18px] border border-white/10" aria-hidden />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[length:100%_2px] opacity-20" />
+        <VideoEffectsOverlay />
 
+        <div className="pointer-events-none absolute left-1/2 top-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/25" />
         <div className="pointer-events-none absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2">
-          <span className="absolute left-0 top-1/2 h-px w-1.5 -translate-y-1/2 bg-white/70" />
-          <span className="absolute right-0 top-1/2 h-px w-1.5 -translate-y-1/2 bg-white/70" />
-          <span className="absolute left-1/2 top-0 w-px h-1.5 -translate-x-1/2 bg-white/70" />
-          <span className="absolute bottom-0 left-1/2 w-px h-1.5 -translate-x-1/2 bg-white/70" />
+          <span className="absolute left-0 top-1/2 h-px w-2 -translate-y-1/2 bg-white/75" />
+          <span className="absolute right-0 top-1/2 h-px w-2 -translate-y-1/2 bg-white/75" />
+          <span className="absolute left-1/2 top-0 w-px h-2 -translate-x-1/2 bg-white/75" />
+          <span className="absolute bottom-0 left-1/2 w-px h-2 -translate-x-1/2 bg-white/75" />
         </div>
 
         <div
@@ -175,9 +185,7 @@ export default function SimulatedLiveVideoView({
             <p>
               {telemetry.latitude.toFixed(6)}, {telemetry.longitude.toFixed(6)}
             </p>
-            <p className="mt-1 text-white/50">
-              {terrainStyle === "urban" ? "Urban map · Matrice 4T" : "Satellite + terrain · Matrice 4T"}
-            </p>
+            <p className="mt-1 text-white/50">Aerial FPV · Matrice 4T</p>
           </div>
         )}
       </div>
