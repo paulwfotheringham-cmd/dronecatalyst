@@ -275,6 +275,14 @@ body {
   filter: saturate(0.92) brightness(0.94);
 }
 
+.flight-path-map-shell--urban .leaflet-container {
+  filter: saturate(1.02) contrast(1.04) brightness(1);
+}
+
+.live-video-map-shell--urban .leaflet-container {
+  filter: saturate(1.05) contrast(1.05) brightness(1.02);
+}
+
 .scan-point-cloud {
   background-image:
     radial-gradient(circle at 18% 32%, rgba(96, 165, 250, 0.9) 1px, transparent 1px),

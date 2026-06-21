@@ -2,8 +2,12 @@
 
 import { useEffect, useRef } from "react";
 import L from "leaflet";
-import { MapContainer, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+
+import { ORBIT_MAP_ZOOM, type MapTerrainStyle } from "@/lib/map-tiles";
+
+import MapTileLayers from "./MapTileLayers";
 
 type LatLng = [number, number];
 
@@ -31,15 +35,22 @@ const homeIcon = L.divIcon({
 function MapViewSync({
   position,
   path,
-  plannedOrbit,
+  followCenter,
+  trackingZoom,
 }: {
   position: LatLng;
   path: LatLng[];
-  plannedOrbit?: LatLng[];
+  followCenter?: boolean;
+  trackingZoom: number;
 }) {
   const map = useMap();
 
   useEffect(() => {
+    if (followCenter) {
+      map.setView(position, trackingZoom, { animate: true });
+      return;
+    }
+
     if (path.length >= 2) {
       const bounds = L.latLngBounds(path);
       const center = bounds.getCenter();
@@ -53,13 +64,8 @@ function MapViewSync({
       return;
     }
 
-    if (plannedOrbit && plannedOrbit.length >= 3) {
-      map.fitBounds(L.latLngBounds(plannedOrbit), { animate: true, padding: [24, 24] });
-      return;
-    }
-
-    map.setView(position, 18, { animate: true });
-  }, [map, path, plannedOrbit, position]);
+    map.setView(position, trackingZoom, { animate: true });
+  }, [map, path, position, followCenter, trackingZoom]);
 
   return null;
 }
@@ -153,6 +159,8 @@ export type FlightPathMapProps = {
   plannedOrbit?: LatLng[];
   homePosition?: LatLng;
   startPosition?: LatLng;
+  followCenter?: boolean;
+  terrainStyle?: MapTerrainStyle;
 };
 
 export default function FlightPathMap({
@@ -161,30 +169,30 @@ export default function FlightPathMap({
   plannedOrbit,
   homePosition,
   startPosition,
+  followCenter = false,
+  terrainStyle = "satellite",
 }: FlightPathMapProps) {
   const pathStartPosition = path[0] ?? startPosition ?? position;
+  const trackingZoom = followCenter ? ORBIT_MAP_ZOOM : 18;
+  const shellClassName =
+    terrainStyle === "urban" ? "flight-path-map-shell flight-path-map-shell--urban" : "flight-path-map-shell";
 
   return (
-    <div className="flight-path-map-shell relative overflow-hidden rounded-xl border border-white/10">
+    <div className={`${shellClassName} relative overflow-hidden rounded-xl border border-white/10`}>
       <MapContainer
-        center={homePosition ?? position}
-        zoom={14}
+        center={position}
+        zoom={trackingZoom}
         scrollWheelZoom={false}
         className="h-[320px] w-full"
-        style={{ background: "#3d4f3a" }}
+        style={{ background: terrainStyle === "urban" ? "#eef2f7" : "#3d4f3a" }}
       >
-        <TileLayer
-          attribution='Tiles &copy; Esri &mdash; Source: Esri, USGS, NOAA'
-          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-          maxZoom={19}
+        <MapTileLayers style={terrainStyle} />
+        <MapViewSync
+          position={position}
+          path={path}
+          followCenter={followCenter}
+          trackingZoom={trackingZoom}
         />
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
-          maxZoom={17}
-          opacity={0.42}
-        />
-        <MapViewSync position={position} path={path} plannedOrbit={plannedOrbit} />
         {plannedOrbit && plannedOrbit.length >= 3 && (
           <PlannedOrbitPolyline path={plannedOrbit} />
         )}

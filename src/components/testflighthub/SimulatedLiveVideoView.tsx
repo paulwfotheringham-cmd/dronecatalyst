@@ -17,6 +17,7 @@ const LiveVideoTerrainMap = dynamic(() => import("./LiveVideoTerrainMap"), {
 type SimulatedLiveVideoViewProps = {
   telemetry: Telemetry;
   compact?: boolean;
+  terrainStyle?: "satellite" | "urban";
 };
 
 function formatHudTime(date: Date) {
@@ -88,6 +89,7 @@ function VideoGrainOverlay() {
 export default function SimulatedLiveVideoView({
   telemetry,
   compact = false,
+  terrainStyle = "satellite",
 }: SimulatedLiveVideoViewProps) {
   return (
     <section
@@ -125,7 +127,7 @@ export default function SimulatedLiveVideoView({
           compact ? "min-h-0" : "aspect-video"
         }`}
       >
-        <LiveVideoTerrainMap telemetry={telemetry} />
+        <LiveVideoTerrainMap telemetry={telemetry} terrainStyle={terrainStyle} />
 
         <div
           className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#0c1f3f]/55 via-transparent to-[#020617]/70"
@@ -173,7 +175,9 @@ export default function SimulatedLiveVideoView({
             <p>
               {telemetry.latitude.toFixed(6)}, {telemetry.longitude.toFixed(6)}
             </p>
-            <p className="mt-1 text-white/50">Satellite + terrain · Matrice 4T</p>
+            <p className="mt-1 text-white/50">
+              {terrainStyle === "urban" ? "Urban map · Matrice 4T" : "Satellite + terrain · Matrice 4T"}
+            </p>
           </div>
         )}
       </div>

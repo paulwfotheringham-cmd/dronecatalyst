@@ -2,18 +2,28 @@
 
 import { useEffect, useRef } from "react";
 import L from "leaflet";
-import { MapContainer, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
+import { type MapTerrainStyle } from "@/lib/map-tiles";
 import type { Telemetry } from "@/lib/telemetry";
+
+import MapTileLayers from "./MapTileLayers";
 
 type LatLng = [number, number];
 
 type LiveVideoTerrainMapProps = {
   telemetry: Telemetry;
+  terrainStyle?: MapTerrainStyle;
 };
 
-function zoomForAltitude(altitudeFt: number) {
+function zoomForAltitude(altitudeFt: number, terrainStyle: MapTerrainStyle) {
+  if (terrainStyle === "urban") {
+    if (altitudeFt >= 360) return 16;
+    if (altitudeFt >= 280) return 17;
+    return 18;
+  }
+
   if (altitudeFt >= 360) return 17;
   if (altitudeFt >= 280) return 18;
   return 19;
@@ -53,7 +63,13 @@ function mphToMps(speedMph: number) {
   return speedMph * 0.44704;
 }
 
-function ChaseCamera({ telemetry }: { telemetry: Telemetry }) {
+function ChaseCamera({
+  telemetry,
+  terrainStyle,
+}: {
+  telemetry: Telemetry;
+  terrainStyle: MapTerrainStyle;
+}) {
   const map = useMap();
   const telemetryRef = useRef(telemetry);
   const displayPositionRef = useRef<LatLng>([telemetry.latitude, telemetry.longitude]);
@@ -68,10 +84,7 @@ function ChaseCamera({ telemetry }: { telemetry: Telemetry }) {
     const nextTarget: LatLng = [telemetry.latitude, telemetry.longitude];
     const previousTarget = targetPositionRef.current;
 
-    if (
-      previousTarget[0] !== nextTarget[0] ||
-      previousTarget[1] !== nextTarget[1]
-    ) {
+    if (previousTarget[0] !== nextTarget[0] || previousTarget[1] !== nextTarget[1]) {
       headingRef.current = bearingDegrees(lastTelemetryPositionRef.current, nextTarget);
       lastTelemetryPositionRef.current = nextTarget;
     }
@@ -81,9 +94,9 @@ function ChaseCamera({ telemetry }: { telemetry: Telemetry }) {
     if (!initializedRef.current) {
       displayPositionRef.current = nextTarget;
       initializedRef.current = true;
-      map.setView(nextTarget, zoomForAltitude(telemetry.altitudeFt), { animate: false });
+      map.setView(nextTarget, zoomForAltitude(telemetry.altitudeFt, terrainStyle), { animate: false });
     }
-  }, [map, telemetry]);
+  }, [map, telemetry, terrainStyle]);
 
   useEffect(() => {
     map.dragging.disable();
@@ -121,7 +134,7 @@ function ChaseCamera({ telemetry }: { telemetry: Telemetry }) {
         forwardStep[1] * 0.72 + towardTarget[1] * 0.28,
       ];
 
-      const zoom = zoomForAltitude(current.altitudeFt);
+      const zoom = zoomForAltitude(current.altitudeFt, terrainStyle);
       map.setView(displayPositionRef.current, zoom, { animate: false });
 
       frameId = window.requestAnimationFrame(tick);
@@ -132,36 +145,35 @@ function ChaseCamera({ telemetry }: { telemetry: Telemetry }) {
     return () => {
       window.cancelAnimationFrame(frameId);
     };
-  }, [map]);
+  }, [map, terrainStyle]);
 
   return null;
 }
 
-export default function LiveVideoTerrainMap({ telemetry }: LiveVideoTerrainMapProps) {
+export default function LiveVideoTerrainMap({
+  telemetry,
+  terrainStyle = "satellite",
+}: LiveVideoTerrainMapProps) {
   const initialPosition: LatLng = [telemetry.latitude, telemetry.longitude];
+  const shellClassName =
+    terrainStyle === "urban"
+      ? "live-video-map-shell live-video-map-shell--urban"
+      : "live-video-map-shell";
 
   return (
-    <div className="live-video-map-shell absolute inset-0 overflow-hidden">
+    <div className={`${shellClassName} absolute inset-0 overflow-hidden`}>
       <div className="live-video-map-stage absolute inset-0">
         <MapContainer
           center={initialPosition}
-          zoom={zoomForAltitude(telemetry.altitudeFt)}
+          zoom={zoomForAltitude(telemetry.altitudeFt, terrainStyle)}
           scrollWheelZoom={false}
           zoomControl={false}
           attributionControl={false}
           className="h-full w-full"
-          style={{ background: "#2f3f2c" }}
+          style={{ background: terrainStyle === "urban" ? "#eef2f7" : "#2f3f2c" }}
         >
-          <TileLayer
-            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-            maxZoom={19}
-          />
-          <TileLayer
-            url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
-            maxZoom={17}
-            opacity={0.5}
-          />
-          <ChaseCamera telemetry={telemetry} />
+          <MapTileLayers style={terrainStyle} showAttribution={false} />
+          <ChaseCamera telemetry={telemetry} terrainStyle={terrainStyle} />
         </MapContainer>
       </div>
     </div>

@@ -305,6 +305,8 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
     const hasTelemetry = telemetry !== null;
     const plannedOrbit = getOrbitPathSamples(activeProfile);
     const mapHomePosition = getMapHomePosition(activeProfile);
+    const mapTerrainStyle = activeProfile.mode === "orbit" ? "urban" : "satellite";
+    const followMapCenter = activeProfile.mode === "orbit";
 
     return (
       <>
@@ -425,10 +427,18 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
                     activeProfile.startPosition.latitude,
                     activeProfile.startPosition.longitude,
                   ]}
+                  followCenter={followMapCenter}
+                  terrainStyle={mapTerrainStyle}
                 />
               </div>
 
-              {isRunning && <SimulatedLiveVideoView telemetry={telemetry} compact />}
+              {isRunning && (
+                <SimulatedLiveVideoView
+                  telemetry={telemetry}
+                  compact
+                  terrainStyle={mapTerrainStyle}
+                />
+              )}
             </div>
           </section>
         )}
