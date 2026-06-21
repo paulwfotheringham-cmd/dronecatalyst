@@ -81,8 +81,8 @@ export const AUSTIN_FLIGHT_PROFILE: OrbitFlightProfile = {
     label: "Austin Survey Point",
   },
   startPosition: {
-    latitude: 30.456901,
-    longitude: -97.648278,
+    latitude: 30.457038,
+    longitude: -97.647892,
     label: "Avalon Tech Ridge, 14100 John Henry Faulk Dr",
   },
   orbitRadiusM: 2000,
@@ -134,6 +134,69 @@ export function angleFromPosition(
     metersPerDegreeLng(profile.orbitCenter.latitude);
 
   return Math.atan2(deltaLngM, deltaLatM);
+}
+
+function distanceBetweenM(
+  fromLat: number,
+  fromLng: number,
+  toLat: number,
+  toLng: number,
+) {
+  const midLat = (fromLat + toLat) / 2;
+  const deltaLatM = (toLat - fromLat) * METERS_PER_DEGREE_LAT;
+  const deltaLngM = (toLng - fromLng) * metersPerDegreeLng(midLat);
+  return Math.hypot(deltaLatM, deltaLngM);
+}
+
+function moveTowardPoint(
+  fromLat: number,
+  fromLng: number,
+  toLat: number,
+  toLng: number,
+  stepM: number,
+) {
+  const remainingM = distanceBetweenM(fromLat, fromLng, toLat, toLng);
+  if (remainingM <= stepM) {
+    return { latitude: toLat, longitude: toLng };
+  }
+
+  const progress = stepM / remainingM;
+  return {
+    latitude: fromLat + (toLat - fromLat) * progress,
+    longitude: fromLng + (toLng - fromLng) * progress,
+  };
+}
+
+function approachSpeedMultiplier(profile: OrbitFlightProfile) {
+  return profile.id === "austin" ? 3.2 : 2.4;
+}
+
+function orbitEntryPoint(profile: OrbitFlightProfile, latitude: number, longitude: number) {
+  const angle = angleFromPosition(profile, latitude, longitude);
+  return {
+    angle,
+    ...positionOnOrbit(profile, angle),
+  };
+}
+
+const ORBIT_ENTRY_TOLERANCE_M = 45;
+
+function distanceFromOrbitEdge(
+  profile: OrbitFlightProfile,
+  latitude: number,
+  longitude: number,
+) {
+  const distToCenter = distanceBetweenM(
+    latitude,
+    longitude,
+    profile.orbitCenter.latitude,
+    profile.orbitCenter.longitude,
+  );
+  return Math.abs(distToCenter - profile.orbitRadiusM);
+}
+
+function isOnOrbit(profile: OrbitFlightProfile, latitude: number, longitude: number) {
+  return distanceFromOrbitEdge(profile, latitude, longitude) <= ORBIT_ENTRY_TOLERANCE_M;
 }
 
 function orbitAngleStep(profile: OrbitFlightProfile, speedMph: number) {
@@ -194,6 +257,34 @@ export function advanceTelemetry(
     };
   }
 
+  if (!isOnOrbit(profile, previous.latitude, previous.longitude)) {
+    const entry = orbitEntryPoint(profile, previous.latitude, previous.longitude);
+    const approachSpeedMph = profile.cruiseSpeedMph * approachSpeedMultiplier(profile);
+    const stepM = approachSpeedMph * 0.44704 * SIMULATION_TICK_SECONDS;
+    const nextPosition = moveTowardPoint(
+      previous.latitude,
+      previous.longitude,
+      entry.latitude,
+      entry.longitude,
+      stepM,
+    );
+    const altitudeDelta = (Math.random() - 0.5) * 4;
+
+    return {
+      nextAngle: entry.angle,
+      telemetry: {
+        ...previous,
+        status: "IN FLIGHT" as const,
+        latitude: nextPosition.latitude,
+        longitude: nextPosition.longitude,
+        altitudeFt: Math.max(220, Math.min(340, previous.altitudeFt + altitudeDelta)),
+        speedMph: approachSpeedMph + (Math.random() - 0.5) * 2,
+        batteryPct: Math.max(0, previous.batteryPct - 0.15 - Math.random() * 0.2),
+        lastUpdated: new Date(),
+      },
+    };
+  }
+
   const nextAngle = angleRadians + orbitAngleStep(profile, previous.speedMph);
   const position = positionOnOrbit(profile, nextAngle);
   const altitudeDelta = (Math.random() - 0.5) * 6;
@@ -229,28 +320,27 @@ export function getMapHomePosition(profile: FlightProfile): [number, number] | n
 }
 
 export function inferFlightProfile(latitude: number, longitude: number): FlightProfile {
-  const candidates: { profile: FlightProfile; maxDistanceM: number }[] = [
-    { profile: SPAIN_FLIGHT_PROFILE, maxDistanceM: 5000 },
-    { profile: AUSTIN_FLIGHT_PROFILE, maxDistanceM: 8000 },
-    { profile: RANDOM_FLIGHT_PROFILE, maxDistanceM: 5000 },
-  ];
+  let closest: FlightProfile = RANDOM_FLIGHT_PROFILE;
+  let closestDistanceM = Number.POSITIVE_INFINITY;
 
-  for (const candidate of candidates) {
+  for (const profile of FLIGHT_PROFILES) {
     const anchor =
-      candidate.profile.mode === "orbit"
-        ? candidate.profile.orbitCenter
-        : candidate.profile.startPosition;
-    const deltaLatM = (latitude - anchor.latitude) * METERS_PER_DEGREE_LAT;
-    const deltaLngM =
-      (longitude - anchor.longitude) * metersPerDegreeLng(anchor.latitude);
-    const distanceM = Math.hypot(deltaLatM, deltaLngM);
+      profile.mode === "orbit" ? profile.orbitCenter : profile.startPosition;
+    const distanceM = distanceBetweenM(
+      latitude,
+      longitude,
+      anchor.latitude,
+      anchor.longitude,
+    );
+    const maxDistanceM = profile.mode === "orbit" ? profile.orbitRadiusM + 6000 : 5000;
 
-    if (distanceM <= candidate.maxDistanceM) {
-      return candidate.profile;
+    if (distanceM <= maxDistanceM && distanceM < closestDistanceM) {
+      closest = profile;
+      closestDistanceM = distanceM;
     }
   }
 
-  return RANDOM_FLIGHT_PROFILE;
+  return closest;
 }
 
 export function getProfileStartPosition(profile: FlightProfile): [number, number] {
