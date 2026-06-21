@@ -5,6 +5,8 @@ import {
   isSupabaseConfigured,
 } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 function supabaseUnavailable() {
   return NextResponse.json(
     {
@@ -51,11 +53,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({
-      status: "connected",
-      records: data ?? [],
-      total: count ?? 0,
-    });
+    return NextResponse.json(
+      {
+        status: "connected",
+        records: data ?? [],
+        total: count ?? 0,
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate",
+        },
+      },
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to load telemetry records";
     return NextResponse.json(

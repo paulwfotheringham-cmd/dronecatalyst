@@ -33,7 +33,7 @@ type TelemetryFeedResponse = {
   error?: string;
 };
 
-const REFRESH_INTERVAL_MS = 5_000;
+const REFRESH_INTERVAL_MS = 3_000;
 const PAGE_SIZE = 10;
 const STATUS_FILTERS: TelemetryStatusFilter[] = [
   "ALL",
@@ -55,7 +55,10 @@ function StatCard({ label, value }: { label: string; value: string }) {
 }
 
 async function fetchTelemetryRecords(): Promise<TelemetryFeedResponse> {
-  const response = await fetch("/api/telemetry/records?limit=200", { cache: "no-store" });
+  const response = await fetch(
+    `/api/telemetry/records?limit=200&_=${Date.now()}`,
+    { cache: "no-store" },
+  );
   const payload = (await response.json()) as TelemetryFeedResponse & { error?: string };
 
   if (response.status === 503) {
@@ -133,7 +136,18 @@ export default function TelemetryDashboard() {
       void refresh();
     }, REFRESH_INTERVAL_MS);
 
-    return () => clearInterval(interval);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void refresh();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [refresh]);
 
   const filteredRecords = useMemo(
@@ -206,8 +220,9 @@ export default function TelemetryDashboard() {
               Telemetry Dashboard
             </h2>
             <p className="mt-2 max-w-2xl text-sm text-white/60">
-              Live telemetry from Supabase with auto-refresh every 5 seconds. Select a row to
-              inspect the latest drone position on the map.
+              Live telemetry from Supabase with auto-refresh every 3 seconds. Start a simulation
+              on Test Lab, then open this page — the simulator keeps running in the background while
+              new rows appear here.
             </p>
           </div>
           {lastRefreshed && (

@@ -6,6 +6,8 @@ import {
 } from "@/lib/supabase/server";
 import { telemetryToInsert, type Telemetry } from "@/lib/telemetry";
 
+export const dynamic = "force-dynamic";
+
 function supabaseUnavailable() {
   return NextResponse.json(
     { error: "Supabase is not configured. Set SUPABASE_URL and SUPABASE_ANON_KEY." },

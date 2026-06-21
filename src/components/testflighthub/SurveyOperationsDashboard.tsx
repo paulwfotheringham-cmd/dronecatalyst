@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { useSearchParams } from "next/navigation";
 
 import {
@@ -13,15 +12,13 @@ import {
   isSurveyOperationsView,
   type SurveyOperationsView,
 } from "@/lib/survey-operations-mock-data";
-import type { Telemetry } from "@/lib/telemetry";
-
 import FleetPanel from "./FleetPanel";
-import FlightHubSandbox, { type FlightHubSandboxHandle } from "./FlightHubSandbox";
 import MissionManagementWorkspace from "./MissionManagementWorkspace";
 import MissionOverviewPanel from "./MissionOverviewPanel";
 import RecentMissionsPanel from "./RecentMissionsPanel";
 import SurveyOperationsPlaceholder from "./SurveyOperationsPlaceholder";
 import SurveyOperationsShell from "./SurveyOperationsShell";
+import { useSurveyOperationsSimulator } from "./SurveyOperationsSimulatorProvider";
 
 function readInitialView(searchParams: ReturnType<typeof useSearchParams>): SurveyOperationsView {
   const viewParam = searchParams.get("view");
@@ -33,19 +30,16 @@ export default function SurveyOperationsDashboard() {
   const [activeView, setActiveView] = useState<SurveyOperationsView>(() =>
     readInitialView(searchParams),
   );
-  const [liveTelemetry, setLiveTelemetry] = useState<Telemetry | null>(null);
-  const [isRunning, setIsRunning] = useState(false);
+  const { sandboxRef, liveTelemetry, isRunning, setSandboxMountTarget } =
+    useSurveyOperationsSimulator();
   const [missions, setMissions] = useState<ManagedMission[]>(() => createInitialMissions());
   const [selectedMissionId, setSelectedMissionId] = useState("mission-1");
   const [runningMissionId, setRunningMissionId] = useState<string | null>(null);
-  const sandboxRef = useRef<FlightHubSandboxHandle>(null);
   const activeMissionIdRef = useRef<string | null>(null);
   const lowBatteryWarnedRef = useRef<Set<string>>(new Set());
   const waypointMilestonesRef = useRef<Map<string, number>>(new Map());
   const dashboardSandboxHostRef = useRef<HTMLDivElement>(null);
   const missionsSandboxHostRef = useRef<HTMLDivElement>(null);
-  const hiddenSandboxHostRef = useRef<HTMLDivElement>(null);
-  const [sandboxHost, setSandboxHost] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
     const viewParam = searchParams.get("view");
@@ -72,15 +66,12 @@ export default function SurveyOperationsDashboard() {
         ? dashboardSandboxHostRef.current
         : activeView === "missions"
           ? missionsSandboxHostRef.current
-          : hiddenSandboxHostRef.current;
+          : null;
 
-    setSandboxHost(host);
-  }, [activeView]);
+    setSandboxMountTarget(host);
 
-  const handleTelemetryChange = useCallback((telemetry: Telemetry | null, running: boolean) => {
-    setLiveTelemetry(telemetry);
-    setIsRunning(running);
-  }, []);
+    return () => setSandboxMountTarget(null);
+  }, [activeView, setSandboxMountTarget]);
 
   const handleViewChange = useCallback((view: SurveyOperationsView) => {
     setActiveView(view);
@@ -168,13 +159,6 @@ export default function SurveyOperationsDashboard() {
     );
   }, [liveTelemetry]);
 
-  const sandbox =
-    sandboxHost &&
-    createPortal(
-      <FlightHubSandbox ref={sandboxRef} onTelemetryChange={handleTelemetryChange} />,
-      sandboxHost,
-    );
-
   return (
     <SurveyOperationsShell activeView={activeView} onViewChange={handleViewChange}>
       <div className="relative px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
@@ -246,8 +230,6 @@ export default function SurveyOperationsDashboard() {
         </div>
       </div>
 
-      <div ref={hiddenSandboxHostRef} className="hidden" aria-hidden />
-      {sandbox}
     </SurveyOperationsShell>
   );
 }

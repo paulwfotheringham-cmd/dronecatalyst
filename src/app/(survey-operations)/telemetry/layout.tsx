@@ -14,9 +14,5 @@ export const viewport: Viewport = {
 };
 
 export default function TelemetryLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="fixed inset-0 z-[100] flex h-dvh max-h-dvh flex-col overflow-hidden overscroll-none bg-[#020617] text-white supports-[height:100dvh]:h-dvh">
-      {children}
-    </div>
-  );
+  return children;
 }
