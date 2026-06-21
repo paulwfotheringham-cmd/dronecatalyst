@@ -3,8 +3,12 @@
 import { TileLayer } from "react-leaflet";
 
 import {
+  OSM_HOT_TILE_URL,
+  OSM_MAP_ATTRIBUTION,
+  OSM_STANDARD_TILE_URL,
   SATELLITE_MAP_ATTRIBUTION,
   type MapTerrainStyle,
+  URBAN_BASE_TILE_URL,
   URBAN_MAP_ATTRIBUTION,
 } from "@/lib/map-tiles";
 
@@ -29,12 +33,25 @@ export default function MapTileLayers({
           maxZoom={20}
         />
         {style === "urban" ? (
-          <TileLayer
-            attribution={showAttribution ? URBAN_MAP_ATTRIBUTION : undefined}
-            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-            maxZoom={20}
-            opacity={0.42}
-          />
+          <>
+            <TileLayer
+              attribution={showAttribution ? URBAN_MAP_ATTRIBUTION : undefined}
+              url={URBAN_BASE_TILE_URL}
+              maxZoom={20}
+              opacity={0.58}
+            />
+            <TileLayer
+              attribution={showAttribution ? OSM_MAP_ATTRIBUTION : undefined}
+              url={OSM_STANDARD_TILE_URL}
+              maxZoom={19}
+              opacity={0.24}
+            />
+            <TileLayer
+              url={OSM_HOT_TILE_URL}
+              maxZoom={19}
+              opacity={0.14}
+            />
+          </>
         ) : (
           <TileLayer
             url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
@@ -51,13 +68,19 @@ export default function MapTileLayers({
       <>
         <TileLayer
           attribution={showAttribution ? URBAN_MAP_ATTRIBUTION : undefined}
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          url={URBAN_BASE_TILE_URL}
           maxZoom={20}
         />
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution={showAttribution ? OSM_MAP_ATTRIBUTION : undefined}
+          url={OSM_STANDARD_TILE_URL}
           maxZoom={19}
-          opacity={0.18}
+          opacity={0.32}
+        />
+        <TileLayer
+          url={OSM_HOT_TILE_URL}
+          maxZoom={19}
+          opacity={0.16}
         />
       </>
     );
@@ -71,11 +94,7 @@ export default function MapTileLayers({
         maxZoom={19}
       />
       <TileLayer
-        attribution={
-          showAttribution
-            ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            : undefined
-        }
+        attribution={showAttribution ? OSM_MAP_ATTRIBUTION : undefined}
         url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
         maxZoom={17}
         opacity={0.42}

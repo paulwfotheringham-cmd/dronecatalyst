@@ -309,7 +309,7 @@ body {
 }
 
 .flight-path-map-shell--urban .leaflet-container {
-  filter: saturate(1.02) contrast(1.04) brightness(1);
+  filter: saturate(1.06) contrast(1.08) brightness(1.02);
 }
 
 .scan-point-cloud {

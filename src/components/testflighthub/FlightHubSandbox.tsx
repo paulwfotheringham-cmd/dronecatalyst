@@ -97,6 +97,10 @@ function profileButtonClass(id: FlightProfileId) {
       return "border border-amber-500/40 bg-amber-500/15 text-amber-100 hover:border-amber-400/60 hover:bg-amber-500/25";
     case "austin":
       return "border border-violet-500/40 bg-violet-500/15 text-violet-100 hover:border-violet-400/60 hover:bg-violet-500/25";
+    case "france":
+      return "border border-sky-500/40 bg-sky-500/15 text-sky-100 hover:border-sky-400/60 hover:bg-sky-500/25";
+    case "norway":
+      return "border border-teal-500/40 bg-teal-500/15 text-teal-100 hover:border-teal-400/60 hover:bg-teal-500/25";
   }
 }
 

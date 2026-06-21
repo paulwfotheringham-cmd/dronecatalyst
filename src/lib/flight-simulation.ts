@@ -1,6 +1,6 @@
 import { DRONE_ID, type Telemetry } from "@/lib/telemetry";
 
-export type FlightProfileId = "random" | "spain" | "austin";
+export type FlightProfileId = "random" | "spain" | "austin" | "france" | "norway";
 
 type GeoPoint = {
   latitude: number;
@@ -88,10 +88,52 @@ export const AUSTIN_FLIGHT_PROFILE: OrbitFlightProfile = {
   orbitRadiusM: 2000,
 };
 
+/** 2 km orbit at 45°33′N 41°07′59″E. */
+export const FRANCE_FLIGHT_PROFILE: OrbitFlightProfile = {
+  id: "france",
+  buttonLabel: "Start France Drone",
+  description: "2 km orbit around the France survey point at 45°33′N, 41°07′59″E.",
+  mode: "orbit",
+  cruiseSpeedMph: 28,
+  orbitCenter: {
+    latitude: 45.55,
+    longitude: 41.13305555555556,
+    label: "France Survey Point",
+  },
+  startPosition: {
+    latitude: 45.552246,
+    longitude: 41.13305555555556,
+    label: "France Survey Takeoff",
+  },
+  orbitRadiusM: 2000,
+};
+
+/** 2 km orbit around the Norway survey point near Oslo. */
+export const NORWAY_FLIGHT_PROFILE: OrbitFlightProfile = {
+  id: "norway",
+  buttonLabel: "Start Norway Drone",
+  description: "2 km orbit around the Norway survey point at 60.117322°N, 10.858643°E.",
+  mode: "orbit",
+  cruiseSpeedMph: 28,
+  orbitCenter: {
+    latitude: 60.1173222623737,
+    longitude: 10.858642954514552,
+    label: "Norway Survey Point",
+  },
+  startPosition: {
+    latitude: 60.119568,
+    longitude: 10.858642954514552,
+    label: "Norway Survey Takeoff",
+  },
+  orbitRadiusM: 2000,
+};
+
 export const FLIGHT_PROFILES: FlightProfile[] = [
   RANDOM_FLIGHT_PROFILE,
   SPAIN_FLIGHT_PROFILE,
   AUSTIN_FLIGHT_PROFILE,
+  FRANCE_FLIGHT_PROFILE,
+  NORWAY_FLIGHT_PROFILE,
 ];
 
 export function getFlightProfile(id: FlightProfileId): FlightProfile {
@@ -167,8 +209,15 @@ function moveTowardPoint(
   };
 }
 
-function approachSpeedMultiplier(profile: OrbitFlightProfile) {
-  return profile.id === "austin" ? 3.2 : 2.4;
+function approachSpeedMultiplier(
+  profile: OrbitFlightProfile,
+  latitude: number,
+  longitude: number,
+) {
+  const distToEdge = distanceFromOrbitEdge(profile, latitude, longitude);
+  if (distToEdge > 1500) return 1.5;
+  if (distToEdge > 800) return 1.25;
+  return 1.05;
 }
 
 function orbitEntryPoint(profile: OrbitFlightProfile, latitude: number, longitude: number) {
@@ -259,7 +308,9 @@ export function advanceTelemetry(
 
   if (!isOnOrbit(profile, previous.latitude, previous.longitude)) {
     const entry = orbitEntryPoint(profile, previous.latitude, previous.longitude);
-    const approachSpeedMph = profile.cruiseSpeedMph * approachSpeedMultiplier(profile);
+    const approachSpeedMph =
+      profile.cruiseSpeedMph *
+      approachSpeedMultiplier(profile, previous.latitude, previous.longitude);
     const stepM = approachSpeedMph * 0.44704 * SIMULATION_TICK_SECONDS;
     const nextPosition = moveTowardPoint(
       previous.latitude,

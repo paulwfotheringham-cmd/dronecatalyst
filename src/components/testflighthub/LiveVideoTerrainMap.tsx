@@ -25,9 +25,9 @@ type CameraMotion = {
 };
 
 function zoomForAltitude(altitudeFt: number) {
-  if (altitudeFt >= 360) return 18;
-  if (altitudeFt >= 280) return 19;
-  return 20;
+  if (altitudeFt >= 360) return 17;
+  if (altitudeFt >= 280) return 18;
+  return 18;
 }
 
 function bearingDegrees(from: LatLng, to: LatLng) {
@@ -145,15 +145,16 @@ function ChaseCamera({
       const headingDelta = Math.abs(heading - lastHeadingRef.current);
       lastHeadingRef.current = heading;
 
-      const forwardStep = movePoint(display[0], display[1], heading, speedMps * deltaSeconds);
+      const lerpFactor = Math.min(deltaSeconds * 0.72, 0.18);
+      const forwardStep = movePoint(display[0], display[1], heading, speedMps * deltaSeconds * 0.22);
       const towardTarget: LatLng = [
-        display[0] + (target[0] - display[0]) * Math.min(deltaSeconds * 2.2, 0.4),
-        display[1] + (target[1] - display[1]) * Math.min(deltaSeconds * 2.2, 0.4),
+        display[0] + (target[0] - display[0]) * lerpFactor,
+        display[1] + (target[1] - display[1]) * lerpFactor,
       ];
 
       displayPositionRef.current = [
-        forwardStep[0] * 0.78 + towardTarget[0] * 0.22,
-        forwardStep[1] * 0.78 + towardTarget[1] * 0.22,
+        forwardStep[0] * 0.18 + towardTarget[0] * 0.82,
+        forwardStep[1] * 0.18 + towardTarget[1] * 0.82,
       ];
 
       const shakeIntensity = 0.12 + speedMps * 0.018 + headingDelta * 2.5;

@@ -47,7 +47,7 @@ function MapViewSync({
 
   useEffect(() => {
     if (followCenter) {
-      map.setView(position, trackingZoom, { animate: true });
+      map.panTo(position, { animate: true, duration: 2.8, easeLinearity: 0.2 });
       return;
     }
 
