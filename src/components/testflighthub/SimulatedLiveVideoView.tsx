@@ -18,6 +18,7 @@ type SimulatedLiveVideoViewProps = {
   telemetry: Telemetry;
   compact?: boolean;
   terrainStyle?: "satellite" | "urban";
+  sessionKey: string;
 };
 
 function formatHudTime(date: Date) {
@@ -97,6 +98,7 @@ export default function SimulatedLiveVideoView({
   telemetry,
   compact = false,
   terrainStyle = "satellite",
+  sessionKey,
 }: SimulatedLiveVideoViewProps) {
   return (
     <section
@@ -134,7 +136,12 @@ export default function SimulatedLiveVideoView({
           compact ? "min-h-0" : "aspect-video"
         }`}
       >
-        <LiveVideoTerrainMap telemetry={telemetry} terrainStyle={terrainStyle} />
+        <LiveVideoTerrainMap
+          key={sessionKey}
+          sessionKey={sessionKey}
+          telemetry={telemetry}
+          terrainStyle={terrainStyle}
+        />
 
         <div
           className="pointer-events-none absolute inset-0 bg-gradient-to-b from-sky-900/35 via-transparent to-[#020617]/55"

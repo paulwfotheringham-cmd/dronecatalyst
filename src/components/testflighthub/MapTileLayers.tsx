@@ -38,18 +38,13 @@ export default function MapTileLayers({
               attribution={showAttribution ? URBAN_MAP_ATTRIBUTION : undefined}
               url={URBAN_BASE_TILE_URL}
               maxZoom={20}
-              opacity={0.58}
+              opacity={0.44}
             />
             <TileLayer
               attribution={showAttribution ? OSM_MAP_ATTRIBUTION : undefined}
               url={OSM_STANDARD_TILE_URL}
               maxZoom={19}
-              opacity={0.24}
-            />
-            <TileLayer
-              url={OSM_HOT_TILE_URL}
-              maxZoom={19}
-              opacity={0.14}
+              opacity={0.28}
             />
           </>
         ) : (

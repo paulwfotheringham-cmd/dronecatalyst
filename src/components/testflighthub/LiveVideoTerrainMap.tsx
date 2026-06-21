@@ -5,6 +5,7 @@ import L from "leaflet";
 import { MapContainer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
+import { SIMULATION_TICK_SECONDS } from "@/lib/flight-simulation";
 import { type MapTerrainStyle } from "@/lib/map-tiles";
 import type { Telemetry } from "@/lib/telemetry";
 
@@ -15,6 +16,8 @@ type LatLng = [number, number];
 type LiveVideoTerrainMapProps = {
   telemetry: Telemetry;
   terrainStyle?: MapTerrainStyle;
+  /** Forces a fresh map when the flight profile or region changes. */
+  sessionKey: string;
 };
 
 type CameraMotion = {
@@ -23,6 +26,26 @@ type CameraMotion = {
   shakeX: number;
   shakeY: number;
 };
+
+type CameraSegment = {
+  from: LatLng;
+  to: LatLng;
+  startedAt: number;
+  durationMs: number;
+};
+
+const METERS_PER_DEGREE_LAT = 111_320;
+
+function metersPerDegreeLng(latitude: number) {
+  return METERS_PER_DEGREE_LAT * Math.cos((latitude * Math.PI) / 180);
+}
+
+function distanceBetweenM(from: LatLng, to: LatLng) {
+  const midLat = (from[0] + to[0]) / 2;
+  const deltaLatM = (to[0] - from[0]) * METERS_PER_DEGREE_LAT;
+  const deltaLngM = (to[1] - from[1]) * metersPerDegreeLng(midLat);
+  return Math.hypot(deltaLatM, deltaLngM);
+}
 
 function zoomForAltitude(altitudeFt: number) {
   if (altitudeFt >= 360) return 17;
@@ -40,24 +63,16 @@ function bearingDegrees(from: LatLng, to: LatLng) {
   return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
 }
 
-function movePoint(lat: number, lng: number, bearingDeg: number, distanceMeters: number): LatLng {
-  const earthRadius = 6378137;
-  const bearing = (bearingDeg * Math.PI) / 180;
-  const latRad = (lat * Math.PI) / 180;
-  const lngRad = (lng * Math.PI) / 180;
-  const angular = distanceMeters / earthRadius;
-  const nextLatRad = Math.asin(
-    Math.sin(latRad) * Math.cos(angular) +
-      Math.cos(latRad) * Math.sin(angular) * Math.cos(bearing),
-  );
-  const nextLngRad =
-    lngRad +
-    Math.atan2(
-      Math.sin(bearing) * Math.sin(angular) * Math.cos(latRad),
-      Math.cos(angular) - Math.sin(latRad) * Math.sin(nextLatRad),
-    );
+function lerpLatLng(from: LatLng, to: LatLng, progress: number): LatLng {
+  return [
+    from[0] + (to[0] - from[0]) * progress,
+    from[1] + (to[1] - from[1]) * progress,
+  ];
+}
 
-  return [(nextLatRad * 180) / Math.PI, (nextLngRad * 180) / Math.PI];
+function smoothstep(progress: number) {
+  const clamped = Math.max(0, Math.min(progress, 1));
+  return clamped * clamped * (3 - 2 * clamped);
 }
 
 function mphToMps(speedMph: number) {
@@ -85,35 +100,43 @@ function ChaseCamera({
   const map = useMap();
   const telemetryRef = useRef(telemetry);
   const displayPositionRef = useRef<LatLng>([telemetry.latitude, telemetry.longitude]);
-  const targetPositionRef = useRef<LatLng>([telemetry.latitude, telemetry.longitude]);
   const headingRef = useRef(0);
   const lastHeadingRef = useRef(0);
-  const lastTelemetryPositionRef = useRef<LatLng>([telemetry.latitude, telemetry.longitude]);
-  const initializedRef = useRef(false);
-  const motionRef = useRef<CameraMotion>({
-    heading: 0,
-    bank: 0,
-    shakeX: 0,
-    shakeY: 0,
+  const segmentRef = useRef<CameraSegment>({
+    from: [telemetry.latitude, telemetry.longitude],
+    to: [telemetry.latitude, telemetry.longitude],
+    startedAt: performance.now(),
+    durationMs: SIMULATION_TICK_SECONDS * 1000,
   });
 
   useEffect(() => {
     telemetryRef.current = telemetry;
 
     const nextTarget: LatLng = [telemetry.latitude, telemetry.longitude];
-    const previousTarget = targetPositionRef.current;
+    const previousTarget = segmentRef.current.to;
+    const display = displayPositionRef.current;
+    const jumpM = distanceBetweenM(display, nextTarget);
+    const targetMoved =
+      previousTarget[0] !== nextTarget[0] || previousTarget[1] !== nextTarget[1];
 
-    if (previousTarget[0] !== nextTarget[0] || previousTarget[1] !== nextTarget[1]) {
-      headingRef.current = bearingDegrees(lastTelemetryPositionRef.current, nextTarget);
-      lastTelemetryPositionRef.current = nextTarget;
-    }
-
-    targetPositionRef.current = nextTarget;
-
-    if (!initializedRef.current) {
+    if (jumpM > 350) {
       displayPositionRef.current = nextTarget;
-      initializedRef.current = true;
+      segmentRef.current = {
+        from: nextTarget,
+        to: nextTarget,
+        startedAt: performance.now(),
+        durationMs: SIMULATION_TICK_SECONDS * 1000,
+      };
       map.setView(nextTarget, zoomForAltitude(telemetry.altitudeFt), { animate: false });
+      map.invalidateSize();
+    } else if (targetMoved) {
+      headingRef.current = bearingDegrees(previousTarget, nextTarget);
+      segmentRef.current = {
+        from: displayPositionRef.current,
+        to: nextTarget,
+        startedAt: performance.now(),
+        durationMs: SIMULATION_TICK_SECONDS * 1000,
+      };
     }
   }, [map, telemetry]);
 
@@ -138,27 +161,19 @@ function ChaseCamera({
       lastTimestamp = timestamp;
 
       const current = telemetryRef.current;
-      const target = targetPositionRef.current;
-      const display = displayPositionRef.current;
+      const segment = segmentRef.current;
+      const elapsedMs = timestamp - segment.startedAt;
+      const progress = smoothstep(elapsedMs / segment.durationMs);
+      const displayPosition = lerpLatLng(segment.from, segment.to, progress);
+      displayPositionRef.current = displayPosition;
+
       const heading = headingRef.current;
       const speedMps = mphToMps(current.speedMph);
       const headingDelta = Math.abs(heading - lastHeadingRef.current);
       lastHeadingRef.current = heading;
 
-      const lerpFactor = Math.min(deltaSeconds * 0.72, 0.18);
-      const forwardStep = movePoint(display[0], display[1], heading, speedMps * deltaSeconds * 0.22);
-      const towardTarget: LatLng = [
-        display[0] + (target[0] - display[0]) * lerpFactor,
-        display[1] + (target[1] - display[1]) * lerpFactor,
-      ];
-
-      displayPositionRef.current = [
-        forwardStep[0] * 0.18 + towardTarget[0] * 0.82,
-        forwardStep[1] * 0.18 + towardTarget[1] * 0.82,
-      ];
-
       const shakeIntensity = 0.12 + speedMps * 0.018 + headingDelta * 2.5;
-      motionRef.current = {
+      const motion: CameraMotion = {
         heading,
         bank: Math.sin(timestamp * 0.0018) * 1.4 + headingDelta * 12,
         shakeX: Math.sin(timestamp * 0.011) * shakeIntensity,
@@ -166,10 +181,10 @@ function ChaseCamera({
       };
 
       if (stageRef.current) {
-        applyCameraTransform(stageRef.current, motionRef.current, scale);
+        applyCameraTransform(stageRef.current, motion, scale);
       }
 
-      map.setView(displayPositionRef.current, zoomForAltitude(current.altitudeFt), { animate: false });
+      map.setView(displayPosition, zoomForAltitude(current.altitudeFt), { animate: false });
 
       frameId = window.requestAnimationFrame(tick);
     };
@@ -187,6 +202,7 @@ function ChaseCamera({
 export default function LiveVideoTerrainMap({
   telemetry,
   terrainStyle = "satellite",
+  sessionKey,
 }: LiveVideoTerrainMapProps) {
   const initialPosition: LatLng = [telemetry.latitude, telemetry.longitude];
   const stageRef = useRef<HTMLDivElement>(null);
@@ -200,6 +216,7 @@ export default function LiveVideoTerrainMap({
       <div className="live-video-camera-rig absolute inset-0">
         <div ref={stageRef} className="live-video-map-stage absolute inset-0">
           <MapContainer
+            key={sessionKey}
             center={initialPosition}
             zoom={zoomForAltitude(telemetry.altitudeFt)}
             scrollWheelZoom={false}

@@ -438,6 +438,8 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
 
               {isRunning && (
                 <SimulatedLiveVideoView
+                  key={activeProfile.id}
+                  sessionKey={activeProfile.id}
                   telemetry={telemetry}
                   compact
                   terrainStyle={mapTerrainStyle}

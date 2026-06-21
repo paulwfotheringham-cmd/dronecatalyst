@@ -102,7 +102,7 @@ export const FRANCE_FLIGHT_PROFILE: OrbitFlightProfile = {
   },
   startPosition: {
     latitude: 45.552246,
-    longitude: 41.13305555555556,
+    longitude: 41.1318,
     label: "France Survey Takeoff",
   },
   orbitRadiusM: 2000,
