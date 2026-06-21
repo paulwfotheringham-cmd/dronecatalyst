@@ -10,6 +10,7 @@ import {
   getInitialOrbitAngle,
   getMapHomePosition,
   getOrbitPathSamples,
+  getProfileMapStyle,
   inferFlightProfile,
   RANDOM_FLIGHT_PROFILE,
   type FlightProfile,
@@ -99,8 +100,8 @@ function profileButtonClass(id: FlightProfileId) {
       return "border border-violet-500/40 bg-violet-500/15 text-violet-100 hover:border-violet-400/60 hover:bg-violet-500/25";
     case "france":
       return "border border-sky-500/40 bg-sky-500/15 text-sky-100 hover:border-sky-400/60 hover:bg-sky-500/25";
-    case "norway":
-      return "border border-teal-500/40 bg-teal-500/15 text-teal-100 hover:border-teal-400/60 hover:bg-teal-500/25";
+    case "oxford":
+      return "border border-emerald-500/40 bg-emerald-500/15 text-emerald-100 hover:border-emerald-400/60 hover:bg-emerald-500/25";
   }
 }
 
@@ -309,7 +310,7 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
     const hasTelemetry = telemetry !== null;
     const plannedOrbit = getOrbitPathSamples(activeProfile);
     const mapHomePosition = getMapHomePosition(activeProfile);
-    const mapTerrainStyle = activeProfile.mode === "orbit" ? "urban" : "satellite";
+    const mapTerrainStyle = getProfileMapStyle(activeProfile);
     const followMapCenter = activeProfile.mode === "orbit";
 
     return (

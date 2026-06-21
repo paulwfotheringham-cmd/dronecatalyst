@@ -1,6 +1,8 @@
 import { DRONE_ID, type Telemetry } from "@/lib/telemetry";
 
-export type FlightProfileId = "random" | "spain" | "austin" | "france" | "norway";
+export type FlightProfileId = "random" | "spain" | "austin" | "france" | "oxford";
+
+export type ProfileMapStyle = "satellite" | "urban";
 
 type GeoPoint = {
   latitude: number;
@@ -14,6 +16,8 @@ type BaseFlightProfile = {
   description: string;
   cruiseSpeedMph: number;
   startPosition: GeoPoint;
+  /** Defaults to urban for orbit profiles and satellite for random. */
+  mapStyle?: ProfileMapStyle;
 };
 
 export type OrbitFlightProfile = BaseFlightProfile & {
@@ -108,22 +112,24 @@ export const FRANCE_FLIGHT_PROFILE: OrbitFlightProfile = {
   orbitRadiusM: 2000,
 };
 
-/** 2 km orbit around the Norway survey point near Oslo. */
-export const NORWAY_FLIGHT_PROFILE: OrbitFlightProfile = {
-  id: "norway",
-  buttonLabel: "Start Norway Drone",
-  description: "2 km orbit around the Norway survey point at 60.117322°N, 10.858643°E.",
+/** 2 km orbit around Oxford survey point; satellite FPV like the original random demo. */
+export const OXFORD_FLIGHT_PROFILE: OrbitFlightProfile = {
+  id: "oxford",
+  buttonLabel: "Start Oxford Drone",
+  description:
+    "2 km orbit around Oxford, UK. Uses the original satellite live video feed.",
   mode: "orbit",
+  mapStyle: "satellite",
   cruiseSpeedMph: 28,
   orbitCenter: {
-    latitude: 60.1173222623737,
-    longitude: 10.858642954514552,
-    label: "Norway Survey Point",
+    latitude: 51.978875174947305,
+    longitude: -1.5308494323398467,
+    label: "Oxford Survey Point",
   },
   startPosition: {
-    latitude: 60.119568,
-    longitude: 10.858642954514552,
-    label: "Norway Survey Takeoff",
+    latitude: 51.981121,
+    longitude: -1.5308494323398467,
+    label: "Oxford Survey Takeoff",
   },
   orbitRadiusM: 2000,
 };
@@ -133,7 +139,7 @@ export const FLIGHT_PROFILES: FlightProfile[] = [
   SPAIN_FLIGHT_PROFILE,
   AUSTIN_FLIGHT_PROFILE,
   FRANCE_FLIGHT_PROFILE,
-  NORWAY_FLIGHT_PROFILE,
+  OXFORD_FLIGHT_PROFILE,
 ];
 
 export function getFlightProfile(id: FlightProfileId): FlightProfile {
@@ -396,4 +402,9 @@ export function inferFlightProfile(latitude: number, longitude: number): FlightP
 
 export function getProfileStartPosition(profile: FlightProfile): [number, number] {
   return [profile.startPosition.latitude, profile.startPosition.longitude];
+}
+
+export function getProfileMapStyle(profile: FlightProfile): ProfileMapStyle {
+  if (profile.mapStyle) return profile.mapStyle;
+  return profile.mode === "orbit" ? "urban" : "satellite";
 }
