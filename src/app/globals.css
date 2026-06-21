@@ -139,6 +139,49 @@ body {
   }
 }
 
+@keyframes droneTakeoff {
+  0% {
+    transform: translateX(-50%) translateY(0) scale(1);
+    opacity: 0.95;
+  }
+  65% {
+    transform: translateX(-50%) translateY(-110px) scale(1.04);
+    opacity: 0.82;
+  }
+  100% {
+    transform: translateX(-50%) translateY(-150px) scale(0.92);
+    opacity: 0;
+  }
+}
+
+@keyframes dronePropSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.drone-takeoff-scene {
+  animation: droneTakeoff 2.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.drone-propeller {
+  transform-origin: center;
+  animation: dronePropSpin 0.18s linear infinite;
+}
+
+.drone-propeller-delay {
+  animation-duration: 0.22s;
+  animation-direction: reverse;
+}
+
+.drone-takeoff-trail {
+  animation: droneTakeoff 2.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.flight-path-map-shell .leaflet-container {
+  filter: saturate(0.92) brightness(0.94);
+}
+
 .scan-point-cloud {
   background-image:
     radial-gradient(circle at 18% 32%, rgba(96, 165, 250, 0.9) 1px, transparent 1px),

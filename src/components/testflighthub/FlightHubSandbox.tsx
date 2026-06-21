@@ -124,6 +124,7 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
     const [telemetry, setTelemetry] = useState<Telemetry | null>(null);
     const [flightPath, setFlightPath] = useState<LatLng[]>([]);
     const [isRunning, setIsRunning] = useState(false);
+    const [takeoffActive, setTakeoffActive] = useState(false);
     const telemetryRef = useRef<Telemetry | null>(null);
 
     useEffect(() => {
@@ -176,16 +177,22 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
       }
     }, []);
 
+    const playTakeoffAnimation = useCallback(() => {
+      setTakeoffActive(true);
+    }, []);
+
     const generateTestDrone = useCallback(async () => {
       const initial = createInitialTelemetry();
       const initialPoint = toLatLng(initial);
       setIsRunning(false);
       setTelemetry(initial);
       setFlightPath([initialPoint]);
+      playTakeoffAnimation();
       await persistTelemetry(initial);
-    }, [persistTelemetry]);
+    }, [persistTelemetry, playTakeoffAnimation]);
 
     const startSimulation = useCallback(async () => {
+      playTakeoffAnimation();
       setTelemetry((prev) => {
         if (!prev) return prev;
         const next = { ...prev, status: "IN FLIGHT" as const, lastUpdated: new Date() };
@@ -193,7 +200,7 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
         return next;
       });
       setIsRunning(true);
-    }, [persistTelemetry]);
+    }, [persistTelemetry, playTakeoffAnimation]);
 
     const stopSimulation = useCallback(async () => {
       setIsRunning(false);
@@ -348,7 +355,12 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
             <h2 className="text-lg font-semibold text-white">Flight Path Map</h2>
 
             <div className="mt-4">
-              <FlightPathMap position={toLatLng(telemetry)} path={flightPath} />
+              <FlightPathMap
+                position={toLatLng(telemetry)}
+                path={flightPath}
+                takeoffActive={takeoffActive}
+                onTakeoffComplete={() => setTakeoffActive(false)}
+              />
             </div>
           </section>
         )}

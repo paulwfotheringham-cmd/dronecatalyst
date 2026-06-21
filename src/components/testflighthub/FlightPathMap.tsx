@@ -5,6 +5,8 @@ import L from "leaflet";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
+import DroneTakeoffOverlay from "./DroneTakeoffOverlay";
+
 type LatLng = [number, number];
 
 const currentIcon = L.divIcon({
@@ -33,7 +35,6 @@ function MapViewSync({ position, path }: { position: LatLng; path: LatLng[] }) {
         bounds.getNorthEast().lng - bounds.getSouthWest().lng,
       );
 
-      // Keep a high fixed zoom for small simulated movements so the route is clearly visible.
       const zoom = span < 0.002 ? 18 : span < 0.01 ? 17 : 16;
       map.setView(center, zoom, { animate: true });
       return;
@@ -101,29 +102,44 @@ function UpdatingMarker({ position, icon }: { position: LatLng; icon: L.DivIcon 
 export type FlightPathMapProps = {
   position: LatLng;
   path: LatLng[];
+  takeoffActive?: boolean;
+  onTakeoffComplete?: () => void;
 };
 
-export default function FlightPathMap({ position, path }: FlightPathMapProps) {
+export default function FlightPathMap({
+  position,
+  path,
+  takeoffActive = false,
+  onTakeoffComplete,
+}: FlightPathMapProps) {
   const startPosition = path[0] ?? position;
 
   return (
-    <div className="overflow-hidden rounded-xl border border-white/10">
+    <div className="flight-path-map-shell relative overflow-hidden rounded-xl border border-white/10">
       <MapContainer
         center={position}
         zoom={18}
         scrollWheelZoom={false}
         className="h-[320px] w-full"
-        style={{ background: "#0f172a" }}
+        style={{ background: "#3d4f3a" }}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; CARTO'
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          attribution='Tiles &copy; Esri &mdash; Source: Esri, USGS, NOAA'
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+          maxZoom={19}
+        />
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
+          maxZoom={17}
+          opacity={0.42}
         />
         <MapViewSync position={position} path={path} />
         <FlightPathPolyline path={path} />
         <UpdatingMarker position={startPosition} icon={startIcon} />
         <UpdatingMarker position={position} icon={currentIcon} />
       </MapContainer>
+      <DroneTakeoffOverlay active={takeoffActive} onComplete={onTakeoffComplete} />
     </div>
   );
 }
