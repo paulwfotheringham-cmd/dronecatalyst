@@ -247,6 +247,26 @@ body {
   animation: liveVideoPulse 1.6s ease-in-out infinite;
 }
 
+.live-video-map-shell {
+  isolation: isolate;
+}
+
+.live-video-map-stage {
+  transform: scale(1.22);
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.live-video-map-shell .leaflet-container {
+  filter: saturate(1.08) contrast(1.06) brightness(0.96);
+}
+
+.live-video-map-shell .leaflet-control-container,
+.live-video-map-shell .leaflet-pane.leaflet-marker-pane,
+.live-video-map-shell .leaflet-pane.leaflet-shadow-pane {
+  display: none;
+}
+
 .flight-path-map-shell {
   isolation: isolate;
 }

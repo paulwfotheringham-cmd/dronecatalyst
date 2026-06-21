@@ -1,8 +1,18 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useRef } from "react";
 
 import type { Telemetry } from "@/lib/telemetry";
+
+const LiveVideoTerrainMap = dynamic(() => import("./LiveVideoTerrainMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="absolute inset-0 flex items-center justify-center bg-[#1a2418] text-sm text-white/50">
+      Loading terrain feed...
+    </div>
+  ),
+});
 
 type SimulatedLiveVideoViewProps = {
   telemetry: Telemetry;
@@ -17,13 +27,8 @@ function formatHudTime(date: Date) {
   });
 }
 
-export default function SimulatedLiveVideoView({ telemetry }: SimulatedLiveVideoViewProps) {
+function VideoGrainOverlay() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const telemetryRef = useRef(telemetry);
-
-  useEffect(() => {
-    telemetryRef.current = telemetry;
-  }, [telemetry]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -33,8 +38,7 @@ export default function SimulatedLiveVideoView({ telemetry }: SimulatedLiveVideo
     if (!context) return;
 
     let frameId = 0;
-    let offset = 0;
-    let grainSeed = 0;
+    let seed = 0;
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
@@ -50,88 +54,15 @@ export default function SimulatedLiveVideoView({ telemetry }: SimulatedLiveVideo
     const draw = () => {
       const width = canvas.clientWidth;
       const height = canvas.clientHeight;
-      const current = telemetryRef.current;
-      const speedFactor = current.speedMph / 30;
-      const altFactor = (current.altitudeFt - 120) / 280;
+      seed += 1;
 
-      offset += 0.6 + speedFactor * 1.4;
-      grainSeed += 1;
-
-      const horizonY = height * (0.38 - altFactor * 0.08);
-
-      const sky = context.createLinearGradient(0, 0, 0, horizonY);
-      sky.addColorStop(0, "#0c1f3f");
-      sky.addColorStop(0.55, "#1e4976");
-      sky.addColorStop(1, "#3d6f8f");
-      context.fillStyle = sky;
-      context.fillRect(0, 0, width, horizonY);
-
-      const ground = context.createLinearGradient(0, horizonY, 0, height);
-      ground.addColorStop(0, "#2f5233");
-      ground.addColorStop(0.35, "#3f6b3f");
-      ground.addColorStop(1, "#1f3420");
-      context.fillStyle = ground;
-      context.fillRect(0, horizonY, width, height - horizonY);
-
-      context.strokeStyle = "rgba(255,255,255,0.08)";
-      context.lineWidth = 1;
-      for (let index = 0; index < 8; index += 1) {
-        const laneOffset = ((offset + index * 90) % 720) / 720;
-        const spread = 0.12 + laneOffset * 0.78;
-        const topX = width * (0.5 + (spread - 0.5) * 0.08);
-        const bottomX = width * spread;
-
-        context.beginPath();
-        context.moveTo(topX, horizonY);
-        context.lineTo(bottomX, height);
-        context.stroke();
-      }
-
-      context.strokeStyle = "rgba(120, 180, 120, 0.18)";
-      for (let row = 0; row < 6; row += 1) {
-        const rowOffset = ((offset * 1.6 + row * 48) % 288) / 288;
-        const y = horizonY + rowOffset * (height - horizonY);
-
-        context.beginPath();
-        context.moveTo(0, y);
-        context.lineTo(width, y);
-        context.stroke();
-      }
-
-      const driftX = Math.sin(grainSeed * 0.015) * 2;
-      const driftY = Math.cos(grainSeed * 0.011) * 1.5;
-      context.strokeStyle = "rgba(255,255,255,0.55)";
-      context.lineWidth = 1.5;
-      context.beginPath();
-      context.moveTo(width / 2 - 18 + driftX, height / 2 + driftY);
-      context.lineTo(width / 2 - 6 + driftX, height / 2 + driftY);
-      context.moveTo(width / 2 + 6 + driftX, height / 2 + driftY);
-      context.lineTo(width / 2 + 18 + driftX, height / 2 + driftY);
-      context.moveTo(width / 2 + driftX, height / 2 - 18 + driftY);
-      context.lineTo(width / 2 + driftX, height / 2 - 6 + driftY);
-      context.moveTo(width / 2 + driftX, height / 2 + 6 + driftY);
-      context.lineTo(width / 2 + driftX, height / 2 + 18 + driftY);
-      context.stroke();
-
-      context.fillStyle = "rgba(255,255,255,0.03)";
-      for (let index = 0; index < 120; index += 1) {
-        const x = ((index * 97 + grainSeed * 13) % width) | 0;
-        const y = ((index * 53 + grainSeed * 7) % height) | 0;
+      context.clearRect(0, 0, width, height);
+      context.fillStyle = "rgba(255,255,255,0.025)";
+      for (let index = 0; index < 90; index += 1) {
+        const x = ((index * 83 + seed * 11) % width) | 0;
+        const y = ((index * 47 + seed * 17) % height) | 0;
         context.fillRect(x, y, 1, 1);
       }
-
-      const vignette = context.createRadialGradient(
-        width / 2,
-        height / 2,
-        height * 0.2,
-        width / 2,
-        height / 2,
-        height * 0.75,
-      );
-      vignette.addColorStop(0, "rgba(0,0,0,0)");
-      vignette.addColorStop(1, "rgba(0,0,0,0.45)");
-      context.fillStyle = vignette;
-      context.fillRect(0, 0, width, height);
 
       frameId = window.requestAnimationFrame(draw);
     };
@@ -144,6 +75,16 @@ export default function SimulatedLiveVideoView({ telemetry }: SimulatedLiveVideo
     };
   }, []);
 
+  return (
+    <canvas
+      ref={canvasRef}
+      className="pointer-events-none absolute inset-0 h-full w-full opacity-40 mix-blend-soft-light"
+      aria-hidden
+    />
+  );
+}
+
+export default function SimulatedLiveVideoView({ telemetry }: SimulatedLiveVideoViewProps) {
   return (
     <section className="overflow-hidden rounded-2xl border border-white/15 bg-black shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)]">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-white/[0.04] px-4 py-3 sm:px-6">
@@ -165,10 +106,26 @@ export default function SimulatedLiveVideoView({ telemetry }: SimulatedLiveVideo
         </div>
       </div>
 
-      <div className="relative aspect-video w-full bg-[#020617]">
-        <canvas ref={canvasRef} className="h-full w-full" aria-label="Simulated live drone video feed" />
+      <div className="relative aspect-video w-full overflow-hidden bg-[#020617]">
+        <LiveVideoTerrainMap telemetry={telemetry} />
 
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[length:100%_3px] opacity-30" />
+        <div
+          className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#0c1f3f]/55 via-transparent to-[#020617]/70"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_35%,rgba(0,0,0,0.55)_100%)]"
+          aria-hidden
+        />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[length:100%_3px] opacity-25" />
+        <VideoGrainOverlay />
+
+        <div className="pointer-events-none absolute left-1/2 top-1/2 h-7 w-7 -translate-x-1/2 -translate-y-1/2">
+          <span className="absolute left-0 top-1/2 h-px w-2 -translate-y-1/2 bg-white/70" />
+          <span className="absolute right-0 top-1/2 h-px w-2 -translate-y-1/2 bg-white/70" />
+          <span className="absolute left-1/2 top-0 w-px h-2 -translate-x-1/2 bg-white/70" />
+          <span className="absolute bottom-0 left-1/2 w-px h-2 -translate-x-1/2 bg-white/70" />
+        </div>
 
         <div className="pointer-events-none absolute left-4 top-4 rounded-lg border border-white/15 bg-black/45 px-3 py-2 font-mono text-[11px] text-white/85 backdrop-blur-sm">
           <p>{telemetry.droneId}</p>
@@ -185,7 +142,7 @@ export default function SimulatedLiveVideoView({ telemetry }: SimulatedLiveVideo
           <p>
             {telemetry.latitude.toFixed(6)}, {telemetry.longitude.toFixed(6)}
           </p>
-          <p className="mt-1 text-white/50">Simulated FPV · Matrice 4T</p>
+          <p className="mt-1 text-white/50">Satellite + terrain · Matrice 4T</p>
         </div>
       </div>
     </section>
