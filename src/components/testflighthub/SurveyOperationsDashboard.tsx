@@ -16,6 +16,7 @@ import FleetPanel from "./FleetPanel";
 import MissionManagementWorkspace from "./MissionManagementWorkspace";
 import MissionOverviewPanel from "./MissionOverviewPanel";
 import RecentMissionsPanel from "./RecentMissionsPanel";
+import SimulatedLiveVideoView from "./SimulatedLiveVideoView";
 import SurveyOperationsPlaceholder from "./SurveyOperationsPlaceholder";
 import SurveyOperationsShell from "./SurveyOperationsShell";
 import { useSurveyOperationsSimulator } from "./SurveyOperationsSimulatorProvider";
@@ -175,6 +176,10 @@ export default function SurveyOperationsDashboard() {
           {activeView === "dashboard" && (
             <>
               <MissionOverviewPanel />
+
+              {isRunning && liveTelemetry && (
+                <SimulatedLiveVideoView telemetry={liveTelemetry} />
+              )}
 
               <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
                 <div ref={dashboardSandboxHostRef} className="space-y-6" />
