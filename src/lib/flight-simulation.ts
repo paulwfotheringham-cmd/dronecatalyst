@@ -92,12 +92,14 @@ export const AUSTIN_FLIGHT_PROFILE: OrbitFlightProfile = {
   orbitRadiusM: 2000,
 };
 
-/** 2 km orbit at 45°33′N 41°07′59″E. */
+/** 2 km orbit at 45°33′N 41°07′59″E; satellite FPV like Oxford. */
 export const FRANCE_FLIGHT_PROFILE: OrbitFlightProfile = {
   id: "france",
   buttonLabel: "Start France Drone",
-  description: "2 km orbit around the France survey point at 45°33′N, 41°07′59″E.",
+  description:
+    "2 km orbit around the France survey point. Uses the original satellite live video feed.",
   mode: "orbit",
+  mapStyle: "satellite",
   cruiseSpeedMph: 28,
   orbitCenter: {
     latitude: 45.55,
