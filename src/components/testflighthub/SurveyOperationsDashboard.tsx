@@ -4,6 +4,14 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { useSearchParams } from "next/navigation";
 
 import {
+  createInitialAssets,
+  type ManagedAsset,
+} from "@/lib/asset-management-data";
+import {
+  createInitialClients,
+  type ManagedClient,
+} from "@/lib/client-management-data";
+import {
   createInitialMissions,
   createMissionEvent,
   type ManagedMission,
@@ -12,9 +20,10 @@ import {
   isSurveyOperationsView,
   type SurveyOperationsView,
 } from "@/lib/survey-operations-mock-data";
+import AssetManagementWorkspace from "./AssetManagementWorkspace";
+import ClientManagementWorkspace from "./ClientManagementWorkspace";
 import FleetPanel from "./FleetPanel";
 import MissionManagementWorkspace from "./MissionManagementWorkspace";
-import MissionOverviewPanel from "./MissionOverviewPanel";
 import RecentMissionsPanel from "./RecentMissionsPanel";
 import SurveyOperationsPlaceholder from "./SurveyOperationsPlaceholder";
 import SurveyOperationsShell from "./SurveyOperationsShell";
@@ -33,7 +42,11 @@ export default function SurveyOperationsDashboard() {
   const { sandboxRef, liveTelemetry, isRunning, setSandboxMountTarget } =
     useSurveyOperationsSimulator();
   const [missions, setMissions] = useState<ManagedMission[]>(() => createInitialMissions());
+  const [assets, setAssets] = useState<ManagedAsset[]>(() => createInitialAssets());
+  const [clients, setClients] = useState<ManagedClient[]>(() => createInitialClients());
   const [selectedMissionId, setSelectedMissionId] = useState("mission-1");
+  const [selectedAssetId, setSelectedAssetId] = useState("asset-1");
+  const [selectedClientId, setSelectedClientId] = useState("client-1");
   const [runningMissionId, setRunningMissionId] = useState<string | null>(null);
   const activeMissionIdRef = useRef<string | null>(null);
   const lowBatteryWarnedRef = useRef<Set<string>>(new Set());
@@ -173,17 +186,17 @@ export default function SurveyOperationsDashboard() {
 
         <div className="relative space-y-6">
           {activeView === "dashboard" && (
-            <>
-              <MissionOverviewPanel />
-
-              <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-                <div ref={dashboardSandboxHostRef} className="space-y-6" />
-                <div className="space-y-6">
-                  <FleetPanel liveTelemetry={liveTelemetry} isRunning={isRunning} />
-                  <RecentMissionsPanel />
-                </div>
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+              <div ref={dashboardSandboxHostRef} className="space-y-6" />
+              <div className="space-y-6">
+                <FleetPanel
+                  liveTelemetry={liveTelemetry}
+                  isRunning={isRunning}
+                  onOpenAssets={() => handleViewChange("assets")}
+                />
+                <RecentMissionsPanel />
               </div>
-            </>
+            </div>
           )}
 
           {activeView === "missions" && (
@@ -200,10 +213,22 @@ export default function SurveyOperationsDashboard() {
             </>
           )}
 
+          {activeView === "assets" && (
+            <AssetManagementWorkspace
+              assets={assets}
+              clients={clients}
+              selectedAssetId={selectedAssetId}
+              onSelectAsset={setSelectedAssetId}
+              onAssetsChange={setAssets}
+            />
+          )}
+
           {activeView === "clients" && (
-            <SurveyOperationsPlaceholder
-              title="Clients"
-              description="Client records and contact management will appear here in a future phase."
+            <ClientManagementWorkspace
+              clients={clients}
+              selectedClientId={selectedClientId}
+              onSelectClient={setSelectedClientId}
+              onClientsChange={setClients}
             />
           )}
 
@@ -215,10 +240,20 @@ export default function SurveyOperationsDashboard() {
           )}
 
           {activeView === "fleet" && (
-            <SurveyOperationsPlaceholder
-              title="Fleet"
-              description="Fleet-wide asset status and hangar assignments will be expanded in a later phase."
-            />
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+              <AssetManagementWorkspace
+                assets={assets}
+                clients={clients}
+                selectedAssetId={selectedAssetId}
+                onSelectAsset={setSelectedAssetId}
+                onAssetsChange={setAssets}
+              />
+              <FleetPanel
+                liveTelemetry={liveTelemetry}
+                isRunning={isRunning}
+                onOpenAssets={() => handleViewChange("assets")}
+              />
+            </div>
           )}
 
           {activeView === "flight-logs" && (

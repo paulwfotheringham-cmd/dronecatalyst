@@ -14,6 +14,7 @@ import {
   Building2,
   LayoutDashboard,
   MapPin,
+  Package,
   Plane,
   Radio,
   ScrollText,
@@ -25,6 +26,7 @@ import {
 const iconMap = {
   LayoutDashboard,
   Building2,
+  Package,
   MapPin,
   Target,
   Plane,
@@ -78,7 +80,7 @@ export default function SurveyOperationsSidebar({
       <div className="shrink-0 border-b border-white/[0.08] px-4 py-4 lg:px-6 lg:py-5">
         <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-white/30">Workspace</p>
         <p className="mt-1.5 text-sm font-medium leading-snug text-white/85">
-          Western Australia Survey Division
+          Barcelona · Porto · Oxford
         </p>
       </div>
 

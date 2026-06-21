@@ -7,72 +7,66 @@ export type FleetDroneStatus =
   | "Maintenance"
   | "Stopped";
 
-export const activeMission = {
-  name: "Kalgoorlie North Topographic Survey",
-  client: "Mineral Ridge Resources",
-  site: "Kalgoorlie North Expansion Zone · WA",
-  assignedDrone: "DC-TEST-001",
-  pilot: "Sarah Chen · RPAS Lead",
-  status: "Active" as MissionStatus,
-  startDate: "17 Jun 2026",
-  endDate: "21 Jun 2026",
+export type FleetDroneSummary = {
+  id: string;
+  model: string;
+  homeBase: string;
+  status: FleetDroneStatus;
+  battery: number;
+  lastContact: string;
+  telemetryDroneId?: string;
 };
 
-export const fleetDrones = [
+export const fleetDrones: FleetDroneSummary[] = [
   {
-    id: "DC-TEST-001",
-    status: "Standby" as FleetDroneStatus,
+    id: "DC-M4T-BCN",
+    model: "DJI Matrice 4T",
+    homeBase: "Barcelona",
+    status: "Standby",
     battery: 96,
-    lastContact: "Awaiting link",
+    lastContact: "4 min ago",
   },
   {
-    id: "DC-SRV-014",
-    status: "In Hangar" as FleetDroneStatus,
+    id: "DC-M4T-PRT",
+    model: "DJI Matrice 4T",
+    homeBase: "Porto",
+    status: "In Hangar",
     battery: 100,
     lastContact: "18 min ago",
   },
   {
-    id: "DC-SRV-022",
-    status: "Standby" as FleetDroneStatus,
-    battery: 87,
-    lastContact: "6 min ago",
+    id: "DC-M4T-OXF",
+    model: "DJI Matrice 4T",
+    homeBase: "Oxford",
+    status: "Standby",
+    battery: 94,
+    lastContact: "Awaiting link",
+    telemetryDroneId: "DC-TEST-001",
   },
-  {
-    id: "DC-SRV-031",
-    status: "Maintenance" as FleetDroneStatus,
-    battery: 42,
-    lastContact: "2 hr ago",
-  },
-  {
-    id: "DC-SRV-008",
-    status: "In Hangar" as FleetDroneStatus,
-    battery: 100,
-    lastContact: "41 min ago",
-  },
-] as const;
+];
 
 export const recentMissions = [
   {
-    name: "Port Hedland Stockpile Volumetrics",
-    client: "Iron Coast Logistics",
+    name: "Riells del Fai Corridor Survey",
+    client: "Catalonia Energy Partners",
     status: "Completed" as MissionStatus,
     date: "12 Jun 2026",
   },
   {
-    name: "Kalgoorlie North Topographic Survey",
-    client: "Mineral Ridge Resources",
+    name: "Douro Berth Volumetrics",
+    client: "Douro Maritime Logistics",
     status: "Active" as MissionStatus,
     date: "17 Jun 2026",
   },
   {
-    name: "Perth CBD Facade Inspection",
-    client: "Harbourline Property Group",
+    name: "Oxford Campus Envelope",
+    client: "Oxford Heritage Survey Ltd",
     status: "Scheduled" as MissionStatus,
     date: "22 Jun 2026",
   },
   {
-    name: "Esperance Coastal Erosion Mapping",
-    client: "Southern Coast Authority",
+    name: "Iberia Corridor Pilot",
+    client: "Iberia Infrastructure Group",
     status: "On Hold" as MissionStatus,
     date: "28 Jun 2026",
   },
@@ -81,6 +75,7 @@ export const recentMissions = [
 export type SurveyOperationsView =
   | "dashboard"
   | "clients"
+  | "assets"
   | "sites"
   | "missions"
   | "fleet"
@@ -89,6 +84,7 @@ export type SurveyOperationsView =
 export const surveyNavItems = [
   { label: "Dashboard", icon: "LayoutDashboard", view: "dashboard" as const, href: "/testflighthub" },
   { label: "Clients", icon: "Building2", view: "clients" as const, href: "/testflighthub" },
+  { label: "Assets", icon: "Package", view: "assets" as const, href: "/testflighthub" },
   { label: "Sites", icon: "MapPin", view: "sites" as const, href: "/testflighthub" },
   { label: "Missions", icon: "Target", view: "missions" as const, href: "/testflighthub" },
   { label: "Fleet", icon: "Plane", view: "fleet" as const, href: "/testflighthub" },
@@ -99,6 +95,7 @@ export const surveyNavItems = [
 const surveyOperationsViews: SurveyOperationsView[] = [
   "dashboard",
   "clients",
+  "assets",
   "sites",
   "missions",
   "fleet",
@@ -143,6 +140,7 @@ export const surveyViewTitles: Record<
 > = {
   dashboard: { title: "Operations Dashboard", subtitle: "Survey Operations" },
   clients: { title: "Client Directory", subtitle: "Survey Operations" },
+  assets: { title: "Asset Registry", subtitle: "Survey Operations" },
   sites: { title: "Site Registry", subtitle: "Survey Operations" },
   missions: { title: "Mission Management", subtitle: "Survey Operations" },
   fleet: { title: "Fleet Overview", subtitle: "Survey Operations" },

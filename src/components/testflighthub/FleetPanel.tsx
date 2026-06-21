@@ -7,6 +7,7 @@ import {
 type FleetPanelProps = {
   liveTelemetry: Telemetry | null;
   isRunning: boolean;
+  onOpenAssets?: () => void;
 };
 
 function fleetStatusClass(status: FleetDroneStatus | string) {
@@ -19,6 +20,8 @@ function fleetStatusClass(status: FleetDroneStatus | string) {
       return "border-white/20 bg-white/10 text-white/60";
     case "Maintenance":
       return "border-amber-400/40 bg-amber-500/15 text-amber-200";
+    case "In Hangar":
+      return "border-violet-400/40 bg-violet-500/15 text-violet-200";
     default:
       return "border-white/15 bg-white/5 text-white/50";
   }
@@ -35,7 +38,8 @@ function formatLastContact(date: Date) {
 
 function buildFleetRows(liveTelemetry: Telemetry | null, isRunning: boolean) {
   return fleetDrones.map((drone) => {
-    if (drone.id !== DRONE_ID || !liveTelemetry) {
+    const linkedId = drone.telemetryDroneId ?? drone.id;
+    if (linkedId !== DRONE_ID || !liveTelemetry) {
       return drone;
     }
 
@@ -54,14 +58,28 @@ function buildFleetRows(liveTelemetry: Telemetry | null, isRunning: boolean) {
   });
 }
 
-export default function FleetPanel({ liveTelemetry, isRunning }: FleetPanelProps) {
+export default function FleetPanel({ liveTelemetry, isRunning, onOpenAssets }: FleetPanelProps) {
   const drones = buildFleetRows(liveTelemetry, isRunning);
 
   return (
     <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-white">Fleet</h2>
-        <span className="text-xs text-white/45">{drones.length} assets</span>
+        <div>
+          <h2 className="text-lg font-semibold text-white">Fleet</h2>
+          <p className="mt-0.5 text-xs text-white/45">3 virtual Matrice 4T assets</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {onOpenAssets && (
+            <button
+              type="button"
+              onClick={onOpenAssets}
+              className="inline-flex h-9 items-center rounded-xl border border-white/15 bg-white/[0.04] px-3 text-xs font-semibold text-white transition-colors hover:border-white/25 hover:bg-white/[0.08]"
+            >
+              Assets
+            </button>
+          )}
+          <span className="text-xs text-white/45">{drones.length} airframes</span>
+        </div>
       </div>
 
       <div className="mt-4 space-y-3">
@@ -73,7 +91,10 @@ export default function FleetPanel({ liveTelemetry, isRunning }: FleetPanelProps
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="font-mono text-sm font-semibold text-white">{drone.id}</p>
-                <p className="mt-1 text-xs text-white/45">Last contact · {drone.lastContact}</p>
+                <p className="mt-1 text-xs text-white/55">{drone.model}</p>
+                <p className="mt-0.5 text-xs text-white/45">
+                  Based in {drone.homeBase} · Last contact {drone.lastContact}
+                </p>
               </div>
               <span
                 className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${fleetStatusClass(drone.status)}`}
