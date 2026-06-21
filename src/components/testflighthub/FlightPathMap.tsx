@@ -152,6 +152,7 @@ export type FlightPathMapProps = {
   path: LatLng[];
   plannedOrbit?: LatLng[];
   homePosition?: LatLng;
+  startPosition?: LatLng;
 };
 
 export default function FlightPathMap({
@@ -159,8 +160,9 @@ export default function FlightPathMap({
   path,
   plannedOrbit,
   homePosition,
+  startPosition,
 }: FlightPathMapProps) {
-  const startPosition = path[0] ?? position;
+  const pathStartPosition = path[0] ?? startPosition ?? position;
 
   return (
     <div className="flight-path-map-shell relative overflow-hidden rounded-xl border border-white/10">
@@ -188,7 +190,7 @@ export default function FlightPathMap({
         )}
         <FlightPathPolyline path={path} />
         {homePosition && <UpdatingMarker position={homePosition} icon={homeIcon} />}
-        <UpdatingMarker position={startPosition} icon={startIcon} />
+        <UpdatingMarker position={pathStartPosition} icon={startIcon} />
         <UpdatingMarker position={position} icon={currentIcon} />
       </MapContainer>
     </div>

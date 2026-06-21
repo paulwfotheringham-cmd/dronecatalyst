@@ -4,18 +4,23 @@ import dynamic from "next/dynamic";
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 
 import {
+  advanceTelemetry,
+  createInitialTelemetry,
+  FLIGHT_PROFILES,
+  getInitialOrbitAngle,
+  getMapHomePosition,
+  getOrbitPathSamples,
+  inferFlightProfile,
+  RANDOM_FLIGHT_PROFILE,
+  type FlightProfile,
+  type FlightProfileId,
+} from "@/lib/flight-simulation";
+import {
   DRONE_ID,
   rowToTelemetry,
   type Telemetry,
   type TelemetryRow,
 } from "@/lib/telemetry";
-import {
-  advanceOrbitTelemetry,
-  angleFromPosition,
-  createInitialTelemetry,
-  getOrbitPathSamples,
-  SIMULATION_HOME,
-} from "@/lib/flight-simulation";
 
 import DroneTakeoffOverlay from "./DroneTakeoffOverlay";
 import SimulatedLiveVideoView from "./SimulatedLiveVideoView";
@@ -30,9 +35,6 @@ const FlightPathMap = dynamic(() => import("./FlightPathMap"), {
 });
 
 type LatLng = [number, number];
-
-const PLANNED_ORBIT_PATH = getOrbitPathSamples();
-const SURVEY_HOME: LatLng = [SIMULATION_HOME.latitude, SIMULATION_HOME.longitude];
 
 function toLatLng(telemetry: Telemetry): LatLng {
   return [telemetry.latitude, telemetry.longitude];
@@ -87,6 +89,17 @@ function TelemetryField({ label, value }: { label: string; value: string }) {
   );
 }
 
+function profileButtonClass(id: FlightProfileId) {
+  switch (id) {
+    case "random":
+      return "bg-[#2563eb] text-white shadow-[0_0_32px_rgba(37,99,235,0.35)] hover:bg-[#1d4ed8]";
+    case "spain":
+      return "border border-amber-500/40 bg-amber-500/15 text-amber-100 hover:border-amber-400/60 hover:bg-amber-500/25";
+    case "austin":
+      return "border border-violet-500/40 bg-violet-500/15 text-violet-100 hover:border-violet-400/60 hover:bg-violet-500/25";
+  }
+}
+
 export type FlightHubSandboxHandle = {
   generateTestDrone: () => Promise<void>;
   startSimulation: () => Promise<void>;
@@ -107,12 +120,18 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
     const [flightPath, setFlightPath] = useState<LatLng[]>([]);
     const [isRunning, setIsRunning] = useState(false);
     const [takeoffToken, setTakeoffToken] = useState(0);
+    const [activeProfile, setActiveProfile] = useState<FlightProfile>(RANDOM_FLIGHT_PROFILE);
     const telemetryRef = useRef<Telemetry | null>(null);
+    const activeProfileRef = useRef<FlightProfile>(RANDOM_FLIGHT_PROFILE);
     const orbitAngleRef = useRef(0);
 
     useEffect(() => {
       telemetryRef.current = telemetry;
     }, [telemetry]);
+
+    useEffect(() => {
+      activeProfileRef.current = activeProfile;
+    }, [activeProfile]);
 
     useEffect(() => {
       onTelemetryChange?.(telemetry, isRunning);
@@ -140,9 +159,12 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
         const latest = await fetchLatestTelemetry();
         if (cancelled || !latest) return;
 
+        const profile = inferFlightProfile(latest.latitude, latest.longitude);
+        setActiveProfile(profile);
+        activeProfileRef.current = profile;
+        orbitAngleRef.current = getInitialOrbitAngle(profile);
         setTelemetry(latest);
         setFlightPath([toLatLng(latest)]);
-        orbitAngleRef.current = angleFromPosition(latest.latitude, latest.longitude);
         setIsRunning(latest.status === "IN FLIGHT");
       }
 
@@ -169,28 +191,49 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
       setTakeoffToken(0);
     }, []);
 
-    const generateTestDrone = useCallback(async () => {
-      orbitAngleRef.current = 0;
-      const initial = createInitialTelemetry();
-      const initialPoint = toLatLng(initial);
-      setIsRunning(false);
-      setTelemetry(initial);
-      setFlightPath([initialPoint]);
-      playTakeoffAnimation();
-      await persistTelemetry(initial);
-    }, [persistTelemetry, playTakeoffAnimation]);
+    const spawnDrone = useCallback(
+      async (profile: FlightProfile) => {
+        orbitAngleRef.current = getInitialOrbitAngle(profile);
+        const initial = createInitialTelemetry(profile);
+        const initialPoint = toLatLng(initial);
+
+        setActiveProfile(profile);
+        activeProfileRef.current = profile;
+        setIsRunning(false);
+        setTelemetry(initial);
+        setFlightPath([initialPoint]);
+        playTakeoffAnimation();
+        await persistTelemetry(initial);
+      },
+      [persistTelemetry, playTakeoffAnimation],
+    );
 
     const startSimulation = useCallback(async () => {
       playTakeoffAnimation();
       setTelemetry((prev) => {
         if (!prev) return prev;
-        orbitAngleRef.current = angleFromPosition(prev.latitude, prev.longitude);
+        orbitAngleRef.current = getInitialOrbitAngle(activeProfileRef.current);
         const next = { ...prev, status: "IN FLIGHT" as const, lastUpdated: new Date() };
         void persistTelemetry(next);
         return next;
       });
       setIsRunning(true);
     }, [persistTelemetry, playTakeoffAnimation]);
+
+    const startDroneProfile = useCallback(
+      async (profileId: FlightProfileId) => {
+        const profile = FLIGHT_PROFILES.find((entry) => entry.id === profileId);
+        if (!profile) return;
+
+        await spawnDrone(profile);
+        await startSimulation();
+      },
+      [spawnDrone, startSimulation],
+    );
+
+    const generateTestDrone = useCallback(async () => {
+      await spawnDrone(RANDOM_FLIGHT_PROFILE);
+    }, [spawnDrone]);
 
     const stopSimulation = useCallback(async () => {
       setIsRunning(false);
@@ -213,14 +256,16 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
       setFlightPath([]);
       setIsRunning(false);
       orbitAngleRef.current = 0;
+      setActiveProfile(RANDOM_FLIGHT_PROFILE);
+      activeProfileRef.current = RANDOM_FLIGHT_PROFILE;
     }, []);
 
     const startMissionFlow = useCallback(async () => {
       if (telemetryRef.current === null) {
-        await generateTestDrone();
+        await spawnDrone(RANDOM_FLIGHT_PROFILE);
       }
       await startSimulation();
-    }, [generateTestDrone, startSimulation]);
+    }, [spawnDrone, startSimulation]);
 
     useImperativeHandle(
       ref,
@@ -242,7 +287,9 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
       const interval = setInterval(() => {
         setTelemetry((prev) => {
           if (!prev) return prev;
-          const { telemetry: next, nextAngle } = advanceOrbitTelemetry(
+          const profile = activeProfileRef.current;
+          const { telemetry: next, nextAngle } = advanceTelemetry(
+            profile,
             prev,
             orbitAngleRef.current,
           );
@@ -256,6 +303,8 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
     }, [isRunning, persistTelemetry]);
 
     const hasTelemetry = telemetry !== null;
+    const plannedOrbit = getOrbitPathSamples(activeProfile);
+    const mapHomePosition = getMapHomePosition(activeProfile);
 
     return (
       <>
@@ -266,28 +315,36 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
             </p>
             <h2 className="mt-1 text-lg font-semibold text-white">Simulator Controls</h2>
             <p className="mt-2 text-sm text-white/60">
-              Generate a test drone, start or stop the live simulation, and verify telemetry writes to
-              Supabase. The drone orbits a 2 km circle around survey home (
-              {SIMULATION_HOME.latitude.toFixed(5)}, {SIMULATION_HOME.longitude.toFixed(5)}).
+              Choose a drone profile to spawn at the correct location and begin the live simulation.
+              Orbit profiles fly a 2 km circle; random mode uses the original Perth jitter demo.
             </p>
+            {hasTelemetry && (
+              <p className="mt-2 text-xs text-white/45">
+                Active profile:{" "}
+                <span className="font-semibold text-white/70">{activeProfile.buttonLabel}</span>
+                {activeProfile.mode === "orbit" && (
+                  <>
+                    {" "}
+                    · takeoff {activeProfile.startPosition.label}
+                  </>
+                )}
+              </p>
+            )}
           </div>
 
           <div className="mt-6 flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => void generateTestDrone()}
-              className="inline-flex h-11 items-center justify-center rounded-xl bg-[#2563eb] px-5 text-sm font-semibold text-white shadow-[0_0_32px_rgba(37,99,235,0.35)] transition-colors hover:bg-[#1d4ed8]"
-            >
-              Generate Test Drone
-            </button>
-            <button
-              type="button"
-              onClick={() => void startSimulation()}
-              disabled={!hasTelemetry || isRunning}
-              className="inline-flex h-11 items-center justify-center rounded-xl border border-emerald-500/40 bg-emerald-500/15 px-5 text-sm font-semibold text-emerald-300 transition-colors hover:border-emerald-400/60 hover:bg-emerald-500/25 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Start Simulation
-            </button>
+            {FLIGHT_PROFILES.map((profile) => (
+              <button
+                key={profile.id}
+                type="button"
+                onClick={() => void startDroneProfile(profile.id)}
+                disabled={isRunning}
+                title={profile.description}
+                className={`inline-flex h-11 items-center justify-center rounded-xl px-5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${profileButtonClass(profile.id)}`}
+              >
+                {profile.buttonLabel}
+              </button>
+            ))}
             <button
               type="button"
               onClick={() => void stopSimulation()}
@@ -330,12 +387,14 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
 
           {!telemetry ? (
             <p className="mt-6 text-base text-white/60">
-              No telemetry received yet. Use Generate Test Drone to begin a new session.
+              No telemetry received yet. Choose a start drone button above to begin a session.
             </p>
           ) : (
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               <TelemetryField label="Drone ID" value={telemetry.droneId} />
               <TelemetryField label="Status" value={telemetry.status} />
+              <TelemetryField label="Profile" value={activeProfile.buttonLabel} />
+              <TelemetryField label="Takeoff Site" value={activeProfile.startPosition.label} />
               <TelemetryField label="Latitude" value={formatCoord(telemetry.latitude, 6)} />
               <TelemetryField label="Longitude" value={formatCoord(telemetry.longitude, 6)} />
               <TelemetryField label="Altitude (ft)" value={telemetry.altitudeFt.toFixed(1)} />
@@ -360,14 +419,16 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
                 <FlightPathMap
                   position={toLatLng(telemetry)}
                   path={flightPath}
-                  plannedOrbit={PLANNED_ORBIT_PATH}
-                  homePosition={SURVEY_HOME}
+                  plannedOrbit={plannedOrbit.length > 0 ? plannedOrbit : undefined}
+                  homePosition={mapHomePosition ?? undefined}
+                  startPosition={[
+                    activeProfile.startPosition.latitude,
+                    activeProfile.startPosition.longitude,
+                  ]}
                 />
               </div>
 
-              {isRunning && (
-                <SimulatedLiveVideoView telemetry={telemetry} compact />
-              )}
+              {isRunning && <SimulatedLiveVideoView telemetry={telemetry} compact />}
             </div>
           </section>
         )}
