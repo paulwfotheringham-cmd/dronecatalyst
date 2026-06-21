@@ -5,8 +5,6 @@ import L from "leaflet";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
-import DroneTakeoffOverlay from "./DroneTakeoffOverlay";
-
 type LatLng = [number, number];
 
 const currentIcon = L.divIcon({
@@ -102,16 +100,9 @@ function UpdatingMarker({ position, icon }: { position: LatLng; icon: L.DivIcon 
 export type FlightPathMapProps = {
   position: LatLng;
   path: LatLng[];
-  takeoffActive?: boolean;
-  onTakeoffComplete?: () => void;
 };
 
-export default function FlightPathMap({
-  position,
-  path,
-  takeoffActive = false,
-  onTakeoffComplete,
-}: FlightPathMapProps) {
+export default function FlightPathMap({ position, path }: FlightPathMapProps) {
   const startPosition = path[0] ?? position;
 
   return (
@@ -139,7 +130,6 @@ export default function FlightPathMap({
         <UpdatingMarker position={startPosition} icon={startIcon} />
         <UpdatingMarker position={position} icon={currentIcon} />
       </MapContainer>
-      <DroneTakeoffOverlay active={takeoffActive} onComplete={onTakeoffComplete} />
     </div>
   );
 }

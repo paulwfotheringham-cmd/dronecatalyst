@@ -10,6 +10,8 @@ import {
   type TelemetryRow,
 } from "@/lib/telemetry";
 
+import DroneTakeoffOverlay from "./DroneTakeoffOverlay";
+
 const FlightPathMap = dynamic(() => import("./FlightPathMap"), {
   ssr: false,
   loading: () => (
@@ -124,7 +126,7 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
     const [telemetry, setTelemetry] = useState<Telemetry | null>(null);
     const [flightPath, setFlightPath] = useState<LatLng[]>([]);
     const [isRunning, setIsRunning] = useState(false);
-    const [takeoffActive, setTakeoffActive] = useState(false);
+    const [takeoffToken, setTakeoffToken] = useState(0);
     const telemetryRef = useRef<Telemetry | null>(null);
 
     useEffect(() => {
@@ -178,7 +180,11 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
     }, []);
 
     const playTakeoffAnimation = useCallback(() => {
-      setTakeoffActive(true);
+      setTakeoffToken((token) => token + 1);
+    }, []);
+
+    const handleTakeoffComplete = useCallback(() => {
+      setTakeoffToken(0);
     }, []);
 
     const generateTestDrone = useCallback(async () => {
@@ -354,13 +360,11 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
           <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-8">
             <h2 className="text-lg font-semibold text-white">Flight Path Map</h2>
 
-            <div className="mt-4">
-              <FlightPathMap
-                position={toLatLng(telemetry)}
-                path={flightPath}
-                takeoffActive={takeoffActive}
-                onTakeoffComplete={() => setTakeoffActive(false)}
-              />
+            <div className="relative mt-4 min-h-[320px]">
+              {takeoffToken > 0 && (
+                <DroneTakeoffOverlay key={takeoffToken} onComplete={handleTakeoffComplete} />
+              )}
+              <FlightPathMap position={toLatLng(telemetry)} path={flightPath} />
             </div>
           </section>
         )}
