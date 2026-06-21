@@ -9,6 +9,13 @@ import {
   type Telemetry,
   type TelemetryRow,
 } from "@/lib/telemetry";
+import {
+  advanceOrbitTelemetry,
+  angleFromPosition,
+  createInitialTelemetry,
+  getOrbitPathSamples,
+  SIMULATION_HOME,
+} from "@/lib/flight-simulation";
 
 import DroneTakeoffOverlay from "./DroneTakeoffOverlay";
 import SimulatedLiveVideoView from "./SimulatedLiveVideoView";
@@ -24,36 +31,8 @@ const FlightPathMap = dynamic(() => import("./FlightPathMap"), {
 
 type LatLng = [number, number];
 
-function createInitialTelemetry(): Telemetry {
-  return {
-    droneId: DRONE_ID,
-    status: "STOPPED",
-    latitude: 31.9523,
-    longitude: 115.8613,
-    altitudeFt: 285,
-    speedMph: 24.6,
-    batteryPct: 94.2,
-    lastUpdated: new Date(),
-  };
-}
-
-function jitterTelemetry(prev: Telemetry): Telemetry {
-  const latDelta = (Math.random() - 0.5) * 0.0004;
-  const lngDelta = (Math.random() - 0.5) * 0.0004;
-  const altDelta = (Math.random() - 0.5) * 8;
-  const speedDelta = (Math.random() - 0.5) * 4;
-
-  return {
-    ...prev,
-    status: "IN FLIGHT",
-    latitude: prev.latitude + latDelta,
-    longitude: prev.longitude + lngDelta,
-    altitudeFt: Math.max(120, Math.min(400, prev.altitudeFt + altDelta)),
-    speedMph: Math.max(8, Math.min(42, prev.speedMph + speedDelta)),
-    batteryPct: Math.max(0, prev.batteryPct - 0.15 - Math.random() * 0.2),
-    lastUpdated: new Date(),
-  };
-}
+const PLANNED_ORBIT_PATH = getOrbitPathSamples();
+const SURVEY_HOME: LatLng = [SIMULATION_HOME.latitude, SIMULATION_HOME.longitude];
 
 function toLatLng(telemetry: Telemetry): LatLng {
   return [telemetry.latitude, telemetry.longitude];
@@ -129,6 +108,7 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
     const [isRunning, setIsRunning] = useState(false);
     const [takeoffToken, setTakeoffToken] = useState(0);
     const telemetryRef = useRef<Telemetry | null>(null);
+    const orbitAngleRef = useRef(0);
 
     useEffect(() => {
       telemetryRef.current = telemetry;
@@ -162,6 +142,7 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
 
         setTelemetry(latest);
         setFlightPath([toLatLng(latest)]);
+        orbitAngleRef.current = angleFromPosition(latest.latitude, latest.longitude);
         setIsRunning(latest.status === "IN FLIGHT");
       }
 
@@ -189,6 +170,7 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
     }, []);
 
     const generateTestDrone = useCallback(async () => {
+      orbitAngleRef.current = 0;
       const initial = createInitialTelemetry();
       const initialPoint = toLatLng(initial);
       setIsRunning(false);
@@ -202,6 +184,7 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
       playTakeoffAnimation();
       setTelemetry((prev) => {
         if (!prev) return prev;
+        orbitAngleRef.current = angleFromPosition(prev.latitude, prev.longitude);
         const next = { ...prev, status: "IN FLIGHT" as const, lastUpdated: new Date() };
         void persistTelemetry(next);
         return next;
@@ -229,6 +212,7 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
       setTelemetry(null);
       setFlightPath([]);
       setIsRunning(false);
+      orbitAngleRef.current = 0;
     }, []);
 
     const startMissionFlow = useCallback(async () => {
@@ -258,7 +242,11 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
       const interval = setInterval(() => {
         setTelemetry((prev) => {
           if (!prev) return prev;
-          const next = jitterTelemetry(prev);
+          const { telemetry: next, nextAngle } = advanceOrbitTelemetry(
+            prev,
+            orbitAngleRef.current,
+          );
+          orbitAngleRef.current = nextAngle;
           void persistTelemetry(next);
           return next;
         });
@@ -279,7 +267,8 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
             <h2 className="mt-1 text-lg font-semibold text-white">Simulator Controls</h2>
             <p className="mt-2 text-sm text-white/60">
               Generate a test drone, start or stop the live simulation, and verify telemetry writes to
-              Supabase.
+              Supabase. The drone orbits a 2 km circle around survey home (
+              {SIMULATION_HOME.latitude.toFixed(5)}, {SIMULATION_HOME.longitude.toFixed(5)}).
             </p>
           </div>
 
@@ -368,7 +357,12 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
                 {takeoffToken > 0 && (
                   <DroneTakeoffOverlay key={takeoffToken} onComplete={handleTakeoffComplete} />
                 )}
-                <FlightPathMap position={toLatLng(telemetry)} path={flightPath} />
+                <FlightPathMap
+                  position={toLatLng(telemetry)}
+                  path={flightPath}
+                  plannedOrbit={PLANNED_ORBIT_PATH}
+                  homePosition={SURVEY_HOME}
+                />
               </div>
 
               {isRunning && (

@@ -21,7 +21,22 @@ const startIcon = L.divIcon({
   iconAnchor: [7, 7],
 });
 
-function MapViewSync({ position, path }: { position: LatLng; path: LatLng[] }) {
+const homeIcon = L.divIcon({
+  className: "",
+  html: `<div style="width:18px;height:18px;border-radius:50%;background:#f59e0b;border:2px solid #fef3c7;box-shadow:0 0 12px rgba(245,158,11,0.9);"></div>`,
+  iconSize: [18, 18],
+  iconAnchor: [9, 9],
+});
+
+function MapViewSync({
+  position,
+  path,
+  plannedOrbit,
+}: {
+  position: LatLng;
+  path: LatLng[];
+  plannedOrbit?: LatLng[];
+}) {
   const map = useMap();
 
   useEffect(() => {
@@ -38,8 +53,13 @@ function MapViewSync({ position, path }: { position: LatLng; path: LatLng[] }) {
       return;
     }
 
+    if (plannedOrbit && plannedOrbit.length >= 3) {
+      map.fitBounds(L.latLngBounds(plannedOrbit), { animate: true, padding: [24, 24] });
+      return;
+    }
+
     map.setView(position, 18, { animate: true });
-  }, [map, path, position]);
+  }, [map, path, plannedOrbit, position]);
 
   return null;
 }
@@ -62,6 +82,36 @@ function FlightPathPolyline({ path }: { path: LatLng[] }) {
     const latLngs = path.length >= 2 ? path : [];
     polylineRef.current.setLatLngs(latLngs);
     polylineRef.current.bringToFront();
+  }, [map, path]);
+
+  useEffect(() => {
+    return () => {
+      polylineRef.current?.remove();
+      polylineRef.current = null;
+    };
+  }, [map]);
+
+  return null;
+}
+
+function PlannedOrbitPolyline({ path }: { path: LatLng[] }) {
+  const map = useMap();
+  const polylineRef = useRef<L.Polyline | null>(null);
+
+  useEffect(() => {
+    if (!polylineRef.current) {
+      polylineRef.current = L.polyline(path, {
+        color: "#fbbf24",
+        weight: 2,
+        opacity: 0.75,
+        dashArray: "8 10",
+        lineCap: "round",
+        lineJoin: "round",
+      }).addTo(map);
+      return;
+    }
+
+    polylineRef.current.setLatLngs(path);
   }, [map, path]);
 
   useEffect(() => {
@@ -100,16 +150,23 @@ function UpdatingMarker({ position, icon }: { position: LatLng; icon: L.DivIcon 
 export type FlightPathMapProps = {
   position: LatLng;
   path: LatLng[];
+  plannedOrbit?: LatLng[];
+  homePosition?: LatLng;
 };
 
-export default function FlightPathMap({ position, path }: FlightPathMapProps) {
+export default function FlightPathMap({
+  position,
+  path,
+  plannedOrbit,
+  homePosition,
+}: FlightPathMapProps) {
   const startPosition = path[0] ?? position;
 
   return (
     <div className="flight-path-map-shell relative overflow-hidden rounded-xl border border-white/10">
       <MapContainer
-        center={position}
-        zoom={18}
+        center={homePosition ?? position}
+        zoom={14}
         scrollWheelZoom={false}
         className="h-[320px] w-full"
         style={{ background: "#3d4f3a" }}
@@ -125,8 +182,12 @@ export default function FlightPathMap({ position, path }: FlightPathMapProps) {
           maxZoom={17}
           opacity={0.42}
         />
-        <MapViewSync position={position} path={path} />
+        <MapViewSync position={position} path={path} plannedOrbit={plannedOrbit} />
+        {plannedOrbit && plannedOrbit.length >= 3 && (
+          <PlannedOrbitPolyline path={plannedOrbit} />
+        )}
         <FlightPathPolyline path={path} />
+        {homePosition && <UpdatingMarker position={homePosition} icon={homeIcon} />}
         <UpdatingMarker position={startPosition} icon={startIcon} />
         <UpdatingMarker position={position} icon={currentIcon} />
       </MapContainer>
