@@ -1,13 +1,11 @@
-export type AssetHomeBase = "Barcelona" | "Porto" | "Oxford";
-
 export type AssetOperationalStatus =
   | "Standby"
   | "In Flight"
   | "In Hangar"
   | "Maintenance"
-  | "Stopped";
-
-export type DroneModel = "DJI Matrice 4T";
+  | "Stopped"
+  | "In Service"
+  | "Active Licence";
 
 export type RtkCalibrationMode =
   | "Uncalibrated"
@@ -19,9 +17,10 @@ export type ControlSource = "RC" | "App" | "Cloud";
 export type ManagedAsset = {
   id: string;
   assetTag: string;
+  category: string;
+  location: string;
+  model: string;
   serialNumber: string;
-  model: DroneModel;
-  homeBase: AssetHomeBase;
   operationalStatus: AssetOperationalStatus;
   purchaseDate: string;
   firmwareVersion: string;
@@ -39,9 +38,40 @@ export type ManagedAsset = {
   telemetryDroneId?: string;
 };
 
-export const DRONE_MODEL_OPTIONS: DroneModel[] = ["DJI Matrice 4T"];
+export const DEFAULT_ASSET_CATEGORIES = [
+  "Aircraft",
+  "RTK Base Station",
+  "Battery",
+  "Remote Controller",
+  "Payload Module",
+  "Charging Hub",
+  "Transport Case",
+  "4G Connectivity",
+  "Software Licence",
+] as const;
 
-export const ASSET_HOME_BASE_OPTIONS: AssetHomeBase[] = ["Barcelona", "Porto", "Oxford"];
+export const DEFAULT_ASSET_LOCATIONS = ["Barcelona", "Porto", "Oxford"] as const;
+
+export const MODELS_BY_CATEGORY: Record<string, string[]> = {
+  Aircraft: ["DJI Matrice 4T"],
+  "RTK Base Station": [
+    "DJI D-RTK 3 Multifunctional Station",
+    "DJI D-RTK 2 Mobile Station",
+  ],
+  Battery: ["TB65 Intelligent Flight Battery", "TB60 Intelligent Flight Battery"],
+  "Remote Controller": ["DJI RC Plus Enterprise", "DJI RC Plus"],
+  "Payload Module": [
+    "Matrice 4T Integrated Payload (Wide/Tele/Thermal)",
+    "Laser Rangefinder Module",
+  ],
+  "Charging Hub": ["BS65 Intelligent Battery Station", "TB65 Charging Hub"],
+  "Transport Case": [
+    "DJI Safety Case (Matrice 4 Series)",
+    "Pelican 1690 Custom Foam Insert",
+  ],
+  "4G Connectivity": ["DJI Cellular Dongle 2", "DJI eSIM Dongle"],
+  "Software Licence": ["FlightHub 2 Organisation", "DJI Terra Advanced", "DJI Modify"],
+};
 
 export const ASSET_STATUS_OPTIONS: AssetOperationalStatus[] = [
   "Standby",
@@ -49,6 +79,8 @@ export const ASSET_STATUS_OPTIONS: AssetOperationalStatus[] = [
   "In Hangar",
   "Maintenance",
   "Stopped",
+  "In Service",
+  "Active Licence",
 ];
 
 export const RTK_CALIBRATION_OPTIONS: RtkCalibrationMode[] = [
@@ -63,91 +95,271 @@ export const FIRMWARE_VERSION_OPTIONS = [
   "v09.02.0001",
   "v09.01.0014",
   "v08.04.0008",
+  "N/A",
 ] as const;
 
-let assetCounter = 3;
+export type AssetRegistryState = {
+  assets: ManagedAsset[];
+  categories: string[];
+  locations: string[];
+};
+
+let assetCounter = 0;
 
 export function createAssetId() {
   assetCounter += 1;
   return `asset-${assetCounter}`;
 }
 
-export function createInitialAssets(): ManagedAsset[] {
+function locationCode(location: string) {
+  switch (location) {
+    case "Barcelona":
+      return "BCN";
+    case "Porto":
+      return "PRT";
+    case "Oxford":
+      return "OXF";
+    default:
+      return location.slice(0, 3).toUpperCase();
+  }
+}
+
+function categoryPrefix(category: string) {
+  switch (category) {
+    case "Aircraft":
+      return "M4T";
+    case "RTK Base Station":
+      return "DRTK3";
+    case "Battery":
+      return "BAT";
+    case "Remote Controller":
+      return "RC";
+    case "Payload Module":
+      return "PLD";
+    case "Charging Hub":
+      return "CHG";
+    case "Transport Case":
+      return "CASE";
+    case "4G Connectivity":
+      return "4G";
+    case "Software Licence":
+      return "LIC";
+    default:
+      return "AST";
+  }
+}
+
+function defaultStatusForCategory(category: string): AssetOperationalStatus {
+  if (category === "Software Licence") return "Active Licence";
+  if (category === "Charging Hub") return "In Service";
+  if (category === "Transport Case") return "In Hangar";
+  return "Standby";
+}
+
+type SeedAsset = {
+  category: string;
+  location: string;
+  assetTag: string;
+  model: string;
+  serialNumber: string;
+  purchaseDate: string;
+  operationalStatus?: AssetOperationalStatus;
+  firmwareVersion?: string;
+  drtk3BaseSerial?: string;
+  rtkCalibrationMode?: RtkCalibrationMode;
+  totalFlightHours?: number;
+  assignedClientId?: string | null;
+  notes?: string;
+  telemetryDroneId?: string;
+};
+
+function buildSeedAsset(seed: SeedAsset): ManagedAsset {
+  assetCounter += 1;
+  return {
+    id: `asset-${assetCounter}`,
+    assetTag: seed.assetTag,
+    category: seed.category,
+    location: seed.location,
+    model: seed.model,
+    serialNumber: seed.serialNumber,
+    operationalStatus: seed.operationalStatus ?? defaultStatusForCategory(seed.category),
+    purchaseDate: seed.purchaseDate,
+    firmwareVersion: seed.firmwareVersion ?? FIRMWARE_VERSION_OPTIONS[0],
+    drtk3BaseSerial: seed.drtk3BaseSerial ?? "",
+    rtkCalibrationMode: seed.rtkCalibrationMode ?? "Network RTK",
+    insuranceExpiry: "2027-06-30",
+    lastMaintenanceDate: "2026-05-01",
+    nextMaintenanceDue: "2026-11-01",
+    totalFlightHours: seed.totalFlightHours ?? 0,
+    storageUsedGb: seed.category === "Aircraft" ? 64 : 0,
+    assignedClientId: seed.assignedClientId ?? null,
+    controlSource: seed.category === "Software Licence" ? "Cloud" : "RC",
+    notes: seed.notes ?? "",
+    telemetryDroneId: seed.telemetryDroneId,
+  };
+}
+
+function seedsForLocation(
+  location: (typeof DEFAULT_ASSET_LOCATIONS)[number],
+  clientId: string,
+  serialSuffix: string,
+): SeedAsset[] {
+  const code = locationCode(location);
+
   return [
     {
-      id: "asset-1",
-      assetTag: "DC-M4T-BCN",
-      serialNumber: "1581F5BKD22800123456",
+      category: "Aircraft",
+      location,
+      assetTag: `DC-M4T-${code}`,
       model: "DJI Matrice 4T",
-      homeBase: "Barcelona",
-      operationalStatus: "Standby",
+      serialNumber: `1581F5BKD2280${serialSuffix}001`,
+      purchaseDate: location === "Barcelona" ? "2024-03-12" : location === "Porto" ? "2024-07-18" : "2025-01-09",
+      totalFlightHours: location === "Barcelona" ? 412 : location === "Porto" ? 286 : 118,
+      assignedClientId: clientId,
+      drtk3BaseSerial: `DRTK3-${code}-001`,
+      notes:
+        location === "Oxford"
+          ? "FlightHub sandbox linked airframe · primary demo drone."
+          : `${location} survey operations airframe.`,
+      telemetryDroneId: location === "Oxford" ? "DC-TEST-001" : undefined,
+    },
+    {
+      category: "RTK Base Station",
+      location,
+      assetTag: `DRTK3-${code}-001`,
+      model: "DJI D-RTK 3 Multifunctional Station",
+      serialNumber: `DRTK3SN${serialSuffix}7788`,
+      purchaseDate: "2024-03-10",
+      rtkCalibrationMode: "Network RTK",
+      notes: "Network RTK calibrated · RTCM broadcast to local fleet.",
+    },
+    {
+      category: "Battery",
+      location,
+      assetTag: `BAT-${code}-01`,
+      model: "TB65 Intelligent Flight Battery",
+      serialNumber: `TB65${serialSuffix}11001`,
       purchaseDate: "2024-03-12",
-      firmwareVersion: "v09.02.0001",
-      drtk3BaseSerial: "DRTK3-BCN-0041",
-      rtkCalibrationMode: "Network RTK",
-      insuranceExpiry: "2027-03-11",
-      lastMaintenanceDate: "2026-05-02",
-      nextMaintenanceDue: "2026-11-02",
-      totalFlightHours: 412,
-      storageUsedGb: 128,
-      assignedClientId: "client-1",
-      controlSource: "Cloud",
-      notes: "Riells del Fai corridor support · wide + thermal payload verified.",
+      notes: "Primary flight battery set A.",
     },
     {
-      id: "asset-2",
-      assetTag: "DC-M4T-PRT",
-      serialNumber: "1581F5BKD22800987654",
-      model: "DJI Matrice 4T",
-      homeBase: "Porto",
-      operationalStatus: "In Hangar",
-      purchaseDate: "2024-07-18",
+      category: "Battery",
+      location,
+      assetTag: `BAT-${code}-02`,
+      model: "TB65 Intelligent Flight Battery",
+      serialNumber: `TB65${serialSuffix}11002`,
+      purchaseDate: "2024-03-12",
+      notes: "Reserve flight battery set B.",
+    },
+    {
+      category: "Remote Controller",
+      location,
+      assetTag: `RC-${code}-01`,
+      model: "DJI RC Plus Enterprise",
+      serialNumber: `RCPE${serialSuffix}44001`,
+      purchaseDate: "2024-03-15",
       firmwareVersion: "v09.01.0014",
-      drtk3BaseSerial: "DRTK3-PRT-0018",
-      rtkCalibrationMode: "Satellite Differential",
-      insuranceExpiry: "2026-07-17",
-      lastMaintenanceDate: "2026-04-20",
-      nextMaintenanceDue: "2026-10-20",
-      totalFlightHours: 286,
-      storageUsedGb: 64,
-      assignedClientId: "client-2",
-      controlSource: "App",
-      notes: "Douro logistics corridor mapping · spare battery set B on charge.",
+      notes: "Assigned pilot handset · encrypted link profile.",
     },
     {
-      id: "asset-3",
-      assetTag: "DC-M4T-OXF",
-      serialNumber: "1581F5BKD22800445566",
-      model: "DJI Matrice 4T",
-      homeBase: "Oxford",
-      operationalStatus: "Standby",
-      purchaseDate: "2025-01-09",
-      firmwareVersion: "v09.02.0001",
-      drtk3BaseSerial: "DRTK3-OXF-0007",
-      rtkCalibrationMode: "Network RTK",
-      insuranceExpiry: "2027-01-08",
-      lastMaintenanceDate: "2026-06-01",
-      nextMaintenanceDue: "2026-12-01",
-      totalFlightHours: 118,
-      storageUsedGb: 32,
-      assignedClientId: "client-3",
-      controlSource: "Cloud",
-      notes: "FlightHub sandbox linked asset · primary demo airframe.",
-      telemetryDroneId: "DC-TEST-001",
+      category: "Payload Module",
+      location,
+      assetTag: `PLD-${code}-01`,
+      model: "Matrice 4T Integrated Payload (Wide/Tele/Thermal)",
+      serialNumber: `PLD4T${serialSuffix}9001`,
+      purchaseDate: "2024-03-12",
+      notes: "Wide + tele + thermal factory payload · R-JPEG radiometric verified.",
+    },
+    {
+      category: "Charging Hub",
+      location,
+      assetTag: `CHG-${code}-01`,
+      model: "BS65 Intelligent Battery Station",
+      serialNumber: `BS65${serialSuffix}33001`,
+      purchaseDate: "2024-04-01",
+      operationalStatus: "In Service",
+      notes: "Hangar charging bay · dual TB65 rotation.",
+    },
+    {
+      category: "Transport Case",
+      location,
+      assetTag: `CASE-${code}-01`,
+      model: "DJI Safety Case (Matrice 4 Series)",
+      serialNumber: `CASE${serialSuffix}22001`,
+      purchaseDate: "2024-03-12",
+      operationalStatus: "In Hangar",
+      notes: "Road case with foam for airframe + RC + batteries.",
+    },
+    {
+      category: "4G Connectivity",
+      location,
+      assetTag: `4G-${code}-01`,
+      model: "DJI Cellular Dongle 2",
+      serialNumber: `DNG2${serialSuffix}55001`,
+      purchaseDate: "2024-06-01",
+      notes: "eSIM provisioned · cloud uplink for FlightHub OSD.",
+    },
+    {
+      category: "Software Licence",
+      location,
+      assetTag: `FH2-${code}-01`,
+      model: "FlightHub 2 Organisation",
+      serialNumber: `FH2-LIC-${code}-2026`,
+      purchaseDate: "2025-01-01",
+      operationalStatus: "Active Licence",
+      firmwareVersion: "N/A",
+      notes: "Organisation seat bundle · telemetry + media sync.",
     },
   ];
 }
 
-export function createBlankAsset(): ManagedAsset {
+export function createInitialAssetRegistry(): AssetRegistryState {
+  assetCounter = 0;
+
+  const assets = [
+    ...seedsForLocation("Barcelona", "client-1", "234"),
+    ...seedsForLocation("Porto", "client-2", "876"),
+    ...seedsForLocation("Oxford", "client-3", "445"),
+  ].map(buildSeedAsset);
+
+  return {
+    assets,
+    categories: [...DEFAULT_ASSET_CATEGORIES],
+    locations: [...DEFAULT_ASSET_LOCATIONS],
+  };
+}
+
+/** @deprecated Use createInitialAssetRegistry().assets */
+export function createInitialAssets(): ManagedAsset[] {
+  return createInitialAssetRegistry().assets;
+}
+
+export function getModelsForCategory(category: string): string[] {
+  return MODELS_BY_CATEGORY[category] ?? ["Other / Custom"];
+}
+
+export function createBlankAsset(
+  categories: string[],
+  locations: string[],
+  category?: string,
+  location?: string,
+): ManagedAsset {
+  const resolvedCategory = category ?? categories[0] ?? "Aircraft";
+  const resolvedLocation = location ?? locations[0] ?? "Oxford";
+  const models = getModelsForCategory(resolvedCategory);
+  const code = locationCode(resolvedLocation);
+  const prefix = categoryPrefix(resolvedCategory);
+
   return {
     id: createAssetId(),
-    assetTag: "",
+    assetTag: `${prefix}-${code}-NEW`,
+    category: resolvedCategory,
+    location: resolvedLocation,
+    model: models[0] ?? "",
     serialNumber: "",
-    model: "DJI Matrice 4T",
-    homeBase: "Oxford",
-    operationalStatus: "Standby",
+    operationalStatus: defaultStatusForCategory(resolvedCategory),
     purchaseDate: new Date().toISOString().slice(0, 10),
-    firmwareVersion: FIRMWARE_VERSION_OPTIONS[0],
+    firmwareVersion: resolvedCategory === "Software Licence" ? "N/A" : FIRMWARE_VERSION_OPTIONS[0],
     drtk3BaseSerial: "",
     rtkCalibrationMode: "Uncalibrated",
     insuranceExpiry: "",
@@ -156,7 +368,7 @@ export function createBlankAsset(): ManagedAsset {
     totalFlightHours: 0,
     storageUsedGb: 0,
     assignedClientId: null,
-    controlSource: "RC",
+    controlSource: resolvedCategory === "Software Licence" ? "Cloud" : "RC",
     notes: "",
   };
 }
@@ -173,6 +385,10 @@ export function assetStatusClass(status: AssetOperationalStatus | string) {
       return "border-amber-400/40 bg-amber-500/15 text-amber-200";
     case "In Hangar":
       return "border-violet-400/40 bg-violet-500/15 text-violet-200";
+    case "In Service":
+      return "border-cyan-400/40 bg-cyan-500/15 text-cyan-200";
+    case "Active Licence":
+      return "border-indigo-400/40 bg-indigo-500/15 text-indigo-200";
     default:
       return "border-white/15 bg-white/5 text-white/50";
   }
@@ -187,4 +403,16 @@ export function formatAssetDate(value: string) {
     month: "short",
     year: "numeric",
   });
+}
+
+export function isAircraftAsset(asset: ManagedAsset) {
+  return asset.category === "Aircraft";
+}
+
+export function isRtkAsset(asset: ManagedAsset) {
+  return asset.category === "RTK Base Station";
+}
+
+export function isSoftwareAsset(asset: ManagedAsset) {
+  return asset.category === "Software Licence";
 }

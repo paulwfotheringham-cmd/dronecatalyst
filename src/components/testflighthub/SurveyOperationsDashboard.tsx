@@ -4,7 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { useSearchParams } from "next/navigation";
 
 import {
-  createInitialAssets,
+  createInitialAssetRegistry,
   type ManagedAsset,
 } from "@/lib/asset-management-data";
 import {
@@ -42,7 +42,10 @@ export default function SurveyOperationsDashboard() {
   const { sandboxRef, liveTelemetry, isRunning, setSandboxMountTarget } =
     useSurveyOperationsSimulator();
   const [missions, setMissions] = useState<ManagedMission[]>(() => createInitialMissions());
-  const [assets, setAssets] = useState<ManagedAsset[]>(() => createInitialAssets());
+  const [assetRegistry] = useState(() => createInitialAssetRegistry());
+  const [assets, setAssets] = useState<ManagedAsset[]>(() => assetRegistry.assets);
+  const [assetCategories, setAssetCategories] = useState<string[]>(() => assetRegistry.categories);
+  const [assetLocations, setAssetLocations] = useState<string[]>(() => assetRegistry.locations);
   const [clients, setClients] = useState<ManagedClient[]>(() => createInitialClients());
   const [selectedMissionId, setSelectedMissionId] = useState("mission-1");
   const [selectedAssetId, setSelectedAssetId] = useState("asset-1");
@@ -216,10 +219,14 @@ export default function SurveyOperationsDashboard() {
           {activeView === "assets" && (
             <AssetManagementWorkspace
               assets={assets}
+              categories={assetCategories}
+              locations={assetLocations}
               clients={clients}
               selectedAssetId={selectedAssetId}
               onSelectAsset={setSelectedAssetId}
               onAssetsChange={setAssets}
+              onCategoriesChange={setAssetCategories}
+              onLocationsChange={setAssetLocations}
             />
           )}
 
@@ -243,10 +250,14 @@ export default function SurveyOperationsDashboard() {
             <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
               <AssetManagementWorkspace
                 assets={assets}
+                categories={assetCategories}
+                locations={assetLocations}
                 clients={clients}
                 selectedAssetId={selectedAssetId}
                 onSelectAsset={setSelectedAssetId}
                 onAssetsChange={setAssets}
+                onCategoriesChange={setAssetCategories}
+                onLocationsChange={setAssetLocations}
               />
               <FleetPanel
                 liveTelemetry={liveTelemetry}
