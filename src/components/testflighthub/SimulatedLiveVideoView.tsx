@@ -16,6 +16,7 @@ const LiveVideoTerrainMap = dynamic(() => import("./LiveVideoTerrainMap"), {
 
 type SimulatedLiveVideoViewProps = {
   telemetry: Telemetry;
+  compact?: boolean;
 };
 
 function formatHudTime(date: Date) {
@@ -84,29 +85,46 @@ function VideoGrainOverlay() {
   );
 }
 
-export default function SimulatedLiveVideoView({ telemetry }: SimulatedLiveVideoViewProps) {
+export default function SimulatedLiveVideoView({
+  telemetry,
+  compact = false,
+}: SimulatedLiveVideoViewProps) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-white/15 bg-black shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)]">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-white/[0.04] px-4 py-3 sm:px-6">
+    <section
+      className={`overflow-hidden rounded-2xl border border-white/15 bg-black shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] ${
+        compact ? "flex h-full min-h-[280px] flex-col" : ""
+      }`}
+    >
+      <div
+        className={`flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-white/[0.04] ${
+          compact ? "px-3 py-2" : "gap-3 px-4 py-3 sm:px-6"
+        }`}
+      >
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#60a5fa]">
             FPV Camera
           </p>
-          <h2 className="mt-1 text-lg font-semibold text-white">Live Video Feed</h2>
+          <h2 className={`font-semibold text-white ${compact ? "text-sm" : "mt-1 text-lg"}`}>
+            Live Video
+          </h2>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="inline-flex items-center gap-2 rounded-full border border-red-500/40 bg-red-500/15 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-red-300">
-            <span className="live-video-rec h-2 w-2 rounded-full bg-red-400" />
+        <div className={`flex items-center ${compact ? "gap-1.5" : "gap-3"}`}>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/40 bg-red-500/15 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-red-300">
+            <span className="live-video-rec h-1.5 w-1.5 rounded-full bg-red-400" />
             Rec
           </span>
-          <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-500/15 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-300">
-            <span className="live-video-pulse h-2 w-2 rounded-full bg-emerald-400" />
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-500/15 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-emerald-300">
+            <span className="live-video-pulse h-1.5 w-1.5 rounded-full bg-emerald-400" />
             Live
           </span>
         </div>
       </div>
 
-      <div className="relative aspect-video w-full overflow-hidden bg-[#020617]">
+      <div
+        className={`relative w-full flex-1 overflow-hidden bg-[#020617] ${
+          compact ? "min-h-0" : "aspect-video"
+        }`}
+      >
         <LiveVideoTerrainMap telemetry={telemetry} />
 
         <div
@@ -120,30 +138,44 @@ export default function SimulatedLiveVideoView({ telemetry }: SimulatedLiveVideo
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[length:100%_3px] opacity-25" />
         <VideoGrainOverlay />
 
-        <div className="pointer-events-none absolute left-1/2 top-1/2 h-7 w-7 -translate-x-1/2 -translate-y-1/2">
-          <span className="absolute left-0 top-1/2 h-px w-2 -translate-y-1/2 bg-white/70" />
-          <span className="absolute right-0 top-1/2 h-px w-2 -translate-y-1/2 bg-white/70" />
-          <span className="absolute left-1/2 top-0 w-px h-2 -translate-x-1/2 bg-white/70" />
-          <span className="absolute bottom-0 left-1/2 w-px h-2 -translate-x-1/2 bg-white/70" />
+        <div className="pointer-events-none absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2">
+          <span className="absolute left-0 top-1/2 h-px w-1.5 -translate-y-1/2 bg-white/70" />
+          <span className="absolute right-0 top-1/2 h-px w-1.5 -translate-y-1/2 bg-white/70" />
+          <span className="absolute left-1/2 top-0 w-px h-1.5 -translate-x-1/2 bg-white/70" />
+          <span className="absolute bottom-0 left-1/2 w-px h-1.5 -translate-x-1/2 bg-white/70" />
         </div>
 
-        <div className="pointer-events-none absolute left-4 top-4 rounded-lg border border-white/15 bg-black/45 px-3 py-2 font-mono text-[11px] text-white/85 backdrop-blur-sm">
+        <div
+          className={`pointer-events-none absolute left-2 top-2 rounded-md border border-white/15 bg-black/45 font-mono text-white/85 backdrop-blur-sm ${
+            compact ? "px-2 py-1 text-[9px]" : "left-4 top-4 px-3 py-2 text-[11px]"
+          }`}
+        >
           <p>{telemetry.droneId}</p>
-          <p className="mt-1 text-white/60">{formatHudTime(telemetry.lastUpdated)} UTC</p>
+          {!compact && (
+            <p className="mt-1 text-white/60">{formatHudTime(telemetry.lastUpdated)} UTC</p>
+          )}
         </div>
 
-        <div className="pointer-events-none absolute right-4 top-4 rounded-lg border border-white/15 bg-black/45 px-3 py-2 text-right font-mono text-[11px] text-white/85 backdrop-blur-sm">
+        <div
+          className={`pointer-events-none absolute right-2 top-2 rounded-md border border-white/15 bg-black/45 text-right font-mono text-white/85 backdrop-blur-sm ${
+            compact ? "px-2 py-1 text-[9px]" : "right-4 top-4 px-3 py-2 text-[11px]"
+          }`}
+        >
           <p>ALT {telemetry.altitudeFt.toFixed(0)} FT</p>
-          <p className="mt-1">SPD {telemetry.speedMph.toFixed(1)} MPH</p>
-          <p className="mt-1 text-emerald-300">BAT {telemetry.batteryPct.toFixed(1)}%</p>
+          <p className="mt-0.5">SPD {telemetry.speedMph.toFixed(1)} MPH</p>
+          {!compact && (
+            <p className="mt-1 text-emerald-300">BAT {telemetry.batteryPct.toFixed(1)}%</p>
+          )}
         </div>
 
-        <div className="pointer-events-none absolute bottom-4 left-4 rounded-lg border border-white/15 bg-black/45 px-3 py-2 font-mono text-[11px] text-white/75 backdrop-blur-sm">
-          <p>
-            {telemetry.latitude.toFixed(6)}, {telemetry.longitude.toFixed(6)}
-          </p>
-          <p className="mt-1 text-white/50">Satellite + terrain · Matrice 4T</p>
-        </div>
+        {!compact && (
+          <div className="pointer-events-none absolute bottom-4 left-4 rounded-lg border border-white/15 bg-black/45 px-3 py-2 font-mono text-[11px] text-white/75 backdrop-blur-sm">
+            <p>
+              {telemetry.latitude.toFixed(6)}, {telemetry.longitude.toFixed(6)}
+            </p>
+            <p className="mt-1 text-white/50">Satellite + terrain · Matrice 4T</p>
+          </div>
+        )}
       </div>
     </section>
   );

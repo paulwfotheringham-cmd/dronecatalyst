@@ -11,6 +11,7 @@ import {
 } from "@/lib/telemetry";
 
 import DroneTakeoffOverlay from "./DroneTakeoffOverlay";
+import SimulatedLiveVideoView from "./SimulatedLiveVideoView";
 
 const FlightPathMap = dynamic(() => import("./FlightPathMap"), {
   ssr: false,
@@ -360,11 +361,19 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
           <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-8">
             <h2 className="text-lg font-semibold text-white">Flight Path Map</h2>
 
-            <div className="relative mt-4 min-h-[320px]">
-              {takeoffToken > 0 && (
-                <DroneTakeoffOverlay key={takeoffToken} onComplete={handleTakeoffComplete} />
+            <div
+              className={`mt-4 grid gap-4 ${isRunning ? "lg:grid-cols-[minmax(0,1fr)_240px] lg:items-stretch" : ""}`}
+            >
+              <div className="relative min-h-[320px]">
+                {takeoffToken > 0 && (
+                  <DroneTakeoffOverlay key={takeoffToken} onComplete={handleTakeoffComplete} />
+                )}
+                <FlightPathMap position={toLatLng(telemetry)} path={flightPath} />
+              </div>
+
+              {isRunning && (
+                <SimulatedLiveVideoView telemetry={telemetry} compact />
               )}
-              <FlightPathMap position={toLatLng(telemetry)} path={flightPath} />
             </div>
           </section>
         )}
