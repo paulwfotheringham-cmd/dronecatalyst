@@ -20,6 +20,7 @@ import {
 } from "@/lib/survey-operations-mock-data";
 import { cn } from "@/lib/utils";
 import {
+  Binoculars,
   Building2,
   Compass,
   ContactRound,
@@ -44,6 +45,7 @@ import {
 
 const iconMap = {
   LayoutDashboard,
+  Binoculars,
   Building2,
   Compass,
   ContactRound,

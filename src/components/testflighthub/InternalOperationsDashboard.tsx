@@ -19,6 +19,7 @@ import {
 } from "@/lib/internal-operations-data";
 import AssetManagementWorkspace from "./AssetManagementWorkspace";
 import ClientManagementWorkspace from "./ClientManagementWorkspace";
+import CompetitorsWorkspace from "./CompetitorsWorkspace";
 import CrmWorkspace from "./CrmWorkspace";
 import FileRepositoryReferenceImages from "./FileRepositoryReferenceImages";
 import FileRepositoryWorkspace from "./FileRepositoryWorkspace";
@@ -179,6 +180,8 @@ export default function InternalOperationsDashboard() {
           {activeView === "strategy" && <StrategyWorkspace />}
 
           {activeView === "whiteboard" && <WhiteboardWorkspace />}
+
+          {activeView === "competitors" && <CompetitorsWorkspace />}
 
           {activeView === "messaging" && <MessagingWorkspace />}
 
