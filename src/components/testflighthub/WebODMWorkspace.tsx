@@ -119,10 +119,14 @@ export default function WebODMWorkspace() {
             {loading ? "Connecting…" : connected && !response?.error ? "Connected" : "Offline"}
           </span>
           <a
-            href={response?.dashboardUrl ?? WEBODM_DASHBOARD_URL}
+            href={WEBODM_DASHBOARD_URL || "#"}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#2563eb] px-5 text-sm font-semibold text-white shadow-[0_0_32px_rgba(37,99,235,0.35)] transition-colors hover:bg-[#1d4ed8]"
+            aria-disabled={!WEBODM_DASHBOARD_URL}
+            className={cn(
+              "inline-flex h-11 items-center gap-2 rounded-xl bg-[#2563eb] px-5 text-sm font-semibold text-white shadow-[0_0_32px_rgba(37,99,235,0.35)] transition-colors hover:bg-[#1d4ed8]",
+              !WEBODM_DASHBOARD_URL && "pointer-events-none opacity-50",
+            )}
           >
             Open WebODM
             <ExternalLink className="h-4 w-4" />
@@ -141,8 +145,12 @@ export default function WebODMWorkspace() {
         <div className="mt-8 rounded-xl border border-red-400/25 bg-red-500/10 p-4 text-sm text-red-200">
           {response.error}
           <p className="mt-2 text-red-200/70">
-            Make sure WebODM is reachable at a public HTTPS URL ({response.dashboardUrl}) and
-            redeploy after setting env vars in Vercel. For local dev, use{" "}
+            Make sure WebODM is reachable at a public HTTPS URL
+            {WEBODM_DASHBOARD_URL ? ` (${WEBODM_DASHBOARD_URL})` : ""} and redeploy after setting{" "}
+            <span className="font-mono">WEBODM_URL</span>,{" "}
+            <span className="font-mono">NEXT_PUBLIC_WEBODM_URL</span>,{" "}
+            <span className="font-mono">WEBODM_USERNAME</span>, and{" "}
+            <span className="font-mono">WEBODM_PASSWORD</span> in Vercel. For local dev, use{" "}
             <span className="font-mono">.env.local</span> and restart{" "}
             <span className="font-mono">npm run dev</span>.
           </p>
@@ -254,7 +262,7 @@ export default function WebODMWorkspace() {
         <ul className="mt-3 space-y-2 text-sm text-white/60">
           <li>Simulated FlightHub 2 mission imagery pushed to WebODM after test flights</li>
           <li>Processing status and deliverables linked to Live Projects and client records</li>
-          <li>Hosted WebODM endpoint for production (replace localhost in env config)</li>
+          <li>Hosted WebODM endpoint configured via environment variables in production</li>
         </ul>
       </div>
     </section>

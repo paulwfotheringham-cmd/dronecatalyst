@@ -1,12 +1,11 @@
-const WEBODM_BASE_URL =
-  process.env.WEBODM_URL ?? process.env.NEXT_PUBLIC_WEBODM_URL ?? "http://localhost:8000";
+import { getServerWebODMUrl, isWebODMServerConfigured } from "@/lib/webodm-env";
 
 export function getWebODMBaseUrl() {
-  return WEBODM_BASE_URL.replace(/\/$/, "");
+  return getServerWebODMUrl();
 }
 
 export function isWebODMConfigured() {
-  return Boolean(process.env.WEBODM_USERNAME && process.env.WEBODM_PASSWORD);
+  return isWebODMServerConfigured();
 }
 
 export function taskStatusLabel(status: number) {
@@ -67,7 +66,12 @@ async function getWebODMToken() {
     throw new Error("WebODM credentials are not configured.");
   }
 
-  const response = await fetch(`${getWebODMBaseUrl()}/api/token-auth/`, {
+  const baseUrl = getWebODMBaseUrl();
+  if (!baseUrl) {
+    throw new Error("WEBODM_URL is not configured.");
+  }
+
+  const response = await fetch(`${baseUrl}/api/token-auth/`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({ username, password }).toString(),
@@ -83,7 +87,12 @@ async function getWebODMToken() {
 }
 
 async function webodmFetch<T>(path: string, token: string) {
-  const response = await fetch(`${getWebODMBaseUrl()}${path}`, {
+  const baseUrl = getWebODMBaseUrl();
+  if (!baseUrl) {
+    throw new Error("WEBODM_URL is not configured.");
+  }
+
+  const response = await fetch(`${baseUrl}${path}`, {
     headers: { Authorization: `JWT ${token}` },
     cache: "no-store",
   });

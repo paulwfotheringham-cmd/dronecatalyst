@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { getPublicWebODMUrl } from "@/lib/webodm-env";
 import {
   fetchWebODMProjectsWithTasks,
   getWebODMBaseUrl,
@@ -8,13 +9,29 @@ import {
 
 export const dynamic = "force-dynamic";
 
+function webodmConfigError() {
+  const missing: string[] = [];
+
+  if (!getWebODMBaseUrl()) {
+    missing.push("WEBODM_URL");
+  }
+  if (!process.env.WEBODM_USERNAME) {
+    missing.push("WEBODM_USERNAME");
+  }
+  if (!process.env.WEBODM_PASSWORD) {
+    missing.push("WEBODM_PASSWORD");
+  }
+
+  return `Set ${missing.join(", ")} in Vercel Environment Variables (or .env.local for local dev).`;
+}
+
 export async function GET() {
   if (!isWebODMConfigured()) {
     return NextResponse.json(
       {
         configured: false,
-        dashboardUrl: getWebODMBaseUrl(),
-        error: "Set WEBODM_USERNAME and WEBODM_PASSWORD in Vercel Environment Variables (or .env.local for local dev).",
+        dashboardUrl: getPublicWebODMUrl(),
+        error: webodmConfigError(),
         projects: [],
       },
       { status: 503 },
@@ -26,7 +43,7 @@ export async function GET() {
 
     return NextResponse.json({
       configured: true,
-      dashboardUrl: getWebODMBaseUrl(),
+      dashboardUrl: getPublicWebODMUrl(),
       projects,
     });
   } catch (error) {
@@ -35,7 +52,7 @@ export async function GET() {
     return NextResponse.json(
       {
         configured: true,
-        dashboardUrl: getWebODMBaseUrl(),
+        dashboardUrl: getPublicWebODMUrl(),
         error: message,
         projects: [],
       },
