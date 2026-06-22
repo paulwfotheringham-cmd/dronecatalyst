@@ -6,7 +6,8 @@ export type InternalOperationsView =
   | "assets"
   | "testing"
   | "live-projects"
-  | "recent-missions";
+  | "recent-missions"
+  | "webodm";
 
 export const INTERNAL_OPERATIONS_BASE_PATH: SurveyOperationsBasePath = "/internaldashboard";
 
@@ -17,6 +18,7 @@ export const internalOperationsViews: InternalOperationsView[] = [
   "testing",
   "live-projects",
   "recent-missions",
+  "webodm",
 ];
 
 export function isInternalOperationsView(value: string | null): value is InternalOperationsView {
@@ -30,6 +32,7 @@ export const internalSurveyNavItems = [
   { label: "Testing", icon: "FlaskConical", view: "testing" as const },
   { label: "Live Projects", icon: "FolderKanban", view: "live-projects" as const },
   { label: "Recent Missions", icon: "History", view: "recent-missions" as const },
+  { label: "WebODM", icon: "Layers", view: "webodm" as const },
   { label: "Live Telemetry", icon: "Radio", view: null, href: "/telemetry" as const },
 ] as const;
 
@@ -45,6 +48,7 @@ export const internalViewTitles: Record<
   testing: { title: "Flight Simulator Testing", subtitle: "Internal Operations" },
   "live-projects": { title: "Live Projects", subtitle: "Internal Operations" },
   "recent-missions": { title: "Recent Missions", subtitle: "Internal Operations" },
+  webodm: { title: "WebODM Processing", subtitle: "Internal Operations" },
 };
 
 export const internalHomeTiles = [
@@ -77,6 +81,12 @@ export const internalHomeTiles = [
     title: "Recent Missions",
     description: "Completed and scheduled mission history across all regions.",
     accent: "from-cyan-500/20 to-sky-600/10 border-cyan-400/30",
+  },
+  {
+    view: "webodm" as const,
+    title: "WebODM",
+    description: "Orthophotos, point clouds, and 3D models from survey imagery.",
+    accent: "from-fuchsia-500/20 to-purple-600/10 border-fuchsia-400/30",
   },
   {
     view: null,

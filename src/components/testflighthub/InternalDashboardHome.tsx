@@ -13,6 +13,7 @@ import {
   FlaskConical,
   FolderKanban,
   History,
+  Layers,
   Package,
   Radio,
 } from "lucide-react";
@@ -23,6 +24,7 @@ const tileIcons = {
   testing: FlaskConical,
   "live-projects": FolderKanban,
   "recent-missions": History,
+  webodm: Layers,
   telemetry: Radio,
 } as const;
 
@@ -57,7 +59,9 @@ export default function InternalDashboardHome({ onNavigate }: InternalDashboardH
                     ? "live-projects"
                     : tile.view === "recent-missions"
                       ? "recent-missions"
-                      : "telemetry";
+                      : tile.view === "webodm"
+                        ? "webodm"
+                        : "telemetry";
           const Icon = tileIcons[iconKey];
           const className = cn(
             "group rounded-2xl border bg-gradient-to-br p-5 text-left shadow-[0_24px_64px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:shadow-[0_28px_72px_rgba(0,0,0,0.45)]",

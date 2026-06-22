@@ -23,6 +23,7 @@ import {
   FlaskConical,
   FolderKanban,
   History,
+  Layers,
   LayoutDashboard,
   MapPin,
   Package,
@@ -46,6 +47,7 @@ const iconMap = {
   FlaskConical,
   FolderKanban,
   History,
+  Layers,
 } as const;
 
 type SurveyOperationsSidebarProps = {

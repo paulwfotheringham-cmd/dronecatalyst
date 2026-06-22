@@ -24,6 +24,7 @@ import InternalDashboardHome from "./InternalDashboardHome";
 import LiveProjectsPanel from "./LiveProjectsPanel";
 import RecentMissionsPanel from "./RecentMissionsPanel";
 import SurveyOperationsShell from "./SurveyOperationsShell";
+import WebODMWorkspace from "./WebODMWorkspace";
 import { useSurveyOperationsSimulator } from "./SurveyOperationsSimulatorProvider";
 
 function readInitialView(searchParams: ReturnType<typeof useSearchParams>): InternalOperationsView {
@@ -148,6 +149,8 @@ export default function InternalOperationsDashboard() {
           {activeView === "live-projects" && <LiveProjectsPanel missions={missions} />}
 
           {activeView === "recent-missions" && <RecentMissionsPanel />}
+
+          {activeView === "webodm" && <WebODMWorkspace />}
         </div>
       </div>
     </SurveyOperationsShell>
