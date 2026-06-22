@@ -20,6 +20,7 @@ export default function Navbar() {
     pathname?.startsWith("/test1") ||
     pathname?.startsWith("/testflighthub") ||
     pathname?.startsWith("/internaldashboard") ||
+    pathname?.startsWith("/files") ||
     pathname?.startsWith("/telemetry");
 
   if (isDashboard) {

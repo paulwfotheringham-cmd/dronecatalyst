@@ -25,6 +25,12 @@ export function isInternalOperationsView(value: string | null): value is Interna
   return internalOperationsViews.includes(value as InternalOperationsView);
 }
 
+export const internalBottomNavItems = [
+  { label: "Files", icon: "FolderOpen", href: "/files" as const },
+] as const;
+
+export type InternalBottomNavItem = (typeof internalBottomNavItems)[number];
+
 export const internalSurveyNavItems = [
   { label: "Home", icon: "LayoutDashboard", view: "home" as const },
   { label: "Clients", icon: "Building2", view: "clients" as const },
@@ -110,6 +116,10 @@ export function getInternalNavHref(
   }
 
   return `${INTERNAL_OPERATIONS_BASE_PATH}?view=${view}`;
+}
+
+export function isInternalBottomNavItemActive(pathname: string, item: InternalBottomNavItem) {
+  return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 
 export function isInternalNavItemActive(

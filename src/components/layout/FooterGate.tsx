@@ -10,6 +10,7 @@ export default function FooterGate() {
     pathname?.startsWith("/test1") ||
     pathname?.startsWith("/testflighthub") ||
     pathname?.startsWith("/internaldashboard") ||
+    pathname?.startsWith("/files") ||
     pathname?.startsWith("/telemetry")
   ) {
     return null;
