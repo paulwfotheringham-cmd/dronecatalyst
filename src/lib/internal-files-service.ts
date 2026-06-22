@@ -169,9 +169,12 @@ export async function browseFolder(options: {
   if (query) {
     folderQuery = folderQuery.ilike("name", `%${query}%`);
     fileQuery = fileQuery.ilike("name", `%${query}%`);
+  } else if (folderId === null) {
+    folderQuery = folderQuery.is("parent_id", null);
+    fileQuery = fileQuery.is("folder_id", null);
   } else {
-    folderQuery = folderQuery.is("parent_id", folderId);
-    fileQuery = fileQuery.is("folder_id", folderId);
+    folderQuery = folderQuery.eq("parent_id", folderId);
+    fileQuery = fileQuery.eq("folder_id", folderId);
   }
 
   if (categoryId) {
