@@ -14,7 +14,8 @@ export type InternalOperationsView =
   | "messaging"
   | "files"
   | "users"
-  | "telemetry";
+  | "telemetry"
+  | "media-example";
 
 export const INTERNAL_OPERATIONS_BASE_PATH: SurveyOperationsBasePath = "/internaldashboard";
 
@@ -33,6 +34,7 @@ export const internalOperationsViews: InternalOperationsView[] = [
   "files",
   "users",
   "telemetry",
+  "media-example",
 ];
 
 export function isInternalOperationsView(value: string | null): value is InternalOperationsView {
@@ -54,6 +56,7 @@ export const internalSurveyNavItems = [
   { label: "Users", icon: "Users", view: "users" as const },
   { label: "Messaging", icon: "MessageSquare", view: "messaging" as const },
   { label: "Files", icon: "FolderOpen", view: "files" as const },
+  { label: "Media Example", icon: "Film", view: "media-example" as const },
 ] as const;
 
 export type InternalNavItem = (typeof internalSurveyNavItems)[number];
@@ -76,6 +79,7 @@ export const internalViewTitles: Record<
   files: { title: "File Repository", subtitle: "Internal Operations" },
   users: { title: "Users", subtitle: "Internal Operations" },
   telemetry: { title: "Live Telemetry", subtitle: "Internal Operations" },
+  "media-example": { title: "Media Example", subtitle: "Internal Operations" },
 };
 
 export const internalHomeTileRows = [

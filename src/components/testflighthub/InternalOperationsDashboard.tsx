@@ -25,6 +25,7 @@ import FileRepositoryWorkspace from "./FileRepositoryWorkspace";
 import FleetWorkspace from "./FleetWorkspace";
 import InternalDashboardHome from "./InternalDashboardHome";
 import LiveProjectsPanel from "./LiveProjectsPanel";
+import MediaExampleWorkspace from "./MediaExampleWorkspace";
 import MessagingWorkspace from "./MessagingWorkspace";
 import RecentMissionsPanel from "./RecentMissionsPanel";
 import StrategyWorkspace from "./StrategyWorkspace";
@@ -195,6 +196,8 @@ export default function InternalOperationsDashboard() {
           )}
 
           {activeView === "telemetry" && <TelemetryDashboard />}
+
+          {activeView === "media-example" && <MediaExampleWorkspace />}
         </div>
       </div>
     </SurveyOperationsShell>

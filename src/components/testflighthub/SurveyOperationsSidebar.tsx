@@ -23,6 +23,7 @@ import {
   Building2,
   Compass,
   ContactRound,
+  Film,
   FlaskConical,
   FolderKanban,
   FolderOpen,
@@ -58,6 +59,7 @@ const iconMap = {
   Layers,
   MessageSquare,
   Users,
+  Film,
 } as const;
 
 const navItemClass = (active: boolean) =>
