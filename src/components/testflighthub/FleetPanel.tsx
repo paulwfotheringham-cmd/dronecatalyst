@@ -3,11 +3,13 @@ import {
   fleetDrones,
   type FleetDroneStatus,
 } from "@/lib/survey-operations-mock-data";
+import { cn } from "@/lib/utils";
 
 type FleetPanelProps = {
   liveTelemetry: Telemetry | null;
   isRunning: boolean;
   onOpenAssets?: () => void;
+  compact?: boolean;
 };
 
 function fleetStatusClass(status: FleetDroneStatus | string) {
@@ -58,14 +60,26 @@ function buildFleetRows(liveTelemetry: Telemetry | null, isRunning: boolean) {
   });
 }
 
-export default function FleetPanel({ liveTelemetry, isRunning, onOpenAssets }: FleetPanelProps) {
+export default function FleetPanel({
+  liveTelemetry,
+  isRunning,
+  onOpenAssets,
+  compact = false,
+}: FleetPanelProps) {
   const drones = buildFleetRows(liveTelemetry, isRunning);
 
   return (
-    <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
+    <section
+      className={cn(
+        "rounded-2xl border border-white/15 bg-white/[0.04] shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl",
+        compact ? "p-4" : "p-6",
+      )}
+    >
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-white">Fleet</h2>
+          <h2 className={cn("font-semibold text-white", compact ? "text-base" : "text-lg")}>
+            Fleet
+          </h2>
           <p className="mt-0.5 text-xs text-white/45">3 virtual Matrice 4T assets</p>
         </div>
         <div className="flex items-center gap-2">
@@ -82,19 +96,24 @@ export default function FleetPanel({ liveTelemetry, isRunning, onOpenAssets }: F
         </div>
       </div>
 
-      <div className="mt-4 space-y-3">
+      <div className={cn("space-y-3", compact ? "mt-3" : "mt-4")}>
         {drones.map((drone) => (
           <div
             key={drone.id}
-            className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3"
+            className={cn(
+              "rounded-xl border border-white/10 bg-white/[0.03]",
+              compact ? "px-3 py-2.5" : "px-4 py-3",
+            )}
           >
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="font-mono text-sm font-semibold text-white">{drone.id}</p>
-                <p className="mt-1 text-xs text-white/55">{drone.model}</p>
-                <p className="mt-0.5 text-xs text-white/45">
-                  Based in {drone.homeBase} · Last contact {drone.lastContact}
-                </p>
+                <p className="mt-0.5 text-xs text-white/55">{drone.model}</p>
+                {!compact && (
+                  <p className="mt-0.5 text-xs text-white/45">
+                    Based in {drone.homeBase} · Last contact {drone.lastContact}
+                  </p>
+                )}
               </div>
               <span
                 className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${fleetStatusClass(drone.status)}`}
@@ -102,7 +121,7 @@ export default function FleetPanel({ liveTelemetry, isRunning, onOpenAssets }: F
                 {drone.status}
               </span>
             </div>
-            <div className="mt-3">
+            <div className={cn(compact ? "mt-2" : "mt-3")}>
               <div className="mb-1 flex items-center justify-between text-[10px] uppercase tracking-[0.12em] text-white/45">
                 <span>Battery</span>
                 <span className="font-mono text-white/70">{drone.battery}%</span>
