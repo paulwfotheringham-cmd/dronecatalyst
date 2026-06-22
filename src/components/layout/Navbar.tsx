@@ -90,7 +90,7 @@ export default function Navbar() {
                 Contact Us
               </Link>
               <Link
-                href="/test1"
+                href="/login"
                 className="hidden h-[36px] items-center rounded-md bg-[#0b2d63] px-[16px] text-[14px] font-semibold text-white hover:bg-[#082652] lg:inline-flex"
               >
                 Login
