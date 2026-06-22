@@ -70,7 +70,10 @@ function renderTile(
 
 export default function InternalDashboardHome({ onNavigate }: InternalDashboardHomeProps) {
   return (
-    <section className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
+    <section
+      aria-label="Internal operations home"
+      className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden"
+    >
       <div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-4 gap-2.5 sm:gap-3">
         {internalHomeTileRows.flatMap((row, rowIndex) =>
           row.map((tile, tileIndex) => (
