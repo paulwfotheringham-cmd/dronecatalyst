@@ -39,16 +39,6 @@ export function isInternalOperationsView(value: string | null): value is Interna
   return internalOperationsViews.includes(value as InternalOperationsView);
 }
 
-export const internalBottomNavItems = [
-  { label: "WebODM", icon: "Layers", view: "webodm" as const },
-  { label: "Testing", icon: "FlaskConical", view: "testing" as const },
-  { label: "Users", icon: "Users", view: "users" as const },
-  { label: "Messaging", icon: "MessageSquare", view: "messaging" as const },
-  { label: "Files", icon: "FolderOpen", view: "files" as const },
-] as const;
-
-export type InternalBottomNavItem = (typeof internalBottomNavItems)[number];
-
 export const internalSurveyNavItems = [
   { label: "Home", icon: "LayoutDashboard", view: "home" as const },
   { label: "Clients", icon: "Building2", view: "clients" as const },
@@ -59,6 +49,11 @@ export const internalSurveyNavItems = [
   { label: "Live Projects", icon: "FolderKanban", view: "live-projects" as const },
   { label: "Recent Missions", icon: "History", view: "recent-missions" as const },
   { label: "Live Telemetry", icon: "Radio", view: "telemetry" as const },
+  { label: "WebODM", icon: "Layers", view: "webodm" as const },
+  { label: "Testing", icon: "FlaskConical", view: "testing" as const },
+  { label: "Users", icon: "Users", view: "users" as const },
+  { label: "Messaging", icon: "MessageSquare", view: "messaging" as const },
+  { label: "Files", icon: "FolderOpen", view: "files" as const },
 ] as const;
 
 export type InternalNavItem = (typeof internalSurveyNavItems)[number];
@@ -190,14 +185,6 @@ export function getInternalNavHref(view: InternalOperationsView | null) {
   }
 
   return `${INTERNAL_OPERATIONS_BASE_PATH}?view=${view}`;
-}
-
-export function isInternalBottomNavItemActive(
-  pathname: string,
-  item: InternalBottomNavItem,
-  activeView: InternalOperationsView = "home",
-) {
-  return pathname === INTERNAL_OPERATIONS_BASE_PATH && activeView === item.view;
 }
 
 export function isInternalNavItemActive(

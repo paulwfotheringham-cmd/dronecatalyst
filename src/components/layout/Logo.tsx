@@ -25,8 +25,8 @@ export default function Logo({
       width={width}
       height={height}
       priority
-      className={cn("h-auto w-auto object-contain", onDark && "brightness-0 invert")}
-      style={{ height, width: "auto", maxWidth: "min(240px, 55vw)" }}
+      className={cn("h-auto w-full object-contain object-left", onDark && "brightness-0 invert")}
+      style={{ height, maxHeight: height, width: "100%", maxWidth: "100%" }}
     />
   );
 
