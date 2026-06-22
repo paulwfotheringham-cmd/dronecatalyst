@@ -43,13 +43,15 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const { id } = await context.params;
     const body = (await request.json()) as {
       name?: string;
+      ownerName?: string;
       elements?: WhiteboardScene["elements"];
       appState?: Partial<AppState>;
       files?: BinaryFiles;
     };
 
-    const patch: Partial<{ name: string; scene: WhiteboardScene }> = {};
+    const patch: Partial<{ name: string; ownerName: string; scene: WhiteboardScene }> = {};
     if (body.name !== undefined) patch.name = body.name;
+    if (body.ownerName !== undefined) patch.ownerName = body.ownerName;
     if (
       body.elements !== undefined ||
       body.appState !== undefined ||

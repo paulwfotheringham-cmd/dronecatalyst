@@ -62,7 +62,7 @@ export async function createWhiteboardProject(
 
 export async function updateWhiteboardProject(
   id: string,
-  patch: Partial<{ name: string; scene: WhiteboardScene }>,
+  patch: Partial<{ name: string; ownerName: string; scene: WhiteboardScene }>,
 ): Promise<WhiteboardProject> {
   const supabase = requireWhiteboardSupabase();
   const payload: Record<string, string | WhiteboardScene> = {
@@ -70,6 +70,7 @@ export async function updateWhiteboardProject(
   };
 
   if (patch.name !== undefined) payload.name = patch.name.trim() || "New project";
+  if (patch.ownerName !== undefined) payload.owner_name = patch.ownerName.trim() || "Unknown";
   if (patch.scene !== undefined) payload.scene = patch.scene;
 
   const { data, error } = await supabase

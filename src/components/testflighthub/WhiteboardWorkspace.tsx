@@ -180,6 +180,7 @@ export default function WhiteboardWorkspace() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: projectName,
+          ownerName,
           elements: scene.elements,
           appState: scene.appState,
           files: scene.files,
@@ -216,7 +217,7 @@ export default function WhiteboardWorkspace() {
     } finally {
       setSaving(false);
     }
-  }, [projectName, selectedProjectId]);
+  }, [ownerName, projectName, selectedProjectId]);
 
   const handleChange = useCallback(
     (elements: WhiteboardScene["elements"], appState: AppState, files: BinaryFiles) => {
@@ -330,9 +331,16 @@ export default function WhiteboardWorkspace() {
               <label className="text-[10px] font-medium uppercase tracking-[0.12em] text-white/45">
                 Owner
               </label>
-              <div className="mt-1.5 flex h-10 items-center rounded-xl border border-white/10 bg-white/[0.03] px-3 text-sm text-white/80">
-                {ownerName || "—"}
-              </div>
+              <input
+                value={ownerName}
+                onChange={(event) => {
+                  setOwnerName(event.target.value);
+                  setDirty(true);
+                }}
+                disabled={!selectedProjectId}
+                placeholder="Project owner"
+                className={inputClassName()}
+              />
             </div>
             <button
               type="button"
