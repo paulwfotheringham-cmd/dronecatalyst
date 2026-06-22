@@ -21,6 +21,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       website?: string;
       services?: string;
       lastRevenue?: string;
+      notes?: string;
     };
 
     const competitor = await withCompetitorsTable(() => updateCompetitor(id, body));

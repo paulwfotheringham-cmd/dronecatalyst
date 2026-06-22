@@ -99,6 +99,7 @@ export default function CompetitorsWorkspace() {
           website: competitor.website,
           services: competitor.services,
           lastRevenue: competitor.lastRevenue,
+          notes: competitor.notes,
         }),
       });
 
@@ -113,7 +114,7 @@ export default function CompetitorsWorkspace() {
     }
   }
 
-  function patchCompetitor(id: string, patch: Partial<Pick<Competitor, "companyName" | "website" | "services" | "lastRevenue">>) {
+  function patchCompetitor(id: string, patch: Partial<Pick<Competitor, "companyName" | "website" | "services" | "lastRevenue" | "notes">>) {
     setCompetitors((current) => {
       const next = current.map((item) => (item.id === id ? { ...item, ...patch } : item));
       const updated = next.find((item) => item.id === id);
@@ -329,6 +330,19 @@ export default function CompetitorsWorkspace() {
                               }
                               placeholder="e.g. £2.4M (2024)"
                               className={inputClassName()}
+                            />
+                          </div>
+
+                          <div className="mt-3">
+                            <FieldLabel>Notes</FieldLabel>
+                            <textarea
+                              value={competitor.notes}
+                              rows={3}
+                              placeholder="Intel, pricing, strengths, weaknesses…"
+                              onChange={(event) =>
+                                patchCompetitor(competitor.id, { notes: event.target.value })
+                              }
+                              className={textareaClassName()}
                             />
                           </div>
                         </article>

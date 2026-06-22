@@ -14,6 +14,8 @@ const migrations = [
   { table: "internal_whiteboard", path: "supabase/migrations/008_create_internal_whiteboard.sql" },
 ];
 
+const alterMigrations = ["supabase/migrations/009_add_competitors_notes.sql"];
+
 async function query(sql) {
   const res = await fetch(`https://api.supabase.com/v1/projects/${projectRef}/database/query`, {
     method: "POST",
@@ -47,6 +49,12 @@ for (const migration of migrations) {
   const sql = readFileSync(join(process.cwd(), migration.path), "utf8");
   const result = await query(sql);
   console.log(migration.path, result.status, JSON.stringify(result.data).slice(0, 300));
+}
+
+for (const migrationPath of alterMigrations) {
+  const sql = readFileSync(join(process.cwd(), migrationPath), "utf8");
+  const result = await query(sql);
+  console.log(migrationPath, result.status, JSON.stringify(result.data).slice(0, 300));
 }
 
 const check = await query(

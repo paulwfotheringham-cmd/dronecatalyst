@@ -7,6 +7,7 @@ export type Competitor = {
   website: string;
   services: string;
   lastRevenue: string;
+  notes: string;
   sortOrder: number;
   createdAt: string;
   updatedAt: string;
@@ -29,6 +30,7 @@ type DbCompetitor = {
   website: string | null;
   services: string | null;
   last_revenue: string | null;
+  notes: string | null;
   sort_order: number;
   created_at: string;
   updated_at: string;
@@ -42,6 +44,7 @@ export function mapCompetitor(row: DbCompetitor): Competitor {
     website: row.website ?? "",
     services: row.services ?? "",
     lastRevenue: row.last_revenue ?? "",
+    notes: row.notes ?? "",
     sortOrder: row.sort_order,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -55,5 +58,6 @@ export function createBlankCompetitorInput(region: CompetitorRegion) {
     website: "",
     services: "",
     lastRevenue: "",
+    notes: "",
   };
 }

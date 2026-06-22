@@ -48,6 +48,7 @@ export async function createCompetitor(
       website: input.website?.trim() || null,
       services: input.services?.trim() || null,
       last_revenue: input.lastRevenue?.trim() || null,
+      notes: input.notes?.trim() || null,
     })
     .select("*")
     .single();
@@ -63,6 +64,7 @@ export async function updateCompetitor(
     website: string;
     services: string;
     lastRevenue: string;
+    notes: string;
   }>,
 ): Promise<Competitor> {
   const supabase = requireCompetitorsSupabase();
@@ -74,6 +76,7 @@ export async function updateCompetitor(
   if (patch.website !== undefined) payload.website = patch.website.trim() || null;
   if (patch.services !== undefined) payload.services = patch.services.trim() || null;
   if (patch.lastRevenue !== undefined) payload.last_revenue = patch.lastRevenue.trim() || null;
+  if (patch.notes !== undefined) payload.notes = patch.notes.trim() || null;
 
   const { data, error } = await supabase
     .from("competitors")
