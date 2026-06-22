@@ -70,14 +70,8 @@ async function readApiJson<T>(response: Response): Promise<T> {
   }
 }
 
-function resolveUploadFolderId(
-  currentFolderId: string | null,
-  selectedId: string | null,
-  selectedKind: "folder" | "file" | null,
-) {
-  if (currentFolderId) return currentFolderId;
-  if (selectedKind === "folder" && selectedId) return selectedId;
-  return null;
+function resolveUploadFolderId(currentFolderId: string | null) {
+  return currentFolderId;
 }
 
 function entryIcon(entry: BrowseEntry) {
@@ -203,7 +197,7 @@ export default function FileRepositoryWorkspace() {
     setBusy(true);
     setError(null);
 
-    const targetFolderId = resolveUploadFolderId(folderId, selectedId, selectedKind);
+    const targetFolderId = resolveUploadFolderId(folderId);
 
     try {
       for (const file of Array.from(files)) {
@@ -227,14 +221,12 @@ export default function FileRepositoryWorkspace() {
           throw new Error(prepareData.error ?? `Failed to prepare upload for ${file.name}`);
         }
 
-        const uploadBody = new FormData();
-        uploadBody.append("cacheControl", "3600");
-        uploadBody.append("", file);
-
         const uploadResponse = await fetch(prepareData.signedUrl, {
           method: "PUT",
-          headers: { "x-upsert": "false" },
-          body: uploadBody,
+          headers: {
+            "Content-Type": file.type || "application/octet-stream",
+          },
+          body: file,
         });
 
         if (!uploadResponse.ok) {
@@ -578,6 +570,8 @@ export default function FileRepositoryWorkspace() {
                   type="button"
                   onClick={() => {
                     setFolderId(segment.id);
+                    setSelectedId(null);
+                    setSelectedKind(null);
                     setSearchInput("");
                     setQuery("");
                   }}
