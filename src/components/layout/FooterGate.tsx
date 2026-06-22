@@ -13,6 +13,7 @@ export default function FooterGate() {
     pathname?.startsWith("/files") ||
     pathname?.startsWith("/users") ||
     pathname?.startsWith("/messaging") ||
+    pathname?.startsWith("/crm") ||
     pathname?.startsWith("/telemetry")
   ) {
     return null;

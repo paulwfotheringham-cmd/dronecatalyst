@@ -22,6 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 import {
   Building2,
+  ContactRound,
   FlaskConical,
   FolderKanban,
   FolderOpen,
@@ -43,6 +44,7 @@ import {
 const iconMap = {
   LayoutDashboard,
   Building2,
+  ContactRound,
   Package,
   MapPin,
   Target,

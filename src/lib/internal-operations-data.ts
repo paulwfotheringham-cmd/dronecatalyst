@@ -26,6 +26,7 @@ export function isInternalOperationsView(value: string | null): value is Interna
 }
 
 export const internalBottomNavItems = [
+  { label: "CRM", icon: "ContactRound", href: "/crm" as const },
   { label: "Users", icon: "Users", href: "/users" as const },
   { label: "Messaging", icon: "MessageSquare", href: "/messaging" as const },
   { label: "Files", icon: "FolderOpen", href: "/files" as const },
@@ -129,8 +130,8 @@ export function isInternalNavItemActive(
   item: InternalNavItem,
   activeView: InternalOperationsView = "home",
 ) {
-  if ("href" in item && item.href === "/telemetry") {
-    return pathname === "/telemetry";
+  if ("href" in item && item.href) {
+    return pathname === item.href || pathname.startsWith(`${item.href}/`);
   }
 
   if (pathname !== INTERNAL_OPERATIONS_BASE_PATH) {
