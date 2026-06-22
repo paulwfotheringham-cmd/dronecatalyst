@@ -1,8 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { SITE_NAME } from "@/lib/site";
-
-const LOGO_DARK = "/dronecatalyst-logo-dark.svg";
+import { LOGO_PATH, SITE_NAME } from "@/lib/site";
 
 export default function Footer() {
   return (
@@ -12,7 +10,7 @@ export default function Footer() {
           <div>
             <Link href="/" className="inline-flex shrink-0 items-center">
               <Image
-                src={LOGO_DARK}
+                src={LOGO_PATH}
                 alt={SITE_NAME}
                 width={170}
                 height={37}

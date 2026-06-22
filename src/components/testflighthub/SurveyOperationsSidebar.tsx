@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import Logo from "@/components/layout/Logo";
 import {
   getInternalNavHref,
   internalBottomNavItems,
@@ -39,7 +40,6 @@ import {
   Target,
   Users,
   X,
-  Zap,
 } from "lucide-react";
 
 const iconMap = {
@@ -62,6 +62,14 @@ const iconMap = {
   Users,
 } as const;
 
+const navItemClass = (active: boolean) =>
+  cn(
+    "flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[11px] leading-tight transition-colors sm:px-3 sm:py-[7px] sm:text-[12px]",
+    active
+      ? "bg-[#0D1B2A] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
+      : "text-white/45 hover:bg-[#0D1B2A]/60 hover:text-white/75",
+  );
+
 type SurveyOperationsSidebarProps = {
   mobileOpen?: boolean;
   onClose?: () => void;
@@ -82,8 +90,50 @@ export default function SurveyOperationsSidebar({
   const pathname = usePathname() ?? "";
   const inAppNavigation =
     isSurveyOperationsDashboardPath(pathname, basePath) && onViewChange != null;
-  const workspaceLabel = mode === "internal" ? "Internal Operations" : "Survey Operations";
   const navItems = mode === "internal" ? internalSurveyNavItems : surveyNavItems;
+  const logoHref = mode === "internal" ? "/internaldashboard" : basePath;
+
+  function renderNavItem(
+    item: (typeof navItems)[number] | (typeof internalBottomNavItems)[number],
+    active: boolean,
+    onNavigate: () => void,
+    asLink: boolean,
+    href: string,
+  ) {
+    const Icon = iconMap[item.icon as keyof typeof iconMap];
+    const content = (
+      <>
+        <Icon className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+        <span className="flex-1 truncate">{item.label}</span>
+      </>
+    );
+
+    if (asLink) {
+      return (
+        <Link
+          key={item.label}
+          href={href}
+          aria-current={active ? "page" : undefined}
+          onClick={onClose}
+          className={navItemClass(active)}
+        >
+          {content}
+        </Link>
+      );
+    }
+
+    return (
+      <button
+        key={item.label}
+        type="button"
+        aria-current={active ? "page" : undefined}
+        onClick={onNavigate}
+        className={navItemClass(active)}
+      >
+        {content}
+      </button>
+    );
+  }
 
   return (
     <aside
@@ -92,19 +142,11 @@ export default function SurveyOperationsSidebar({
         mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
       )}
     >
-      <div className="flex h-14 shrink-0 items-center justify-between border-b border-white/[0.08] px-4 lg:h-16 lg:px-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 shadow-lg shadow-blue-500/20">
-            <Zap className="h-4 w-4 text-white" />
-          </div>
-          <div>
-            <p className="text-[11px] font-semibold tracking-wide text-white/90">DRONE CATALYST</p>
-            <p className="text-[10px] text-white/35">{workspaceLabel}</p>
-          </div>
-        </div>
+      <div className="flex h-12 shrink-0 items-center justify-between border-b border-white/[0.08] px-3 lg:h-14 lg:px-4">
+        <Logo height={26} onDark href={logoHref} className="min-w-0 max-w-[170px]" />
         <button
           type="button"
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.08] text-white/60 lg:hidden"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] text-white/60 lg:hidden"
           aria-label="Close menu"
           onClick={onClose}
         >
@@ -112,163 +154,101 @@ export default function SurveyOperationsSidebar({
         </button>
       </div>
 
-      <div className="shrink-0 border-b border-white/[0.08] px-4 py-4 lg:px-6 lg:py-5">
-        <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-white/30">Workspace</p>
-        <p className="mt-1.5 text-sm font-medium leading-snug text-white/85">
-          Barcelona · Porto · Oxford
-        </p>
-      </div>
+      <nav className="flex min-h-0 flex-1 flex-col overflow-hidden px-2 py-2 lg:px-2.5">
+        <div className="flex min-h-0 flex-1 flex-col justify-between gap-1 overflow-hidden">
+          <div className="space-y-0.5">
+            {navItems.map((item) => {
+              const active =
+                mode === "internal"
+                  ? isInternalNavItemActive(
+                      pathname,
+                      item as (typeof internalSurveyNavItems)[number],
+                      (activeView as InternalOperationsView | undefined) ?? "home",
+                    )
+                  : isSurveyNavItemActive(
+                      pathname,
+                      item as (typeof surveyNavItems)[number],
+                      activeView as SurveyOperationsView | null | undefined,
+                      basePath,
+                    );
+              const externalHref = "href" in item ? item.href : undefined;
+              const navHref =
+                mode === "internal"
+                  ? getInternalNavHref(item.view as InternalOperationsView)
+                  : getSurveyNavHref(
+                      item.view as SurveyOperationsView | null,
+                      externalHref,
+                      basePath,
+                    );
 
-      <nav className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="min-h-0 flex-1 space-y-1 overflow-y-auto px-2 py-3 lg:px-3 lg:py-4">
-          {navItems.map((item) => {
-          const Icon = iconMap[item.icon];
-          const active =
-            mode === "internal"
-              ? isInternalNavItemActive(
-                  pathname,
-                  item as (typeof internalSurveyNavItems)[number],
-                  (activeView as InternalOperationsView | undefined) ?? "home",
-                )
-              : isSurveyNavItemActive(
-                  pathname,
-                  item as (typeof surveyNavItems)[number],
-                  activeView as SurveyOperationsView | null | undefined,
-                  basePath,
-                );
-          const externalHref = "href" in item ? item.href : undefined;
-          const navHref =
-            mode === "internal"
-              ? getInternalNavHref(item.view as InternalOperationsView)
-              : getSurveyNavHref(
-                  item.view as SurveyOperationsView | null,
-                  externalHref,
-                  basePath,
-                );
-          const className = cn(
-            "flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-left text-[13px] transition-colors",
-            active
-              ? "bg-[#0D1B2A] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
-              : "text-white/45 hover:bg-[#0D1B2A]/60 hover:text-white/75",
-          );
-
-          if (mode === "internal" && inAppNavigation) {
-            return (
-              <button
-                key={item.label}
-                type="button"
-                aria-current={active ? "page" : undefined}
-                onClick={() => {
-                  (onViewChange as (view: InternalOperationsView) => void)(
-                    item.view as InternalOperationsView,
-                  );
-                  onClose?.();
-                }}
-                className={className}
-              >
-                <Icon className="h-4 w-4 shrink-0" />
-                <span className="flex-1">{item.label}</span>
-              </button>
-            );
-          }
-
-          if (mode === "internal") {
-            return (
-              <Link
-                key={item.label}
-                href={getInternalNavHref(item.view as InternalOperationsView)}
-                aria-current={active ? "page" : undefined}
-                onClick={onClose}
-                className={className}
-              >
-                <Icon className="h-4 w-4 shrink-0" />
-                <span className="flex-1">{item.label}</span>
-              </Link>
-            );
-          }
-
-          if (inAppNavigation && item.view) {
-            return (
-              <button
-                key={item.label}
-                type="button"
-                aria-current={active ? "page" : undefined}
-                onClick={() => {
-                  (onViewChange as (view: SurveyOperationsView) => void)(
-                    item.view as SurveyOperationsView,
-                  );
-                  onClose?.();
-                }}
-                className={className}
-              >
-                <Icon className="h-4 w-4 shrink-0" />
-                <span className="flex-1">{item.label}</span>
-              </button>
-            );
-          }
-
-          return (
-            <Link
-              key={item.label}
-              href={navHref}
-              aria-current={active ? "page" : undefined}
-              onClick={onClose}
-              className={className}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              <span className="flex-1">{item.label}</span>
-            </Link>
-          );
-        })}
-        </div>
-
-        {mode === "internal" && (
-          <div className="shrink-0 space-y-1 border-t border-white/[0.08] px-2 py-3 lg:px-3">
-            {internalBottomNavItems.map((item) => {
-              const Icon = iconMap[item.icon];
-              const internalActiveView = (activeView as InternalOperationsView | undefined) ?? "home";
-              const active = isInternalBottomNavItemActive(pathname, item, internalActiveView);
-              const navHref = getInternalNavHref(item.view);
-              const className = cn(
-                "flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-left text-[13px] transition-colors",
-                active
-                  ? "bg-[#0D1B2A] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
-                  : "text-white/45 hover:bg-[#0D1B2A]/60 hover:text-white/75",
-              );
-
-              if (inAppNavigation) {
-                return (
-                  <button
-                    key={item.label}
-                    type="button"
-                    aria-current={active ? "page" : undefined}
-                    onClick={() => {
-                      (onViewChange as (view: InternalOperationsView) => void)(item.view);
-                      onClose?.();
-                    }}
-                    className={className}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    <span className="flex-1">{item.label}</span>
-                  </button>
+              if (mode === "internal" && inAppNavigation) {
+                return renderNavItem(
+                  item,
+                  active,
+                  () => {
+                    (onViewChange as (view: InternalOperationsView) => void)(
+                      item.view as InternalOperationsView,
+                    );
+                    onClose?.();
+                  },
+                  false,
+                  navHref,
                 );
               }
 
-              return (
-                <Link
-                  key={item.label}
-                  href={navHref}
-                  aria-current={active ? "page" : undefined}
-                  onClick={onClose}
-                  className={className}
-                >
-                  <Icon className="h-4 w-4 shrink-0" />
-                  <span className="flex-1">{item.label}</span>
-                </Link>
-              );
+              if (mode === "internal") {
+                return renderNavItem(item, active, () => undefined, true, navHref);
+              }
+
+              if (inAppNavigation && item.view) {
+                return renderNavItem(
+                  item,
+                  active,
+                  () => {
+                    (onViewChange as (view: SurveyOperationsView) => void)(
+                      item.view as SurveyOperationsView,
+                    );
+                    onClose?.();
+                  },
+                  false,
+                  navHref,
+                );
+              }
+
+              return renderNavItem(item, active, () => undefined, true, navHref);
             })}
           </div>
-        )}
+
+          {mode === "internal" && (
+            <div className="space-y-0.5 border-t border-white/[0.08] pt-1">
+              {internalBottomNavItems.map((item) => {
+                const internalActiveView =
+                  (activeView as InternalOperationsView | undefined) ?? "home";
+                const active = isInternalBottomNavItemActive(
+                  pathname,
+                  item,
+                  internalActiveView,
+                );
+                const navHref = getInternalNavHref(item.view);
+
+                if (inAppNavigation) {
+                  return renderNavItem(
+                    item,
+                    active,
+                    () => {
+                      (onViewChange as (view: InternalOperationsView) => void)(item.view);
+                      onClose?.();
+                    },
+                    false,
+                    navHref,
+                  );
+                }
+
+                return renderNavItem(item, active, () => undefined, true, navHref);
+              })}
+            </div>
+          )}
+        </div>
       </nav>
     </aside>
   );

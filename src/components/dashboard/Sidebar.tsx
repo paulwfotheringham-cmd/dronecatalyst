@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import Logo from "@/components/layout/Logo";
 import { NAV_ITEMS, project } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
-import { FlaskConical, X, Zap } from "lucide-react";
+import { FlaskConical, X } from "lucide-react";
 import { DashboardIcon } from "./icons";
 
 type SidebarProps = {
@@ -18,18 +19,8 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
         mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}
     >
-      <div className="flex h-14 shrink-0 items-center justify-between border-b border-white/[0.08] px-4 lg:h-16 lg:px-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 shadow-lg shadow-blue-500/20">
-            <Zap className="h-4 w-4 text-white" />
-          </div>
-          <div>
-            <p className="text-[11px] font-semibold tracking-wide text-white/90">
-              DRONE CATALYST
-            </p>
-            <p className="text-[10px] text-white/35">Intelligence Platform</p>
-          </div>
-        </div>
+      <div className="flex h-12 shrink-0 items-center justify-between border-b border-white/[0.08] px-3 lg:h-14 lg:px-4">
+        <Logo height={26} onDark href="/test1" className="min-w-0 max-w-[170px]" />
         <button
           type="button"
           className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.08] text-white/60 lg:hidden"

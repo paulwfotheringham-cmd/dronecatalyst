@@ -43,7 +43,7 @@ export default function Navbar() {
           <div className="flex w-full items-center justify-between lg:contents">
             {/* Logo */}
             <div className="flex items-center justify-start">
-              <Logo height={48} />
+              <Logo height={48} onDark={isHome} />
             </div>
 
             {/* Centered navigation */}
