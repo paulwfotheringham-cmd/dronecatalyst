@@ -22,6 +22,7 @@ export default function Navbar() {
     pathname?.startsWith("/internaldashboard") ||
     pathname?.startsWith("/files") ||
     pathname?.startsWith("/users") ||
+    pathname?.startsWith("/messaging") ||
     pathname?.startsWith("/telemetry");
 
   if (isDashboard) {

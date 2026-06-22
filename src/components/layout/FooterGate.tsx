@@ -12,6 +12,7 @@ export default function FooterGate() {
     pathname?.startsWith("/internaldashboard") ||
     pathname?.startsWith("/files") ||
     pathname?.startsWith("/users") ||
+    pathname?.startsWith("/messaging") ||
     pathname?.startsWith("/telemetry")
   ) {
     return null;

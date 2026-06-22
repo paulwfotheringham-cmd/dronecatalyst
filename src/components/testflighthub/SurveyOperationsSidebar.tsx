@@ -29,6 +29,7 @@ import {
   Layers,
   LayoutDashboard,
   MapPin,
+  MessageSquare,
   Package,
   Plane,
   Radio,
@@ -53,6 +54,7 @@ const iconMap = {
   FolderOpen,
   History,
   Layers,
+  MessageSquare,
   Users,
 } as const;
 
