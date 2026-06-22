@@ -20,6 +20,7 @@ export type ClientRegion =
   | "Catalonia, Spain"
   | "Porto, Portugal"
   | "Oxfordshire, UK"
+  | "Western Australia"
   | "Iberia"
   | "United Kingdom"
   | "Europe-wide";
@@ -38,6 +39,8 @@ export type ManagedClient = {
   billingAddress: string;
   activeProjects: number;
   notes: string;
+  /** Optional link to a client-facing intelligence platform demo. */
+  platformUrl?: string;
 };
 
 export const CLIENT_INDUSTRY_OPTIONS: ClientIndustry[] = [
@@ -69,12 +72,13 @@ export const CLIENT_REGION_OPTIONS: ClientRegion[] = [
   "Catalonia, Spain",
   "Porto, Portugal",
   "Oxfordshire, UK",
+  "Western Australia",
   "Iberia",
   "United Kingdom",
   "Europe-wide",
 ];
 
-let clientCounter = 5;
+let clientCounter = 6;
 
 export function createClientId() {
   clientCounter += 1;
@@ -142,6 +146,23 @@ export function createInitialClients(): ManagedClient[] {
       billingAddress: "Paseo de la Castellana 95, 28046 Madrid, Spain",
       activeProjects: 0,
       notes: "Pilot corridor mapping — awaiting Q3 mobilisation.",
+    },
+    {
+      id: "client-westport",
+      companyName: "Westport Logistics Hub",
+      industry: "Logistics & Ports",
+      primaryContact: "Marcus Chen",
+      email: "m.chen@terrabuild.com.au",
+      phone: "+61 8 9432 8800",
+      region: "Western Australia",
+      accountStatus: "Active",
+      contractType: "Framework Agreement",
+      taxId: "AU 51 824 753 556",
+      billingAddress: "TerraBuild Infrastructure, Perth WA 6000, Australia",
+      activeProjects: 1,
+      notes:
+        "TerraBuild Infrastructure — 240ha industrial logistics precinct. Earthworks, warehouse zones, and drainage monitoring. Project value $180M · target completion March 2026.",
+      platformUrl: "/test1",
     },
   ];
 }

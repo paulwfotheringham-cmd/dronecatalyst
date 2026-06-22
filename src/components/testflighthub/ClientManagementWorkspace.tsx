@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo } from "react";
 
 import {
@@ -12,6 +13,7 @@ import {
   type ManagedClient,
 } from "@/lib/client-management-data";
 import { cn } from "@/lib/utils";
+import { ExternalLink } from "lucide-react";
 
 type ClientManagementWorkspaceProps = {
   clients: ManagedClient[];
@@ -128,14 +130,25 @@ export default function ClientManagementWorkspace({
                 </h2>
                 <p className="mt-1 text-sm text-white/50">{selectedClient.region}</p>
               </div>
-              <span
-                className={cn(
-                  "rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em]",
-                  clientStatusClass(selectedClient.accountStatus),
+              <div className="flex flex-wrap items-center gap-2">
+                {selectedClient.platformUrl && (
+                  <Link
+                    href={selectedClient.platformUrl}
+                    className="inline-flex h-9 items-center gap-2 rounded-xl border border-sky-500/40 bg-sky-500/15 px-3 text-xs font-semibold text-sky-300 transition-colors hover:border-sky-400/60 hover:bg-sky-500/25"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Open Intelligence Platform
+                  </Link>
                 )}
-              >
-                {selectedClient.accountStatus}
-              </span>
+                <span
+                  className={cn(
+                    "rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em]",
+                    clientStatusClass(selectedClient.accountStatus),
+                  )}
+                >
+                  {selectedClient.accountStatus}
+                </span>
+              </div>
             </div>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
