@@ -14,7 +14,7 @@ export async function GET() {
       {
         configured: false,
         dashboardUrl: getWebODMBaseUrl(),
-        error: "Set WEBODM_USERNAME and WEBODM_PASSWORD in .env.local",
+        error: "Set WEBODM_USERNAME and WEBODM_PASSWORD in Vercel Environment Variables (or .env.local for local dev).",
         projects: [],
       },
       { status: 503 },

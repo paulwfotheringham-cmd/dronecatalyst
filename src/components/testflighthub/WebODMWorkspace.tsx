@@ -101,7 +101,8 @@ export default function WebODMWorkspace() {
           <h2 className="mt-1 text-lg font-semibold text-white">WebODM Processing</h2>
           <p className="mt-2 max-w-2xl text-sm text-white/55">
             Live view of projects and tasks from your WebODM server. Works locally when WebODM is
-            running and credentials are set in <span className="font-mono">.env.local</span>.
+            running and credentials are set in Vercel Environment Variables (or{" "}
+            <span className="font-mono">.env.local</span> for local dev).
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -140,9 +141,10 @@ export default function WebODMWorkspace() {
         <div className="mt-8 rounded-xl border border-red-400/25 bg-red-500/10 p-4 text-sm text-red-200">
           {response.error}
           <p className="mt-2 text-red-200/70">
-            Make sure WebODM is running at {response.dashboardUrl} and{" "}
-            <span className="font-mono">npm run dev</span> was restarted after editing{" "}
-            <span className="font-mono">.env.local</span>.
+            Make sure WebODM is reachable at a public HTTPS URL ({response.dashboardUrl}) and
+            redeploy after setting env vars in Vercel. For local dev, use{" "}
+            <span className="font-mono">.env.local</span> and restart{" "}
+            <span className="font-mono">npm run dev</span>.
           </p>
         </div>
       )}
