@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import type { CompetitorRegion } from "@/lib/competitors-data";
 import { createCompetitor, listCompetitors } from "@/lib/competitors-service";
+import { ensureCompetitorsTable, withCompetitorsTable } from "@/lib/internal-db-migrations";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -12,8 +13,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    await ensureCompetitorsTable();
     const region = request.nextUrl.searchParams.get("region") as CompetitorRegion | "all" | null;
-    const competitors = await listCompetitors(region ?? "all");
+    const competitors = await withCompetitorsTable(() => listCompetitors(region ?? "all"));
     return NextResponse.json({ competitors });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to load competitors";
@@ -39,7 +41,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "A valid region is required." }, { status: 400 });
     }
 
-    const competitor = await createCompetitor(body as { region: CompetitorRegion });
+    const competitor = await withCompetitorsTable(() =>
+      createCompetitor(body as { region: CompetitorRegion }),
+    );
     return NextResponse.json({ competitor });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to create competitor";

@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:setup-files": "node scripts/setup-internal-files-db.mjs"
+    "db:setup-files": "node scripts/setup-internal-files-db.mjs",
+    "db:setup-internal": "node scripts/setup-internal-db.mjs"
   },
   "dependencies": {
     "@excalidraw/excalidraw": "^0.18.1",

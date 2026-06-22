@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { deleteCompetitor, updateCompetitor } from "@/lib/competitors-service";
+import { ensureCompetitorsTable, withCompetitorsTable } from "@/lib/internal-db-migrations";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +14,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   }
 
   try {
+    await ensureCompetitorsTable();
     const { id } = await context.params;
     const body = (await request.json()) as {
       companyName?: string;
@@ -21,7 +23,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       lastRevenue?: string;
     };
 
-    const competitor = await updateCompetitor(id, body);
+    const competitor = await withCompetitorsTable(() => updateCompetitor(id, body));
     return NextResponse.json({ competitor });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to update competitor";
@@ -35,8 +37,9 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
   }
 
   try {
+    await ensureCompetitorsTable();
     const { id } = await context.params;
-    await deleteCompetitor(id);
+    await withCompetitorsTable(() => deleteCompetitor(id));
     return NextResponse.json({ ok: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to delete competitor";

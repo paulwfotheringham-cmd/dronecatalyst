@@ -202,6 +202,15 @@ export default function CompetitorsWorkspace() {
       {error && (
         <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
           {error}
+          {error.includes("competitors") && (
+            <>
+              {" "}
+              If this persists, run{" "}
+              <span className="font-mono">supabase/migrations/007_create_competitors.sql</span> in
+              Supabase or set <span className="font-mono">SUPABASE_DB_URL</span> on Vercel so the
+              table can be created automatically.
+            </>
+          )}
         </p>
       )}
 

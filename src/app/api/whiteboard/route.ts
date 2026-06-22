@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import type { AppState, BinaryFiles } from "@excalidraw/excalidraw/types";
 import { normalizeWhiteboardScene, type WhiteboardScene } from "@/lib/whiteboard-data";
+import { ensureWhiteboardTable, withWhiteboardTable } from "@/lib/internal-db-migrations";
 import { getWhiteboardScene, saveWhiteboardScene } from "@/lib/whiteboard-service";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 
@@ -13,7 +14,8 @@ export async function GET() {
   }
 
   try {
-    const scene = await getWhiteboardScene();
+    await ensureWhiteboardTable();
+    const scene = await withWhiteboardTable(() => getWhiteboardScene());
     return NextResponse.json({ scene });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to load whiteboard";
@@ -27,6 +29,7 @@ export async function PUT(request: NextRequest) {
   }
 
   try {
+    await ensureWhiteboardTable();
     const body = (await request.json()) as {
       elements?: WhiteboardScene["elements"];
       appState?: Partial<AppState>;
@@ -39,7 +42,7 @@ export async function PUT(request: NextRequest) {
       body.files ?? {},
     );
 
-    const saved = await saveWhiteboardScene(scene);
+    const saved = await withWhiteboardTable(() => saveWhiteboardScene(scene));
     return NextResponse.json({ scene: saved });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to save whiteboard";
