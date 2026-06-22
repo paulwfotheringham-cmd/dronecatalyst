@@ -99,7 +99,13 @@ export default function InternalOperationsDashboard() {
       }}
       basePath={INTERNAL_OPERATIONS_BASE_PATH}
     >
-      <div className="relative px-4 py-3 sm:px-6 lg:px-8 lg:py-4">
+      <div
+        className={
+          activeView === "home"
+            ? "relative px-3 py-2 sm:px-4 lg:px-5 lg:py-3"
+            : "relative px-4 py-3 sm:px-6 lg:px-8 lg:py-4"
+        }
+      >
         <div
           className="pointer-events-none absolute inset-0"
           aria-hidden
@@ -111,14 +117,16 @@ export default function InternalOperationsDashboard() {
 
         <div className="relative space-y-6">
           {activeView === "home" && (
-            <div className="grid h-[calc(100dvh-5.5rem)] max-h-[calc(100dvh-5.5rem)] gap-3 overflow-hidden xl:grid-cols-[minmax(0,1fr)_260px] xl:items-stretch">
+            <div className="grid h-[calc(100dvh-4rem-1.25rem)] max-h-[calc(100dvh-4rem-1.25rem)] min-h-0 grid-cols-1 gap-2.5 overflow-hidden xl:grid-cols-[minmax(0,1fr)_12.5rem] xl:items-stretch">
               <InternalDashboardHome onNavigate={handleViewChange} />
-              <FleetPanel
-                liveTelemetry={liveTelemetry}
-                isRunning={isRunning}
-                onOpenAssets={() => handleViewChange("assets")}
-                compact
-              />
+              <div className="hidden min-h-0 min-w-0 xl:block">
+                <FleetPanel
+                  liveTelemetry={liveTelemetry}
+                  isRunning={isRunning}
+                  onOpenAssets={() => handleViewChange("assets")}
+                  compact
+                />
+              </div>
             </div>
           )}
 
