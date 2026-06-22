@@ -26,7 +26,8 @@ export function isInternalOperationsView(value: string | null): value is Interna
 }
 
 export const internalBottomNavItems = [
-  { label: "CRM", icon: "ContactRound", href: "/crm" as const },
+  { label: "WebODM", icon: "Layers", view: "webodm" as const },
+  { label: "Testing", icon: "FlaskConical", view: "testing" as const },
   { label: "Users", icon: "Users", href: "/users" as const },
   { label: "Messaging", icon: "MessageSquare", href: "/messaging" as const },
   { label: "Files", icon: "FolderOpen", href: "/files" as const },
@@ -37,11 +38,10 @@ export type InternalBottomNavItem = (typeof internalBottomNavItems)[number];
 export const internalSurveyNavItems = [
   { label: "Home", icon: "LayoutDashboard", view: "home" as const },
   { label: "Clients", icon: "Building2", view: "clients" as const },
+  { label: "CRM", icon: "ContactRound", view: null, href: "/crm" as const },
   { label: "Assets", icon: "Package", view: "assets" as const },
-  { label: "Testing", icon: "FlaskConical", view: "testing" as const },
   { label: "Live Projects", icon: "FolderKanban", view: "live-projects" as const },
   { label: "Recent Missions", icon: "History", view: "recent-missions" as const },
-  { label: "WebODM", icon: "Layers", view: "webodm" as const },
   { label: "Live Telemetry", icon: "Radio", view: null, href: "/telemetry" as const },
 ] as const;
 
@@ -121,8 +121,20 @@ export function getInternalNavHref(
   return `${INTERNAL_OPERATIONS_BASE_PATH}?view=${view}`;
 }
 
-export function isInternalBottomNavItemActive(pathname: string, item: InternalBottomNavItem) {
-  return pathname === item.href || pathname.startsWith(`${item.href}/`);
+export function isInternalBottomNavItemActive(
+  pathname: string,
+  item: InternalBottomNavItem,
+  activeView: InternalOperationsView = "home",
+) {
+  if ("href" in item && item.href) {
+    return pathname === item.href || pathname.startsWith(`${item.href}/`);
+  }
+
+  if ("view" in item && item.view) {
+    return pathname === INTERNAL_OPERATIONS_BASE_PATH && activeView === item.view;
+  }
+
+  return false;
 }
 
 export function isInternalNavItemActive(

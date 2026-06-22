@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 import {
   getInternalNavHref,
+  INTERNAL_OPERATIONS_BASE_PATH,
   internalBottomNavItems,
   internalSurveyNavItems,
   isInternalBottomNavItemActive,
@@ -198,7 +199,13 @@ export default function SurveyOperationsSidebar({
           <div className="shrink-0 space-y-1 border-t border-white/[0.08] px-2 py-3 lg:px-3">
             {internalBottomNavItems.map((item) => {
               const Icon = iconMap[item.icon];
-              const active = isInternalBottomNavItemActive(pathname, item);
+              const internalActiveView = (activeView as InternalOperationsView | undefined) ?? "home";
+              const active = isInternalBottomNavItemActive(pathname, item, internalActiveView);
+              const externalHref = "href" in item ? item.href : undefined;
+              const itemView = "view" in item ? item.view : undefined;
+              const navHref = itemView
+                ? getInternalNavHref(itemView, undefined)
+                : (externalHref ?? INTERNAL_OPERATIONS_BASE_PATH);
               const className = cn(
                 "flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-left text-[13px] transition-colors",
                 active
@@ -206,10 +213,28 @@ export default function SurveyOperationsSidebar({
                   : "text-white/45 hover:bg-[#0D1B2A]/60 hover:text-white/75",
               );
 
+              if (inAppNavigation && itemView) {
+                return (
+                  <button
+                    key={item.label}
+                    type="button"
+                    aria-current={active ? "page" : undefined}
+                    onClick={() => {
+                      (onViewChange as (view: InternalOperationsView) => void)(itemView);
+                      onClose?.();
+                    }}
+                    className={className}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span className="flex-1">{item.label}</span>
+                  </button>
+                );
+              }
+
               return (
                 <Link
                   key={item.label}
-                  href={item.href}
+                  href={navHref}
                   aria-current={active ? "page" : undefined}
                   onClick={onClose}
                   className={className}
