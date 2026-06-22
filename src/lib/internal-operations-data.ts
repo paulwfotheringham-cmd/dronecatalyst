@@ -26,6 +26,7 @@ export function isInternalOperationsView(value: string | null): value is Interna
 }
 
 export const internalBottomNavItems = [
+  { label: "Users", icon: "Users", href: "/users" as const },
   { label: "Files", icon: "FolderOpen", href: "/files" as const },
 ] as const;
 

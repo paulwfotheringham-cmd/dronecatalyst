@@ -34,6 +34,7 @@ import {
   Radio,
   ScrollText,
   Target,
+  Users,
   X,
   Zap,
 } from "lucide-react";
@@ -52,6 +53,7 @@ const iconMap = {
   FolderOpen,
   History,
   Layers,
+  Users,
 } as const;
 
 type SurveyOperationsSidebarProps = {
