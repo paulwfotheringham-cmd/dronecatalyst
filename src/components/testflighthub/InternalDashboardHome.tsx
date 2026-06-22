@@ -8,6 +8,7 @@ import {
 import { cn } from "@/lib/utils";
 import {
   Building2,
+  Compass,
   ContactRound,
   FlaskConical,
   FolderKanban,
@@ -32,6 +33,7 @@ const tileIcons = {
   users: Users,
   telemetry: Radio,
   webodm: Layers,
+  strategy: Compass,
 } as const;
 
 type InternalDashboardHomeProps = {
@@ -75,17 +77,9 @@ export default function InternalDashboardHome({ onNavigate }: InternalDashboardH
       className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden"
     >
       <div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-4 gap-2.5 sm:gap-3">
-        {internalHomeTileRows.flatMap((row, rowIndex) =>
-          row.map((tile, tileIndex) => (
-            <div
-              key={tile.id}
-              className={cn(
-                "min-h-0 min-w-0",
-                row.length === 2 && tileIndex === 0 && "col-start-1",
-                row.length === 2 && tileIndex === 1 && "col-start-2",
-                rowIndex === 3 && "row-start-4",
-              )}
-            >
+        {internalHomeTileRows.flatMap((row) =>
+          row.map((tile) => (
+            <div key={tile.id} className="min-h-0 min-w-0">
               {renderTile(tile, onNavigate)}
             </div>
           )),

@@ -174,6 +174,14 @@ export const internalHomeTileRows = [
       description: "Orthophotos and 3D models.",
       accent: "from-fuchsia-500/20 to-purple-600/10 border-fuchsia-400/30",
     },
+    {
+      id: "strategy",
+      view: "strategy" as const,
+      icon: "strategy" as const,
+      title: "Strategy",
+      description: "Capability matrix, notes, and priorities.",
+      accent: "from-teal-500/20 to-emerald-600/10 border-teal-400/30",
+    },
   ],
 ] as const;
 
