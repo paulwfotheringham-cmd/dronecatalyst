@@ -99,7 +99,7 @@ export default function InternalOperationsDashboard() {
       }}
       basePath={INTERNAL_OPERATIONS_BASE_PATH}
     >
-      <div className="relative px-4 py-4 sm:px-6 sm:py-5 lg:px-8 lg:py-6">
+      <div className="relative px-4 py-3 sm:px-6 lg:px-8 lg:py-4">
         <div
           className="pointer-events-none absolute inset-0"
           aria-hidden
@@ -111,7 +111,7 @@ export default function InternalOperationsDashboard() {
 
         <div className="relative space-y-6">
           {activeView === "home" && (
-            <div className="grid min-h-[calc(100dvh-7.5rem)] gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-stretch">
+            <div className="grid h-[calc(100dvh-5.5rem)] max-h-[calc(100dvh-5.5rem)] gap-3 overflow-hidden xl:grid-cols-[minmax(0,1fr)_260px] xl:items-stretch">
               <InternalDashboardHome onNavigate={handleViewChange} />
               <FleetPanel
                 liveTelemetry={liveTelemetry}
