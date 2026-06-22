@@ -79,7 +79,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
 
       <div className="shrink-0 border-t border-white/[0.08] px-2 py-3 lg:px-3 lg:py-4">
         <Link
-          href="/testflighthub"
+          href="/internaldashboard?view=testing"
           onClick={onClose}
           className="flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-left text-[13px] text-white/45 transition-colors hover:bg-[#0D1B2A]/60 hover:text-white/75"
         >

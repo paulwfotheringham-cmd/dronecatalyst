@@ -19,12 +19,19 @@ import {
 } from "@/lib/internal-operations-data";
 import AssetManagementWorkspace from "./AssetManagementWorkspace";
 import ClientManagementWorkspace from "./ClientManagementWorkspace";
+import CrmWorkspace from "./CrmWorkspace";
+import FileRepositoryReferenceImages from "./FileRepositoryReferenceImages";
+import FileRepositoryWorkspace from "./FileRepositoryWorkspace";
 import FleetPanel from "./FleetPanel";
 import InternalDashboardHome from "./InternalDashboardHome";
 import LiveProjectsPanel from "./LiveProjectsPanel";
+import MessagingWorkspace from "./MessagingWorkspace";
 import RecentMissionsPanel from "./RecentMissionsPanel";
 import SurveyOperationsShell from "./SurveyOperationsShell";
+import UserManagementWorkspace from "./UserManagementWorkspace";
 import WebODMWorkspace from "./WebODMWorkspace";
+import TelemetryDashboard from "@/components/telemetry/TelemetryDashboard";
+import { createInitialUsers, type ManagedUser } from "@/lib/user-management-data";
 import { useSurveyOperationsSimulator } from "./SurveyOperationsSimulatorProvider";
 
 function readInitialView(searchParams: ReturnType<typeof useSearchParams>): InternalOperationsView {
@@ -47,6 +54,8 @@ export default function InternalOperationsDashboard() {
   const [clients, setClients] = useState<ManagedClient[]>(() => createInitialClients());
   const [selectedAssetId, setSelectedAssetId] = useState("asset-1");
   const [selectedClientId, setSelectedClientId] = useState("client-1");
+  const [users, setUsers] = useState<ManagedUser[]>(() => createInitialUsers());
+  const [selectedUserId, setSelectedUserId] = useState("user-1");
   const testingSandboxHostRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -160,6 +169,28 @@ export default function InternalOperationsDashboard() {
           {activeView === "recent-missions" && <RecentMissionsPanel />}
 
           {activeView === "webodm" && <WebODMWorkspace />}
+
+          {activeView === "crm" && <CrmWorkspace />}
+
+          {activeView === "messaging" && <MessagingWorkspace />}
+
+          {activeView === "files" && (
+            <div className="space-y-6">
+              <FileRepositoryWorkspace />
+              <FileRepositoryReferenceImages />
+            </div>
+          )}
+
+          {activeView === "users" && (
+            <UserManagementWorkspace
+              users={users}
+              selectedUserId={selectedUserId}
+              onSelectUser={setSelectedUserId}
+              onUsersChange={setUsers}
+            />
+          )}
+
+          {activeView === "telemetry" && <TelemetryDashboard />}
         </div>
       </div>
     </SurveyOperationsShell>

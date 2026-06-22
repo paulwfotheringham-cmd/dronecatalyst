@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 
 import {
   getInternalNavHref,
-  INTERNAL_OPERATIONS_BASE_PATH,
   internalBottomNavItems,
   internalSurveyNavItems,
   isInternalBottomNavItemActive,
@@ -138,10 +137,7 @@ export default function SurveyOperationsSidebar({
           const externalHref = "href" in item ? item.href : undefined;
           const navHref =
             mode === "internal"
-              ? getInternalNavHref(
-                  item.view as InternalOperationsView | null,
-                  externalHref,
-                )
+              ? getInternalNavHref(item.view as InternalOperationsView)
               : getSurveyNavHref(
                   item.view as SurveyOperationsView | null,
                   externalHref,
@@ -154,6 +150,41 @@ export default function SurveyOperationsSidebar({
               : "text-white/45 hover:bg-[#0D1B2A]/60 hover:text-white/75",
           );
 
+          if (mode === "internal" && inAppNavigation) {
+            return (
+              <button
+                key={item.label}
+                type="button"
+                aria-current={active ? "page" : undefined}
+                onClick={() => {
+                  (onViewChange as (view: InternalOperationsView) => void)(
+                    item.view as InternalOperationsView,
+                  );
+                  onClose?.();
+                }}
+                className={className}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                <span className="flex-1">{item.label}</span>
+              </button>
+            );
+          }
+
+          if (mode === "internal") {
+            return (
+              <Link
+                key={item.label}
+                href={getInternalNavHref(item.view as InternalOperationsView)}
+                aria-current={active ? "page" : undefined}
+                onClick={onClose}
+                className={className}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                <span className="flex-1">{item.label}</span>
+              </Link>
+            );
+          }
+
           if (inAppNavigation && item.view) {
             return (
               <button
@@ -161,15 +192,9 @@ export default function SurveyOperationsSidebar({
                 type="button"
                 aria-current={active ? "page" : undefined}
                 onClick={() => {
-                  if (mode === "internal") {
-                    (onViewChange as (view: InternalOperationsView) => void)(
-                      item.view as InternalOperationsView,
-                    );
-                  } else {
-                    (onViewChange as (view: SurveyOperationsView) => void)(
-                      item.view as SurveyOperationsView,
-                    );
-                  }
+                  (onViewChange as (view: SurveyOperationsView) => void)(
+                    item.view as SurveyOperationsView,
+                  );
                   onClose?.();
                 }}
                 className={className}
@@ -201,11 +226,7 @@ export default function SurveyOperationsSidebar({
               const Icon = iconMap[item.icon];
               const internalActiveView = (activeView as InternalOperationsView | undefined) ?? "home";
               const active = isInternalBottomNavItemActive(pathname, item, internalActiveView);
-              const externalHref = "href" in item ? item.href : undefined;
-              const itemView = "view" in item ? item.view : undefined;
-              const navHref = itemView
-                ? getInternalNavHref(itemView, undefined)
-                : (externalHref ?? INTERNAL_OPERATIONS_BASE_PATH);
+              const navHref = getInternalNavHref(item.view);
               const className = cn(
                 "flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-left text-[13px] transition-colors",
                 active
@@ -213,14 +234,14 @@ export default function SurveyOperationsSidebar({
                   : "text-white/45 hover:bg-[#0D1B2A]/60 hover:text-white/75",
               );
 
-              if (inAppNavigation && itemView) {
+              if (inAppNavigation) {
                 return (
                   <button
                     key={item.label}
                     type="button"
                     aria-current={active ? "page" : undefined}
                     onClick={() => {
-                      (onViewChange as (view: InternalOperationsView) => void)(itemView);
+                      (onViewChange as (view: InternalOperationsView) => void)(item.view);
                       onClose?.();
                     }}
                     className={className}

@@ -1,9 +1,6 @@
 "use client";
 
-import Link from "next/link";
-
 import {
-  getInternalNavHref,
   internalHomeTileRows,
   type InternalHomeTile,
   type InternalOperationsView,
@@ -51,8 +48,13 @@ function renderTile(
     tile.accent,
   );
 
-  const content = (
-    <>
+  return (
+    <button
+      key={tile.id}
+      type="button"
+      onClick={() => onNavigate(tile.view)}
+      className={className}
+    >
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.06] text-[#60a5fa] transition-colors group-hover:bg-white/[0.1]">
         <Icon className="h-4 w-4" />
       </div>
@@ -62,30 +64,7 @@ function renderTile(
       <p className="mt-1 line-clamp-2 flex-1 text-[11px] leading-snug text-white/50">
         {tile.description}
       </p>
-    </>
-  );
-
-  if (tile.view) {
-    return (
-      <button
-        key={tile.id}
-        type="button"
-        onClick={() => onNavigate(tile.view)}
-        className={className}
-      >
-        {content}
-      </button>
-    );
-  }
-
-  return (
-    <Link
-      key={tile.id}
-      href={getInternalNavHref(null, "href" in tile ? tile.href : undefined)}
-      className={className}
-    >
-      {content}
-    </Link>
+    </button>
   );
 }
 

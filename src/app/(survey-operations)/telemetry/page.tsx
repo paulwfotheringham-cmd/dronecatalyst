@@ -1,10 +1,5 @@
-import SurveyOperationsShell from "@/components/testflighthub/SurveyOperationsShell";
-import TelemetryDashboard from "@/components/telemetry/TelemetryDashboard";
+import { redirect } from "next/navigation";
 
 export default function TelemetryPage() {
-  return (
-    <SurveyOperationsShell title="Live Telemetry" subtitle="Survey Operations">
-      <TelemetryDashboard />
-    </SurveyOperationsShell>
-  );
+  redirect("/internaldashboard?view=telemetry");
 }

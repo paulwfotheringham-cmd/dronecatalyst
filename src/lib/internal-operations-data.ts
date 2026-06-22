@@ -3,22 +3,32 @@ import type { SurveyOperationsBasePath } from "@/lib/survey-operations-mock-data
 export type InternalOperationsView =
   | "home"
   | "clients"
+  | "crm"
   | "assets"
   | "testing"
   | "live-projects"
   | "recent-missions"
-  | "webodm";
+  | "webodm"
+  | "messaging"
+  | "files"
+  | "users"
+  | "telemetry";
 
 export const INTERNAL_OPERATIONS_BASE_PATH: SurveyOperationsBasePath = "/internaldashboard";
 
 export const internalOperationsViews: InternalOperationsView[] = [
   "home",
   "clients",
+  "crm",
   "assets",
   "testing",
   "live-projects",
   "recent-missions",
   "webodm",
+  "messaging",
+  "files",
+  "users",
+  "telemetry",
 ];
 
 export function isInternalOperationsView(value: string | null): value is InternalOperationsView {
@@ -28,9 +38,9 @@ export function isInternalOperationsView(value: string | null): value is Interna
 export const internalBottomNavItems = [
   { label: "WebODM", icon: "Layers", view: "webodm" as const },
   { label: "Testing", icon: "FlaskConical", view: "testing" as const },
-  { label: "Users", icon: "Users", href: "/users" as const },
-  { label: "Messaging", icon: "MessageSquare", href: "/messaging" as const },
-  { label: "Files", icon: "FolderOpen", href: "/files" as const },
+  { label: "Users", icon: "Users", view: "users" as const },
+  { label: "Messaging", icon: "MessageSquare", view: "messaging" as const },
+  { label: "Files", icon: "FolderOpen", view: "files" as const },
 ] as const;
 
 export type InternalBottomNavItem = (typeof internalBottomNavItems)[number];
@@ -38,11 +48,11 @@ export type InternalBottomNavItem = (typeof internalBottomNavItems)[number];
 export const internalSurveyNavItems = [
   { label: "Home", icon: "LayoutDashboard", view: "home" as const },
   { label: "Clients", icon: "Building2", view: "clients" as const },
-  { label: "CRM", icon: "ContactRound", view: null, href: "/crm" as const },
+  { label: "CRM", icon: "ContactRound", view: "crm" as const },
   { label: "Assets", icon: "Package", view: "assets" as const },
   { label: "Live Projects", icon: "FolderKanban", view: "live-projects" as const },
   { label: "Recent Missions", icon: "History", view: "recent-missions" as const },
-  { label: "Live Telemetry", icon: "Radio", view: null, href: "/telemetry" as const },
+  { label: "Live Telemetry", icon: "Radio", view: "telemetry" as const },
 ] as const;
 
 export type InternalNavItem = (typeof internalSurveyNavItems)[number];
@@ -53,11 +63,16 @@ export const internalViewTitles: Record<
 > = {
   home: { title: "Internal Operations", subtitle: "Drone Catalyst" },
   clients: { title: "Client Directory", subtitle: "Internal Operations" },
+  crm: { title: "CRM", subtitle: "Internal Operations" },
   assets: { title: "Asset Registry", subtitle: "Internal Operations" },
   testing: { title: "Flight Simulator Testing", subtitle: "Internal Operations" },
   "live-projects": { title: "Live Projects", subtitle: "Internal Operations" },
   "recent-missions": { title: "Recent Missions", subtitle: "Internal Operations" },
   webodm: { title: "WebODM Processing", subtitle: "Internal Operations" },
+  messaging: { title: "Messaging", subtitle: "Internal Operations" },
+  files: { title: "File Repository", subtitle: "Internal Operations" },
+  users: { title: "Users", subtitle: "Internal Operations" },
+  telemetry: { title: "Live Telemetry", subtitle: "Internal Operations" },
 };
 
 export const internalHomeTileRows = [
@@ -90,8 +105,7 @@ export const internalHomeTileRows = [
   [
     {
       id: "crm",
-      view: null,
-      href: "/crm" as const,
+      view: "crm" as const,
       icon: "crm" as const,
       title: "CRM",
       description: "Lead pipeline, status, and next actions.",
@@ -117,8 +131,7 @@ export const internalHomeTileRows = [
   [
     {
       id: "messaging",
-      view: null,
-      href: "/messaging" as const,
+      view: "messaging" as const,
       icon: "messaging" as const,
       title: "Messaging",
       description: "Internal operator chat.",
@@ -126,8 +139,7 @@ export const internalHomeTileRows = [
     },
     {
       id: "files",
-      view: null,
-      href: "/files" as const,
+      view: "files" as const,
       icon: "files" as const,
       title: "Files",
       description: "Document repository.",
@@ -135,8 +147,7 @@ export const internalHomeTileRows = [
     },
     {
       id: "users",
-      view: null,
-      href: "/users" as const,
+      view: "users" as const,
       icon: "users" as const,
       title: "Users",
       description: "Operator roster and roles.",
@@ -146,8 +157,7 @@ export const internalHomeTileRows = [
   [
     {
       id: "telemetry",
-      view: null,
-      href: "/telemetry" as const,
+      view: "telemetry" as const,
       icon: "telemetry" as const,
       title: "Live Telemetry",
       description: "Live drone OSD feed.",
@@ -166,14 +176,7 @@ export const internalHomeTileRows = [
 
 export type InternalHomeTile = (typeof internalHomeTileRows)[number][number];
 
-export function getInternalNavHref(
-  view: InternalOperationsView | null,
-  externalHref: string | undefined,
-) {
-  if (externalHref) {
-    return externalHref;
-  }
-
+export function getInternalNavHref(view: InternalOperationsView | null) {
   if (!view || view === "home") {
     return INTERNAL_OPERATIONS_BASE_PATH;
   }
@@ -186,15 +189,7 @@ export function isInternalBottomNavItemActive(
   item: InternalBottomNavItem,
   activeView: InternalOperationsView = "home",
 ) {
-  if ("href" in item && item.href) {
-    return pathname === item.href || pathname.startsWith(`${item.href}/`);
-  }
-
-  if ("view" in item && item.view) {
-    return pathname === INTERNAL_OPERATIONS_BASE_PATH && activeView === item.view;
-  }
-
-  return false;
+  return pathname === INTERNAL_OPERATIONS_BASE_PATH && activeView === item.view;
 }
 
 export function isInternalNavItemActive(
@@ -202,10 +197,6 @@ export function isInternalNavItemActive(
   item: InternalNavItem,
   activeView: InternalOperationsView = "home",
 ) {
-  if ("href" in item && item.href) {
-    return pathname === item.href || pathname.startsWith(`${item.href}/`);
-  }
-
   if (pathname !== INTERNAL_OPERATIONS_BASE_PATH) {
     return false;
   }
