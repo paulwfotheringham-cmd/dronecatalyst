@@ -147,6 +147,7 @@ export default function InternalOperationsDashboard() {
               categories={assetCategories}
               locations={assetLocations}
               clients={clients}
+              users={users}
               selectedAssetId={selectedAssetId}
               onSelectAsset={setSelectedAssetId}
               onAssetsChange={setAssets}

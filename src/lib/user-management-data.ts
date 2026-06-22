@@ -33,6 +33,20 @@ export const USER_STATUS_OPTIONS: UserStatus[] = ["Active", "On Leave", "Inactiv
 
 export const USER_REGION_OPTIONS: UserRegion[] = ["Barcelona", "Porto", "Oxford", "Multi-site"];
 
+/** Regional site owners — one operator per base location. */
+export const REGION_OWNER_USER_IDS = {
+  Barcelona: "user-1",
+  Oxford: "user-2",
+  Porto: "user-3",
+} as const satisfies Record<"Barcelona" | "Porto" | "Oxford", string>;
+
+export function getOwnerUserIdForRegion(region: string): string | null {
+  if (region in REGION_OWNER_USER_IDS) {
+    return REGION_OWNER_USER_IDS[region as keyof typeof REGION_OWNER_USER_IDS];
+  }
+  return null;
+}
+
 export function createInitialUsers(): ManagedUser[] {
   return [
     {

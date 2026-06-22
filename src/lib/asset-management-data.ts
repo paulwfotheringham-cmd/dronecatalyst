@@ -1,3 +1,5 @@
+import { getOwnerUserIdForRegion } from "@/lib/user-management-data";
+
 export type AssetOperationalStatus =
   | "Standby"
   | "In Flight"
@@ -32,6 +34,7 @@ export type ManagedAsset = {
   totalFlightHours: number;
   storageUsedGb: number;
   assignedClientId: string | null;
+  assignedToUserId: string | null;
   controlSource: ControlSource;
   notes: string;
   /** Links live simulator telemetry when set (matches DRONE_ID). */
@@ -169,6 +172,7 @@ type SeedAsset = {
   rtkCalibrationMode?: RtkCalibrationMode;
   totalFlightHours?: number;
   assignedClientId?: string | null;
+  assignedToUserId?: string | null;
   notes?: string;
   telemetryDroneId?: string;
 };
@@ -193,6 +197,7 @@ function buildSeedAsset(seed: SeedAsset): ManagedAsset {
     totalFlightHours: seed.totalFlightHours ?? 0,
     storageUsedGb: seed.category === "Aircraft" ? 64 : 0,
     assignedClientId: seed.assignedClientId ?? null,
+    assignedToUserId: seed.assignedToUserId ?? getOwnerUserIdForRegion(seed.location),
     controlSource: seed.category === "Software Licence" ? "Cloud" : "RC",
     notes: seed.notes ?? "",
     telemetryDroneId: seed.telemetryDroneId,
@@ -368,6 +373,7 @@ export function createBlankAsset(
     totalFlightHours: 0,
     storageUsedGb: 0,
     assignedClientId: null,
+    assignedToUserId: getOwnerUserIdForRegion(resolvedLocation),
     controlSource: resolvedCategory === "Software Licence" ? "Cloud" : "RC",
     notes: "",
   };

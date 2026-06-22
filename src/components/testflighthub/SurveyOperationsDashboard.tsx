@@ -22,6 +22,7 @@ import {
   type SurveyOperationsBasePath,
   type SurveyOperationsView,
 } from "@/lib/survey-operations-mock-data";
+import { createInitialUsers } from "@/lib/user-management-data";
 import AssetManagementWorkspace from "./AssetManagementWorkspace";
 import ClientManagementWorkspace from "./ClientManagementWorkspace";
 import FleetPanel from "./FleetPanel";
@@ -55,6 +56,7 @@ export default function SurveyOperationsDashboard({
   const [assetCategories, setAssetCategories] = useState<string[]>(() => assetRegistry.categories);
   const [assetLocations, setAssetLocations] = useState<string[]>(() => assetRegistry.locations);
   const [clients, setClients] = useState<ManagedClient[]>(() => createInitialClients());
+  const [users] = useState(() => createInitialUsers());
   const [selectedMissionId, setSelectedMissionId] = useState("mission-1");
   const [selectedAssetId, setSelectedAssetId] = useState("asset-1");
   const [selectedClientId, setSelectedClientId] = useState("client-1");
@@ -238,6 +240,7 @@ export default function SurveyOperationsDashboard({
               categories={assetCategories}
               locations={assetLocations}
               clients={clients}
+              users={users}
               selectedAssetId={selectedAssetId}
               onSelectAsset={setSelectedAssetId}
               onAssetsChange={setAssets}
@@ -269,6 +272,7 @@ export default function SurveyOperationsDashboard({
                 categories={assetCategories}
                 locations={assetLocations}
                 clients={clients}
+                users={users}
                 selectedAssetId={selectedAssetId}
                 onSelectAsset={setSelectedAssetId}
                 onAssetsChange={setAssets}

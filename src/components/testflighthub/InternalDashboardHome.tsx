@@ -71,9 +71,7 @@ function renderTile(
 export default function InternalDashboardHome({ onNavigate }: InternalDashboardHomeProps) {
   return (
     <section className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
-      <p className="mb-3 shrink-0 text-xs text-white/45">Barcelona · Porto · Oxford</p>
-
-      <div className="grid h-[95%] max-h-[95%] min-h-0 shrink-0 grid-cols-3 grid-rows-4 gap-2.5 sm:gap-3">
+      <div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-4 gap-2.5 sm:gap-3">
         {internalHomeTileRows.flatMap((row, rowIndex) =>
           row.map((tile, tileIndex) => (
             <div

@@ -17,6 +17,7 @@ import {
   type ManagedAsset,
 } from "@/lib/asset-management-data";
 import type { ManagedClient } from "@/lib/client-management-data";
+import { getOwnerUserIdForRegion, type ManagedUser } from "@/lib/user-management-data";
 import { cn } from "@/lib/utils";
 
 type AssetManagementWorkspaceProps = {
@@ -24,6 +25,7 @@ type AssetManagementWorkspaceProps = {
   categories: string[];
   locations: string[];
   clients: ManagedClient[];
+  users: ManagedUser[];
   selectedAssetId: string;
   onSelectAsset: (assetId: string) => void;
   onAssetsChange: (assets: ManagedAsset[]) => void;
@@ -73,6 +75,7 @@ export default function AssetManagementWorkspace({
   categories,
   locations,
   clients,
+  users,
   selectedAssetId,
   onSelectAsset,
   onAssetsChange,
@@ -133,6 +136,9 @@ export default function AssetManagementWorkspace({
   function patchSelected(patch: Partial<ManagedAsset>) {
     if (!selectedAsset) return;
     const next = { ...selectedAsset, ...patch };
+    if (patch.location && patch.location !== selectedAsset.location) {
+      next.assignedToUserId = getOwnerUserIdForRegion(patch.location);
+    }
     if (patch.category && patch.category !== selectedAsset.category) {
       const models = getModelsForCategory(patch.category);
       next.model = models.includes(next.model) ? next.model : models[0] ?? next.model;
@@ -149,6 +155,17 @@ export default function AssetManagementWorkspace({
     value: client.id,
     label: client.companyName,
   }));
+
+  const userOptions = users.map((user) => ({
+    value: user.id,
+    label: `${user.fullName} · ${user.region}`,
+  }));
+
+  function ownerLabel(userId: string | null) {
+    if (!userId) return "Unassigned";
+    const user = users.find((entry) => entry.id === userId);
+    return user ? user.fullName : "Unassigned";
+  }
 
   return (
     <div className="space-y-6">
@@ -284,6 +301,7 @@ export default function AssetManagementWorkspace({
               const clientName =
                 clients.find((client) => client.id === asset.assignedClientId)?.companyName ??
                 "Unassigned";
+              const assignedTo = ownerLabel(asset.assignedToUserId);
 
               return (
                 <li key={asset.id}>
@@ -306,6 +324,7 @@ export default function AssetManagementWorkspace({
                         <p className="mt-0.5 text-[11px] text-white/35">
                           {asset.model} · {clientName}
                         </p>
+                        <p className="mt-0.5 text-[11px] text-white/35">Assigned to {assignedTo}</p>
                       </div>
                       <span
                         className={cn(
@@ -537,6 +556,23 @@ export default function AssetManagementWorkspace({
                 >
                   <option value="">Unassigned</option>
                   {clientOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <FieldLabel>Assigned To</FieldLabel>
+                <select
+                  className={inputClassName()}
+                  value={selectedAsset.assignedToUserId ?? ""}
+                  onChange={(event) =>
+                    patchSelected({ assignedToUserId: event.target.value || null })
+                  }
+                >
+                  <option value="">Unassigned</option>
+                  {userOptions.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
