@@ -27,6 +27,7 @@ import InternalDashboardHome from "./InternalDashboardHome";
 import LiveProjectsPanel from "./LiveProjectsPanel";
 import MessagingWorkspace from "./MessagingWorkspace";
 import RecentMissionsPanel from "./RecentMissionsPanel";
+import StrategyWorkspace from "./StrategyWorkspace";
 import SurveyOperationsShell from "./SurveyOperationsShell";
 import UserManagementWorkspace from "./UserManagementWorkspace";
 import WebODMWorkspace from "./WebODMWorkspace";
@@ -171,6 +172,8 @@ export default function InternalOperationsDashboard() {
           {activeView === "webodm" && <WebODMWorkspace />}
 
           {activeView === "crm" && <CrmWorkspace />}
+
+          {activeView === "strategy" && <StrategyWorkspace />}
 
           {activeView === "messaging" && <MessagingWorkspace />}
 
