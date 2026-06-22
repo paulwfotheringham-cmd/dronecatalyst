@@ -530,10 +530,22 @@ export default function FileRepositoryWorkspace() {
         {error && (
           <div className="border-b border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
             {error}
-            {error.includes("Supabase") && (
+            {(error.includes("schema cache") || error.includes("file_folders") || error.includes("file_categories")) && (
+              <div className="mt-2 space-y-1 text-xs text-red-200/80">
+                <p>
+                  The file repository tables are not in Supabase yet. In your Supabase project, open{" "}
+                  <strong className="font-semibold text-red-100">SQL Editor</strong>, paste the full
+                  contents of{" "}
+                  <span className="font-mono">supabase/migrations/002_create_internal_files.sql</span>
+                  , and click <strong className="font-semibold text-red-100">Run</strong>.
+                </p>
+                <p>Then refresh this page and try creating a folder again.</p>
+              </div>
+            )}
+            {error.includes("Supabase is not configured") && (
               <p className="mt-1 text-xs text-red-200/70">
-                Run the migration in Supabase SQL Editor:{" "}
-                <span className="font-mono">supabase/migrations/002_create_internal_files.sql</span>
+                Set <span className="font-mono">SUPABASE_URL</span> and{" "}
+                <span className="font-mono">SUPABASE_ANON_KEY</span> in Vercel, then redeploy.
               </p>
             )}
           </div>
