@@ -1,3 +1,4 @@
+import FileRepositoryReferenceImages from "@/components/testflighthub/FileRepositoryReferenceImages";
 import FileRepositoryWorkspace from "@/components/testflighthub/FileRepositoryWorkspace";
 import SurveyOperationsShell from "@/components/testflighthub/SurveyOperationsShell";
 
@@ -18,8 +19,9 @@ export default function FilesPage() {
           }}
         />
 
-        <div className="relative">
+        <div className="relative space-y-6">
           <FileRepositoryWorkspace />
+          <FileRepositoryReferenceImages />
         </div>
       </div>
     </SurveyOperationsShell>
