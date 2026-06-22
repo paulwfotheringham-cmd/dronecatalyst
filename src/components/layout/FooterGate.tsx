@@ -6,7 +6,12 @@ import Footer from "./Footer";
 export default function FooterGate() {
   const pathname = usePathname();
 
-  if (pathname?.startsWith("/test1") || pathname?.startsWith("/testflighthub") || pathname?.startsWith("/telemetry")) {
+  if (
+    pathname?.startsWith("/test1") ||
+    pathname?.startsWith("/testflighthub") ||
+    pathname?.startsWith("/internaldashboard") ||
+    pathname?.startsWith("/telemetry")
+  ) {
     return null;
   }
 

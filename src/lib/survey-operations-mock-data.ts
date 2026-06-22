@@ -72,6 +72,23 @@ export const recentMissions = [
   },
 ] as const;
 
+export type SurveyOperationsBasePath = "/testflighthub" | "/internaldashboard";
+
+export const DEFAULT_SURVEY_OPERATIONS_BASE_PATH: SurveyOperationsBasePath = "/testflighthub";
+
+export const SURVEY_OPERATIONS_BASE_PATHS: SurveyOperationsBasePath[] = [
+  "/testflighthub",
+  "/internaldashboard",
+];
+
+export function isSurveyOperationsDashboardPath(pathname: string, basePath?: SurveyOperationsBasePath) {
+  if (basePath) {
+    return pathname === basePath;
+  }
+
+  return SURVEY_OPERATIONS_BASE_PATHS.includes(pathname as SurveyOperationsBasePath);
+}
+
 export type SurveyOperationsView =
   | "dashboard"
   | "clients"
@@ -82,14 +99,14 @@ export type SurveyOperationsView =
   | "flight-logs";
 
 export const surveyNavItems = [
-  { label: "Dashboard", icon: "LayoutDashboard", view: "dashboard" as const, href: "/testflighthub" },
-  { label: "Clients", icon: "Building2", view: "clients" as const, href: "/testflighthub" },
-  { label: "Assets", icon: "Package", view: "assets" as const, href: "/testflighthub" },
-  { label: "Sites", icon: "MapPin", view: "sites" as const, href: "/testflighthub" },
-  { label: "Missions", icon: "Target", view: "missions" as const, href: "/testflighthub" },
-  { label: "Fleet", icon: "Plane", view: "fleet" as const, href: "/testflighthub" },
-  { label: "Live Telemetry", icon: "Radio", view: null, href: "/telemetry" },
-  { label: "Flight Logs", icon: "ScrollText", view: "flight-logs" as const, href: "/testflighthub" },
+  { label: "Dashboard", icon: "LayoutDashboard", view: "dashboard" as const },
+  { label: "Clients", icon: "Building2", view: "clients" as const },
+  { label: "Assets", icon: "Package", view: "assets" as const },
+  { label: "Sites", icon: "MapPin", view: "sites" as const },
+  { label: "Missions", icon: "Target", view: "missions" as const },
+  { label: "Fleet", icon: "Plane", view: "fleet" as const },
+  { label: "Live Telemetry", icon: "Radio", view: null, href: "/telemetry" as const },
+  { label: "Flight Logs", icon: "ScrollText", view: "flight-logs" as const },
 ] as const;
 
 const surveyOperationsViews: SurveyOperationsView[] = [
@@ -106,32 +123,37 @@ export function isSurveyOperationsView(value: string | null): value is SurveyOpe
   return surveyOperationsViews.includes(value as SurveyOperationsView);
 }
 
-export function getSurveyNavHref(view: SurveyOperationsView | null, href: string) {
-  if (href === "/telemetry") {
-    return href;
+export function getSurveyNavHref(
+  view: SurveyOperationsView | null,
+  externalHref: string | undefined,
+  basePath: SurveyOperationsBasePath = DEFAULT_SURVEY_OPERATIONS_BASE_PATH,
+) {
+  if (externalHref === "/telemetry") {
+    return externalHref;
   }
 
   if (!view || view === "dashboard") {
-    return "/testflighthub";
+    return basePath;
   }
 
-  return `/testflighthub?view=${view}`;
+  return `${basePath}?view=${view}`;
 }
 
 export function isSurveyNavItemActive(
   pathname: string,
   item: (typeof surveyNavItems)[number],
   activeView?: SurveyOperationsView | null,
+  basePath: SurveyOperationsBasePath = DEFAULT_SURVEY_OPERATIONS_BASE_PATH,
 ) {
-  if (item.href === "/telemetry") {
+  if ("href" in item && item.href === "/telemetry") {
     return pathname === "/telemetry";
   }
 
-  if (pathname === "/testflighthub" && activeView != null) {
+  if (pathname === basePath && activeView != null) {
     return item.view === activeView;
   }
 
-  return item.view === "dashboard" && pathname === "/testflighthub";
+  return item.view === "dashboard" && pathname === basePath;
 }
 
 export const surveyViewTitles: Record<

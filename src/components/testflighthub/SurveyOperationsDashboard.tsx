@@ -17,7 +17,9 @@ import {
   type ManagedMission,
 } from "@/lib/mission-management-data";
 import {
+  DEFAULT_SURVEY_OPERATIONS_BASE_PATH,
   isSurveyOperationsView,
+  type SurveyOperationsBasePath,
   type SurveyOperationsView,
 } from "@/lib/survey-operations-mock-data";
 import AssetManagementWorkspace from "./AssetManagementWorkspace";
@@ -34,7 +36,13 @@ function readInitialView(searchParams: ReturnType<typeof useSearchParams>): Surv
   return isSurveyOperationsView(viewParam) ? viewParam : "dashboard";
 }
 
-export default function SurveyOperationsDashboard() {
+type SurveyOperationsDashboardProps = {
+  basePath?: SurveyOperationsBasePath;
+};
+
+export default function SurveyOperationsDashboard({
+  basePath = DEFAULT_SURVEY_OPERATIONS_BASE_PATH,
+}: SurveyOperationsDashboardProps) {
   const searchParams = useSearchParams();
   const [activeView, setActiveView] = useState<SurveyOperationsView>(() =>
     readInitialView(searchParams),
@@ -176,7 +184,11 @@ export default function SurveyOperationsDashboard() {
   }, [liveTelemetry]);
 
   return (
-    <SurveyOperationsShell activeView={activeView} onViewChange={handleViewChange}>
+    <SurveyOperationsShell
+      activeView={activeView}
+      onViewChange={handleViewChange}
+      basePath={basePath}
+    >
       <div className="relative px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
         <div
           className="pointer-events-none absolute inset-0"

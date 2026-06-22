@@ -5,6 +5,7 @@ import { Menu } from "lucide-react";
 
 import {
   surveyViewTitles,
+  type SurveyOperationsBasePath,
   type SurveyOperationsView,
 } from "@/lib/survey-operations-mock-data";
 
@@ -16,12 +17,14 @@ export default function SurveyOperationsShell({
   subtitle = "Survey Operations",
   activeView,
   onViewChange,
+  basePath = "/testflighthub",
 }: {
   children: React.ReactNode;
   title?: string;
   subtitle?: string;
   activeView?: SurveyOperationsView;
   onViewChange?: (view: SurveyOperationsView) => void;
+  basePath?: SurveyOperationsBasePath;
 }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const resolvedTitle =
@@ -45,6 +48,7 @@ export default function SurveyOperationsShell({
         onClose={() => setMobileNavOpen(false)}
         activeView={activeView}
         onViewChange={onViewChange}
+        basePath={basePath}
       />
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[#020617]">
