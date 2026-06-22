@@ -60,10 +60,10 @@ function renderTile(
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.06] text-[#60a5fa] transition-colors group-hover:bg-white/[0.1] sm:h-10 sm:w-10 sm:rounded-xl">
         <Icon className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
       </div>
-      <h3 className="mt-3 line-clamp-1 text-base font-semibold leading-tight text-white sm:mt-3.5 sm:text-lg">
+      <h3 className="mt-3 line-clamp-1 text-lg font-semibold leading-tight text-white sm:mt-3.5 sm:text-xl lg:text-[22px]">
         {tile.title}
       </h3>
-      <p className="mt-2 line-clamp-2 flex-1 text-sm leading-relaxed text-white/55 sm:mt-2.5 sm:text-[15px]">
+      <p className="mt-2 line-clamp-2 flex-1 text-base leading-relaxed text-white/55 sm:mt-2.5 sm:text-lg">
         {tile.description}
       </p>
     </button>
