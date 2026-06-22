@@ -159,17 +159,20 @@ export default function AssetManagementWorkspace({
               <h3 className="text-sm font-semibold text-white">Categories</h3>
               <span className="text-xs text-white/40">{categories.length} types</span>
             </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {categories.map((category) => (
-                <RegistryChip
-                  key={category}
-                  label={category}
-                  active={categoryFilter === category}
-                  onClick={() =>
-                    setCategoryFilter((current) => (current === category ? "All" : category))
-                  }
-                />
-              ))}
+            <div className="mt-3">
+              <FieldLabel>Filter by category</FieldLabel>
+              <select
+                className={inputClassName()}
+                value={categoryFilter}
+                onChange={(event) => setCategoryFilter(event.target.value)}
+              >
+                <option value="All">All categories</option>
+                {categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="mt-3 flex gap-2">
               <input
