@@ -33,6 +33,7 @@ import {
   MapPin,
   MessageSquare,
   Package,
+  PenLine,
   Plane,
   Radio,
   ScrollText,
@@ -60,6 +61,7 @@ const iconMap = {
   MessageSquare,
   Users,
   Film,
+  PenLine,
 } as const;
 
 const navItemClass = (active: boolean) =>

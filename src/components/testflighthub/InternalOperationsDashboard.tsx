@@ -29,6 +29,7 @@ import MediaExampleWorkspace from "./MediaExampleWorkspace";
 import MessagingWorkspace from "./MessagingWorkspace";
 import RecentMissionsPanel from "./RecentMissionsPanel";
 import StrategyWorkspace from "./StrategyWorkspace";
+import WhiteboardWorkspace from "./WhiteboardWorkspace";
 import SurveyOperationsShell from "./SurveyOperationsShell";
 import UserManagementWorkspace from "./UserManagementWorkspace";
 import WebODMWorkspace from "./WebODMWorkspace";
@@ -176,6 +177,8 @@ export default function InternalOperationsDashboard() {
           {activeView === "crm" && <CrmWorkspace />}
 
           {activeView === "strategy" && <StrategyWorkspace />}
+
+          {activeView === "whiteboard" && <WhiteboardWorkspace />}
 
           {activeView === "messaging" && <MessagingWorkspace />}
 

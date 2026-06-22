@@ -10,6 +10,7 @@
     "db:setup-files": "node scripts/setup-internal-files-db.mjs"
   },
   "dependencies": {
+    "@excalidraw/excalidraw": "^0.18.1",
     "@radix-ui/react-avatar": "^1.2.0",
     "@radix-ui/react-progress": "^1.1.10",
     "@radix-ui/react-scroll-area": "^1.2.12",
