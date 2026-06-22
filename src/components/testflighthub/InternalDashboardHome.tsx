@@ -44,7 +44,7 @@ function renderTile(
 ) {
   const Icon = tileIcons[tile.icon];
   const className = cn(
-    "group flex h-full min-h-0 w-full min-w-0 flex-col rounded-xl border bg-gradient-to-br p-3.5 text-left shadow-[0_8px_24px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(0,0,0,0.36)] sm:rounded-2xl sm:p-4",
+    "group flex h-full min-h-0 w-full min-w-0 flex-col rounded-xl border bg-gradient-to-br p-3 text-left shadow-[0_8px_24px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(0,0,0,0.36)] sm:rounded-2xl sm:p-3.5",
     tile.accent,
   );
 
@@ -55,13 +55,13 @@ function renderTile(
       onClick={() => onNavigate(tile.view)}
       className={className}
     >
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.06] text-[#60a5fa] transition-colors group-hover:bg-white/[0.1] sm:h-10 sm:w-10 sm:rounded-xl">
-        <Icon className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.06] text-[#60a5fa] transition-colors group-hover:bg-white/[0.1] sm:h-9 sm:w-9 sm:rounded-xl">
+        <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
       </div>
-      <h3 className="mt-3 line-clamp-1 text-sm font-semibold leading-tight text-white">
+      <h3 className="mt-2.5 line-clamp-1 text-sm font-semibold leading-tight text-white">
         {tile.title}
       </h3>
-      <p className="mt-1.5 line-clamp-2 flex-1 text-xs leading-snug text-white/50">
+      <p className="mt-1 line-clamp-2 flex-1 text-xs leading-snug text-white/50">
         {tile.description}
       </p>
     </button>
@@ -73,7 +73,7 @@ export default function InternalDashboardHome({ onNavigate }: InternalDashboardH
     <section className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
       <p className="mb-3 shrink-0 text-xs text-white/45">Barcelona · Porto · Oxford</p>
 
-      <div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-4 gap-3 sm:gap-4">
+      <div className="grid h-[95%] max-h-[95%] min-h-0 shrink-0 grid-cols-3 grid-rows-4 gap-2.5 sm:gap-3">
         {internalHomeTileRows.flatMap((row, rowIndex) =>
           row.map((tile, tileIndex) => (
             <div

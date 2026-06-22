@@ -62,10 +62,10 @@ const iconMap = {
 
 const navItemClass = (active: boolean) =>
   cn(
-    "flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[11px] leading-tight transition-colors sm:px-3 sm:py-[7px] sm:text-[12px]",
+    "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[13px] leading-snug transition-colors sm:px-3.5 sm:py-2 sm:text-sm",
     active
       ? "bg-[#0D1B2A] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
-      : "text-white/45 hover:bg-[#0D1B2A]/60 hover:text-white/75",
+      : "text-white/50 hover:bg-[#0D1B2A]/60 hover:text-white/80",
   );
 
 type SurveyOperationsSidebarProps = {
@@ -101,7 +101,7 @@ export default function SurveyOperationsSidebar({
     const Icon = iconMap[item.icon as keyof typeof iconMap];
     const content = (
       <>
-        <Icon className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+        <Icon className="h-4 w-4 shrink-0 sm:h-[18px] sm:w-[18px]" />
         <span className="flex-1 truncate">{item.label}</span>
       </>
     );
@@ -140,7 +140,7 @@ export default function SurveyOperationsSidebar({
         mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
       )}
     >
-      <div className="flex shrink-0 items-center justify-between border-b border-white/[0.08] px-3 py-2.5 lg:px-3.5 lg:py-3">
+      <div className="flex shrink-0 items-center justify-between border-b border-white/[0.08] px-3 pb-4 pt-2.5 lg:px-3.5 lg:pb-5 lg:pt-3">
         <div className="min-w-0 flex-1 rounded-lg bg-white px-2.5 py-1.5">
           <Logo height={30} href={logoHref} className="block w-full max-w-none" />
         </div>
@@ -154,8 +154,8 @@ export default function SurveyOperationsSidebar({
         </button>
       </div>
 
-      <nav className="flex min-h-0 flex-1 flex-col overflow-hidden px-2 py-2 lg:px-2.5">
-        <div className="space-y-0.5">
+      <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden px-2.5 pt-4 pb-2 lg:px-3 lg:pt-5">
+        <div className="space-y-1">
           {navItems.map((item) => {
             const active =
               mode === "internal"
