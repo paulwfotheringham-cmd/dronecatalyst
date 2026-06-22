@@ -3,9 +3,16 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AppState, BinaryFiles } from "@excalidraw/excalidraw/types";
-import { Loader2, PenLine } from "lucide-react";
+import { Loader2, PenLine, Plus, Save } from "lucide-react";
 
-import { EMPTY_WHITEBOARD_SCENE, type WhiteboardScene } from "@/lib/whiteboard-data";
+import {
+  EMPTY_WHITEBOARD_SCENE,
+  normalizeWhiteboardScene,
+  type WhiteboardProject,
+  type WhiteboardProjectSummary,
+  type WhiteboardScene,
+} from "@/lib/whiteboard-data";
+import { cn } from "@/lib/utils";
 
 import "@excalidraw/excalidraw/index.css";
 
@@ -31,138 +38,216 @@ async function readApiJson<T>(response: Response): Promise<T> {
   }
 }
 
-function isSchemaCacheError(message: string) {
-  return message.includes("schema cache") || message.includes("internal_whiteboard");
+function inputClassName() {
+  return "h-10 w-full rounded-xl border border-white/10 bg-[#0b1524] px-3 text-sm text-white outline-none transition-colors focus:border-sky-400/50";
 }
 
 export default function WhiteboardWorkspace() {
-  const [scene, setScene] = useState<WhiteboardScene>(EMPTY_WHITEBOARD_SCENE);
-  const [loaded, setLoaded] = useState(false);
+  const [projects, setProjects] = useState<WhiteboardProjectSummary[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [projectName, setProjectName] = useState("");
+  const [ownerName, setOwnerName] = useState("");
+  const [loadedScene, setLoadedScene] = useState<WhiteboardScene>(EMPTY_WHITEBOARD_SCENE);
+  const [editorKey, setEditorKey] = useState(0);
+  const [loadingProjects, setLoadingProjects] = useState(true);
+  const [loadingProject, setLoadingProject] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [dirty, setDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const canSaveRef = useRef(false);
+
+  const pendingSceneRef = useRef<WhiteboardScene>(EMPTY_WHITEBOARD_SCENE);
   const skipNextChangeRef = useRef(true);
 
-  const loadScene = useCallback(async () => {
+  const loadProjects = useCallback(async () => {
+    setLoadingProjects(true);
     setError(null);
-    canSaveRef.current = false;
+
+    try {
+      const response = await fetch("/api/whiteboard/projects", { cache: "no-store" });
+      const data = await readApiJson<{
+        projects?: WhiteboardProjectSummary[];
+        error?: string;
+      }>(response);
+      if (!response.ok) throw new Error(data.error ?? "Failed to load whiteboard projects");
+      setProjects(data.projects ?? []);
+      return data.projects ?? [];
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : "Failed to load whiteboard projects");
+      setProjects([]);
+      return [];
+    } finally {
+      setLoadingProjects(false);
+    }
+  }, []);
+
+  const loadProject = useCallback(async (projectId: string) => {
+    setLoadingProject(true);
+    setError(null);
     skipNextChangeRef.current = true;
 
     try {
-      const response = await fetch("/api/whiteboard", { cache: "no-store" });
-      const data = await readApiJson<{ scene?: WhiteboardScene; error?: string }>(response);
-      if (!response.ok) throw new Error(data.error ?? "Failed to load whiteboard");
-      setScene(data.scene ?? EMPTY_WHITEBOARD_SCENE);
-      canSaveRef.current = true;
+      const response = await fetch(`/api/whiteboard/projects/${projectId}`, { cache: "no-store" });
+      const data = await readApiJson<{ project?: WhiteboardProject; error?: string }>(response);
+      if (!response.ok || !data.project) throw new Error(data.error ?? "Failed to load project");
+
+      const project = data.project;
+      setSelectedProjectId(project.id);
+      setProjectName(project.name);
+      setOwnerName(project.ownerName);
+      setLoadedScene(project.scene);
+      pendingSceneRef.current = project.scene;
+      setDirty(false);
+      setEditorKey((current) => current + 1);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Failed to load whiteboard");
-      setScene(EMPTY_WHITEBOARD_SCENE);
+      setError(loadError instanceof Error ? loadError.message : "Failed to load project");
     } finally {
-      setLoaded(true);
+      setLoadingProject(false);
     }
   }, []);
 
   useEffect(() => {
-    void loadScene();
-  }, [loadScene]);
+    void (async () => {
+      const nextProjects = await loadProjects();
+      if (nextProjects[0]) {
+        await loadProject(nextProjects[0].id);
+      }
+    })();
+  }, [loadProjects, loadProject]);
 
-  const persistScene = useCallback(async (nextScene: WhiteboardScene, attempt = 0) => {
+  const handleSelectProject = useCallback(
+    async (projectId: string) => {
+      if (projectId === selectedProjectId) return;
+      if (dirty && !window.confirm("Discard unsaved changes on this project?")) return;
+      await loadProject(projectId);
+    },
+    [dirty, loadProject, selectedProjectId],
+  );
+
+  const handleNewProject = useCallback(async () => {
+    if (dirty && !window.confirm("Discard unsaved changes and start a new project?")) return;
+
+    setCreating(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/whiteboard/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: "New project" }),
+      });
+
+      const data = await readApiJson<{ project?: WhiteboardProject; error?: string }>(response);
+      if (!response.ok || !data.project) throw new Error(data.error ?? "Failed to create project");
+
+      const project = data.project;
+      setProjects((current) => [
+        {
+          id: project.id,
+          name: project.name,
+          ownerUserId: project.ownerUserId,
+          ownerName: project.ownerName,
+          createdAt: project.createdAt,
+          updatedAt: project.updatedAt,
+        },
+        ...current,
+      ]);
+      setSelectedProjectId(project.id);
+      setProjectName(project.name);
+      setOwnerName(project.ownerName);
+      setLoadedScene(project.scene);
+      pendingSceneRef.current = project.scene;
+      setDirty(false);
+      setEditorKey((current) => current + 1);
+      skipNextChangeRef.current = true;
+    } catch (createError) {
+      setError(createError instanceof Error ? createError.message : "Failed to create project");
+    } finally {
+      setCreating(false);
+    }
+  }, [dirty]);
+
+  const handleSave = useCallback(async () => {
+    if (!selectedProjectId) return;
+
     setSaving(true);
     setError(null);
 
     try {
-      const response = await fetch("/api/whiteboard", {
-        method: "PUT",
+      const scene = pendingSceneRef.current;
+      const response = await fetch(`/api/whiteboard/projects/${selectedProjectId}`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(nextScene),
+        body: JSON.stringify({
+          name: projectName,
+          elements: scene.elements,
+          appState: scene.appState,
+          files: scene.files,
+        }),
       });
 
-      const data = await readApiJson<{ scene?: WhiteboardScene; error?: string }>(response);
-      if (!response.ok) throw new Error(data.error ?? "Failed to save whiteboard");
-      if (data.scene) setScene(data.scene);
+      const data = await readApiJson<{ project?: WhiteboardProject; error?: string }>(response);
+      if (!response.ok || !data.project) throw new Error(data.error ?? "Failed to save project");
+
+      const project = data.project;
+      setProjectName(project.name);
+      setOwnerName(project.ownerName);
+      setLoadedScene(project.scene);
+      pendingSceneRef.current = project.scene;
+      setDirty(false);
+      setProjects((current) =>
+        current
+          .map((item) =>
+            item.id === project.id
+              ? {
+                  id: project.id,
+                  name: project.name,
+                  ownerUserId: project.ownerUserId,
+                  ownerName: project.ownerName,
+                  createdAt: project.createdAt,
+                  updatedAt: project.updatedAt,
+                }
+              : item,
+          )
+          .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
+      );
     } catch (saveError) {
-      const message = saveError instanceof Error ? saveError.message : "Failed to save whiteboard";
-      if (isSchemaCacheError(message) && attempt < 2) {
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        return persistScene(nextScene, attempt + 1);
-      }
-      setError(message);
+      setError(saveError instanceof Error ? saveError.message : "Failed to save project");
     } finally {
       setSaving(false);
     }
-  }, []);
+  }, [projectName, selectedProjectId]);
 
   const handleChange = useCallback(
     (elements: WhiteboardScene["elements"], appState: AppState, files: BinaryFiles) => {
-      if (!canSaveRef.current) return;
       if (skipNextChangeRef.current) {
         skipNextChangeRef.current = false;
         return;
       }
 
-      const nextScene: WhiteboardScene = {
-        elements,
-        appState: {
-          viewBackgroundColor: appState.viewBackgroundColor,
-          currentItemStrokeColor: appState.currentItemStrokeColor,
-          currentItemBackgroundColor: appState.currentItemBackgroundColor,
-          currentItemFillStyle: appState.currentItemFillStyle,
-          currentItemStrokeWidth: appState.currentItemStrokeWidth,
-          currentItemRoughness: appState.currentItemRoughness,
-          currentItemOpacity: appState.currentItemOpacity,
-          currentItemFontFamily: appState.currentItemFontFamily,
-          currentItemFontSize: appState.currentItemFontSize,
-          currentItemTextAlign: appState.currentItemTextAlign,
-          currentItemStartArrowhead: appState.currentItemStartArrowhead,
-          currentItemEndArrowhead: appState.currentItemEndArrowhead,
-          scrollX: appState.scrollX,
-          scrollY: appState.scrollY,
-          zoom: appState.zoom,
-          theme: appState.theme,
-        },
-        files,
-      };
-
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-      saveTimerRef.current = setTimeout(() => {
-        void persistScene(nextScene);
-      }, 600);
+      pendingSceneRef.current = normalizeWhiteboardScene(elements, appState, files);
+      setDirty(true);
     },
-    [persistScene],
+    [],
   );
 
-  useEffect(() => {
-    return () => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    };
-  }, []);
-
   const hasStoredContent =
-    (scene.elements?.length ?? 0) > 0 || Object.keys(scene.files).length > 0;
+    (loadedScene.elements?.length ?? 0) > 0 || Object.keys(loadedScene.files).length > 0;
 
   return (
     <div className="flex min-h-0 flex-col gap-4">
       <section className="shrink-0 rounded-2xl border border-white/15 bg-white/[0.04] p-5 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-6">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06] text-[#60a5fa]">
-              <PenLine className="h-5 w-5" />
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold text-white">Whiteboard</h2>
-              <p className="mt-1 max-w-2xl text-sm leading-relaxed text-white/50">
-                Shared team canvas for ideas, flows, and notes. Changes save to Supabase and are
-                visible to all internal users.
-              </p>
-            </div>
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06] text-[#60a5fa]">
+            <PenLine className="h-5 w-5" />
           </div>
-          {saving && (
-            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs text-white/55">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              Saving…
-            </span>
-          )}
+          <div>
+            <h2 className="text-lg font-semibold text-white">Whiteboard</h2>
+            <p className="mt-1 max-w-2xl text-sm leading-relaxed text-white/50">
+              Create and manage named whiteboard projects. Select a project from the list, sketch
+              your ideas, then click Save.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -172,29 +257,123 @@ export default function WhiteboardWorkspace() {
         </p>
       )}
 
-      <div className="relative min-h-[calc(100dvh-16rem)] flex-1 overflow-hidden rounded-2xl border border-white/15 bg-[#1e1e1e] shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)]">
-        {!loaded ? (
-          <div className="flex h-full min-h-[480px] items-center justify-center gap-2 text-sm text-white/50">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Loading whiteboard…
+      <div className="grid min-h-[calc(100dvh-14rem)] gap-4 xl:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className="flex min-h-0 flex-col rounded-2xl border border-white/15 bg-white/[0.04] shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
+          <div className="flex items-center justify-between gap-2 border-b border-white/10 px-4 py-3">
+            <div>
+              <h3 className="text-sm font-semibold text-white">Projects</h3>
+              <p className="text-xs text-white/45">{projects.length} saved</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void handleNewProject()}
+              disabled={creating || saving}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500/40 bg-sky-500/15 px-2.5 py-1.5 text-xs font-semibold text-sky-300 transition-colors hover:border-sky-400/60 hover:bg-sky-500/25 disabled:opacity-50"
+            >
+              {creating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+              New
+            </button>
           </div>
-        ) : (
-          <div className="absolute inset-0">
-            <Excalidraw
-              theme="dark"
-              initialData={
-                hasStoredContent
-                  ? {
-                      elements: scene.elements,
-                      appState: scene.appState,
-                      files: scene.files,
-                    }
-                  : { appState: { theme: "dark" } }
-              }
-              onChange={handleChange}
-            />
+
+          {loadingProjects ? (
+            <div className="flex items-center gap-2 px-4 py-8 text-sm text-white/55">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading projects…
+            </div>
+          ) : projects.length === 0 ? (
+            <p className="px-4 py-8 text-sm text-white/45">
+              No projects yet. Click New to create your first whiteboard.
+            </p>
+          ) : (
+            <ul className="max-h-[420px] flex-1 space-y-1 overflow-y-auto p-2 xl:max-h-none">
+              {projects.map((project) => {
+                const selected = project.id === selectedProjectId;
+                return (
+                  <li key={project.id}>
+                    <button
+                      type="button"
+                      onClick={() => void handleSelectProject(project.id)}
+                      className={cn(
+                        "w-full rounded-xl border px-3 py-3 text-left transition-colors",
+                        selected
+                          ? "border-sky-400/40 bg-sky-500/10"
+                          : "border-transparent bg-white/[0.03] hover:border-white/10 hover:bg-white/[0.05]",
+                      )}
+                    >
+                      <p className="truncate text-sm font-semibold text-white">{project.name}</p>
+                      <p className="mt-1 truncate text-xs text-white/45">Owner: {project.ownerName}</p>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </aside>
+
+        <div className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#1e1e1e] shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)]">
+          <div className="flex flex-wrap items-end gap-3 border-b border-white/10 bg-[#121212] px-4 py-3 sm:px-5">
+            <div className="min-w-[180px] flex-1">
+              <label className="text-[10px] font-medium uppercase tracking-[0.12em] text-white/45">
+                Project name
+              </label>
+              <input
+                value={projectName}
+                onChange={(event) => {
+                  setProjectName(event.target.value);
+                  setDirty(true);
+                }}
+                disabled={!selectedProjectId}
+                className={inputClassName()}
+              />
+            </div>
+            <div className="min-w-[160px]">
+              <label className="text-[10px] font-medium uppercase tracking-[0.12em] text-white/45">
+                Owner
+              </label>
+              <div className="mt-1.5 flex h-10 items-center rounded-xl border border-white/10 bg-white/[0.03] px-3 text-sm text-white/80">
+                {ownerName || "—"}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => void handleSave()}
+              disabled={!selectedProjectId || saving || loadingProject}
+              className="inline-flex h-10 items-center gap-2 rounded-xl border border-sky-500/40 bg-sky-500/15 px-4 text-sm font-semibold text-sky-300 transition-colors hover:border-sky-400/60 hover:bg-sky-500/25 disabled:opacity-50"
+            >
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              Save
+            </button>
+            {dirty && (
+              <span className="pb-2 text-xs text-amber-200/80">Unsaved changes</span>
+            )}
           </div>
-        )}
+
+          <div className="relative min-h-[520px] flex-1">
+            {loadingProject || !selectedProjectId ? (
+              <div className="flex h-full min-h-[520px] items-center justify-center gap-2 text-sm text-white/50">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {selectedProjectId ? "Loading project…" : "Select or create a project"}
+              </div>
+            ) : (
+              <div className="absolute inset-0">
+                <Excalidraw
+                  key={editorKey}
+                  theme="dark"
+                  initialData={
+                    hasStoredContent
+                      ? {
+                          elements: loadedScene.elements,
+                          appState: loadedScene.appState,
+                          files: loadedScene.files,
+                        }
+                      : { appState: { theme: "dark" } }
+                  }
+                  onChange={handleChange}
+                />
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

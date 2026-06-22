@@ -14,7 +14,10 @@ const migrations = [
   { table: "internal_whiteboard", path: "supabase/migrations/008_create_internal_whiteboard.sql" },
 ];
 
-const alterMigrations = ["supabase/migrations/009_add_competitors_notes.sql"];
+const alterMigrations = [
+  "supabase/migrations/009_add_competitors_notes.sql",
+  "supabase/migrations/010_create_whiteboard_projects.sql",
+];
 
 async function query(sql) {
   const res = await fetch(`https://api.supabase.com/v1/projects/${projectRef}/database/query`, {
@@ -61,7 +64,7 @@ const check = await query(
   `select table_name
    from information_schema.tables
    where table_schema = 'public'
-     and table_name in ('competitors', 'internal_whiteboard')
+     and table_name in ('competitors', 'internal_whiteboard', 'whiteboard_projects')
    order by table_name`,
 );
 
