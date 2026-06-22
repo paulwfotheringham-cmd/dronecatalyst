@@ -1,4 +1,5 @@
 export const INTERNAL_FILES_BUCKET = "internal-files";
+export const INTERNAL_FILES_MAX_BYTES = 52_428_800;
 
 export type FileCategory = {
   id: string;

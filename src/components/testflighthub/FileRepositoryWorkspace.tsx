@@ -49,6 +49,37 @@ function isFolderDescendant(
   return false;
 }
 
+async function readApiJson<T>(response: Response): Promise<T> {
+  const text = await response.text();
+
+  if (!text) {
+    throw new Error(`Request failed (${response.status})`);
+  }
+
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    const message = text.replace(/\s+/g, " ").trim();
+    throw new Error(
+      response.ok
+        ? "Server returned an invalid response."
+        : message.length > 180
+          ? `${message.slice(0, 180)}...`
+          : message,
+    );
+  }
+}
+
+function resolveUploadFolderId(
+  currentFolderId: string | null,
+  selectedId: string | null,
+  selectedKind: "folder" | "file" | null,
+) {
+  if (currentFolderId) return currentFolderId;
+  if (selectedKind === "folder" && selectedId) return selectedId;
+  return null;
+}
+
 function entryIcon(entry: BrowseEntry) {
   if (entry.kind === "folder") return Folder;
   const ext = entry.item.extension?.toLowerCase() ?? "";
@@ -172,16 +203,61 @@ export default function FileRepositoryWorkspace() {
     setBusy(true);
     setError(null);
 
+    const targetFolderId = resolveUploadFolderId(folderId, selectedId, selectedKind);
+
     try {
       for (const file of Array.from(files)) {
-        const formData = new FormData();
-        formData.append("file", file);
-        if (folderId) formData.append("folderId", folderId);
-        if (categoryFilter) formData.append("categoryId", categoryFilter);
+        const prepareResponse = await fetch("/api/files/upload/prepare", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: file.name,
+            size: file.size,
+            folderId: targetFolderId,
+          }),
+        });
 
-        const response = await fetch("/api/files/upload", { method: "POST", body: formData });
-        const data = (await response.json()) as { error?: string };
-        if (!response.ok) throw new Error(data.error ?? `Failed to upload ${file.name}`);
+        const prepareData = await readApiJson<{
+          signedUrl?: string;
+          storagePath?: string;
+          error?: string;
+        }>(prepareResponse);
+
+        if (!prepareResponse.ok || !prepareData.signedUrl || !prepareData.storagePath) {
+          throw new Error(prepareData.error ?? `Failed to prepare upload for ${file.name}`);
+        }
+
+        const uploadBody = new FormData();
+        uploadBody.append("cacheControl", "3600");
+        uploadBody.append("", file);
+
+        const uploadResponse = await fetch(prepareData.signedUrl, {
+          method: "PUT",
+          headers: { "x-upsert": "false" },
+          body: uploadBody,
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error(`Failed to upload ${file.name} to storage (${uploadResponse.status}).`);
+        }
+
+        const completeResponse = await fetch("/api/files/upload/complete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: file.name,
+            storagePath: prepareData.storagePath,
+            folderId: targetFolderId,
+            categoryId: categoryFilter,
+            mimeType: file.type || null,
+            size: file.size,
+          }),
+        });
+
+        const completeData = await readApiJson<{ error?: string }>(completeResponse);
+        if (!completeResponse.ok) {
+          throw new Error(completeData.error ?? `Failed to finalize upload for ${file.name}`);
+        }
       }
 
       await refreshAll();
@@ -674,11 +750,20 @@ export default function FileRepositoryWorkspace() {
                   return (
                     <tr
                       key={`${entry.kind}-${entry.item.id}`}
-                      onClick={() => {
+                      onClick={(event) => {
+                        if (entry.kind === "folder" && !event.metaKey && !event.ctrlKey) {
+                          openEntry(entry);
+                          return;
+                        }
+
                         setSelectedId(entry.item.id);
                         setSelectedKind(entry.kind);
                       }}
-                      onDoubleClick={() => openEntry(entry)}
+                      onDoubleClick={() => {
+                        if (entry.kind === "file") {
+                          void handleDownload(entry.item.id);
+                        }
+                      }}
                       className={cn(
                         "cursor-pointer border-b border-white/5 transition-colors",
                         isSelected ? "bg-sky-500/10" : "hover:bg-white/[0.03]",

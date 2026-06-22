@@ -5,6 +5,7 @@ import {
 import {
   getFileExtension,
   INTERNAL_FILES_BUCKET,
+  INTERNAL_FILES_MAX_BYTES,
   type BreadcrumbSegment,
   type BrowseEntry,
   type FileCategory,
@@ -284,15 +285,94 @@ export async function deleteFolder(id: string) {
   await deleteFolderRecursive(id);
 }
 
+function buildStoragePath(folderId: string | null, fileName: string) {
+  const objectId = crypto.randomUUID();
+  return `objects/${folderId ?? "root"}/${objectId}-${fileName}`;
+}
+
+function assertUploadableFile(name: string, size: number) {
+  if (!name.trim()) {
+    throw new Error("File name is required.");
+  }
+
+  if (size <= 0) {
+    throw new Error("File is empty.");
+  }
+
+  if (size > INTERNAL_FILES_MAX_BYTES) {
+    throw new Error(
+      `File is too large. Maximum size is ${Math.floor(INTERNAL_FILES_MAX_BYTES / (1024 * 1024))} MB.`,
+    );
+  }
+}
+
+export async function prepareFileUpload(options: {
+  name: string;
+  size: number;
+  folderId: string | null;
+}) {
+  assertUploadableFile(options.name, options.size);
+
+  const supabase = requireFilesSupabase();
+  const storagePath = buildStoragePath(options.folderId, options.name);
+
+  const { data, error } = await supabase.storage
+    .from(INTERNAL_FILES_BUCKET)
+    .createSignedUploadUrl(storagePath);
+
+  if (error) throw new Error(error.message);
+
+  return {
+    signedUrl: data.signedUrl,
+    token: data.token,
+    storagePath,
+  };
+}
+
+export async function completeFileUpload(options: {
+  name: string;
+  storagePath: string;
+  folderId: string | null;
+  categoryId: string | null;
+  mimeType: string | null;
+  size: number;
+}) {
+  assertUploadableFile(options.name, options.size);
+
+  const supabase = requireFilesSupabase();
+  const extension = getFileExtension(options.name);
+
+  const { data, error } = await supabase
+    .from("file_objects")
+    .insert({
+      name: options.name,
+      folder_id: options.folderId,
+      category_id: options.categoryId,
+      storage_path: options.storagePath,
+      mime_type: options.mimeType,
+      extension: extension || null,
+      size_bytes: options.size,
+    })
+    .select("*")
+    .single();
+
+  if (error) {
+    await supabase.storage.from(INTERNAL_FILES_BUCKET).remove([options.storagePath]);
+    throw new Error(error.message);
+  }
+
+  return mapFile(data as DbFile);
+}
+
 export async function uploadFile(options: {
   file: File;
   folderId: string | null;
   categoryId: string | null;
 }) {
+  assertUploadableFile(options.file.name, options.file.size);
+
   const supabase = requireFilesSupabase();
-  const extension = getFileExtension(options.file.name);
-  const objectId = crypto.randomUUID();
-  const storagePath = `objects/${options.folderId ?? "root"}/${objectId}-${options.file.name}`;
+  const storagePath = buildStoragePath(options.folderId, options.file.name);
 
   const buffer = Buffer.from(await options.file.arrayBuffer());
   const { error: uploadError } = await supabase.storage
@@ -304,26 +384,14 @@ export async function uploadFile(options: {
 
   if (uploadError) throw new Error(uploadError.message);
 
-  const { data, error } = await supabase
-    .from("file_objects")
-    .insert({
-      name: options.file.name,
-      folder_id: options.folderId,
-      category_id: options.categoryId,
-      storage_path: storagePath,
-      mime_type: options.file.type || null,
-      extension: extension || null,
-      size_bytes: options.file.size,
-    })
-    .select("*")
-    .single();
-
-  if (error) {
-    await supabase.storage.from(INTERNAL_FILES_BUCKET).remove([storagePath]);
-    throw new Error(error.message);
-  }
-
-  return mapFile(data as DbFile);
+  return completeFileUpload({
+    name: options.file.name,
+    storagePath,
+    folderId: options.folderId,
+    categoryId: options.categoryId,
+    mimeType: options.file.type || null,
+    size: options.file.size,
+  });
 }
 
 export async function updateFile(
