@@ -31,21 +31,30 @@ async function readApiJson<T>(response: Response): Promise<T> {
   }
 }
 
+function isSchemaCacheError(message: string) {
+  return message.includes("schema cache") || message.includes("internal_whiteboard");
+}
+
 export default function WhiteboardWorkspace() {
   const [scene, setScene] = useState<WhiteboardScene>(EMPTY_WHITEBOARD_SCENE);
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const canSaveRef = useRef(false);
+  const skipNextChangeRef = useRef(true);
 
   const loadScene = useCallback(async () => {
     setError(null);
+    canSaveRef.current = false;
+    skipNextChangeRef.current = true;
 
     try {
       const response = await fetch("/api/whiteboard", { cache: "no-store" });
       const data = await readApiJson<{ scene?: WhiteboardScene; error?: string }>(response);
       if (!response.ok) throw new Error(data.error ?? "Failed to load whiteboard");
       setScene(data.scene ?? EMPTY_WHITEBOARD_SCENE);
+      canSaveRef.current = true;
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "Failed to load whiteboard");
       setScene(EMPTY_WHITEBOARD_SCENE);
@@ -58,7 +67,7 @@ export default function WhiteboardWorkspace() {
     void loadScene();
   }, [loadScene]);
 
-  const persistScene = useCallback(async (nextScene: WhiteboardScene) => {
+  const persistScene = useCallback(async (nextScene: WhiteboardScene, attempt = 0) => {
     setSaving(true);
     setError(null);
 
@@ -73,7 +82,12 @@ export default function WhiteboardWorkspace() {
       if (!response.ok) throw new Error(data.error ?? "Failed to save whiteboard");
       if (data.scene) setScene(data.scene);
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : "Failed to save whiteboard");
+      const message = saveError instanceof Error ? saveError.message : "Failed to save whiteboard";
+      if (isSchemaCacheError(message) && attempt < 2) {
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        return persistScene(nextScene, attempt + 1);
+      }
+      setError(message);
     } finally {
       setSaving(false);
     }
@@ -81,6 +95,12 @@ export default function WhiteboardWorkspace() {
 
   const handleChange = useCallback(
     (elements: WhiteboardScene["elements"], appState: AppState, files: BinaryFiles) => {
+      if (!canSaveRef.current) return;
+      if (skipNextChangeRef.current) {
+        skipNextChangeRef.current = false;
+        return;
+      }
+
       const nextScene: WhiteboardScene = {
         elements,
         appState: {

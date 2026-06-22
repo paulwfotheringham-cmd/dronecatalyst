@@ -85,6 +85,34 @@ async function applyMigrationViaManagementApi(relativePath: string) {
   return true;
 }
 
+async function reloadPostgrestSchema() {
+  const token = process.env.SUPABASE_ACCESS_TOKEN;
+  const projectRef = getSupabaseProjectRef();
+  if (token && projectRef) {
+    await fetch(`https://api.supabase.com/v1/projects/${projectRef}/database/query`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ query: `notify pgrst, 'reload schema'` }),
+    });
+    return true;
+  }
+
+  const dbUrl = getDatabaseUrl();
+  if (!dbUrl) return false;
+
+  const client = new Client({ connectionString: dbUrl, ssl: { rejectUnauthorized: false } });
+  try {
+    await client.connect();
+    await client.query(`notify pgrst, 'reload schema'`);
+    return true;
+  } finally {
+    await client.end().catch(() => undefined);
+  }
+}
+
 async function tableExists(client: ClientBase, tableName: string) {
   const result = await client.query<{ exists: boolean }>(
     `select exists (
@@ -108,6 +136,7 @@ async function applyMigration(client: ClientBase, relativePath: string) {
 export function isMissingTableError(error: unknown, tableName: string) {
   const message = error instanceof Error ? error.message : String(error);
   return (
+    message.includes("schema cache") ||
     message.includes(`'public.${tableName}'`) ||
     message.includes(`public.${tableName}`) ||
     message.includes(`relation "${tableName}" does not exist`) ||
@@ -159,7 +188,9 @@ export async function ensureWhiteboardTable(): Promise<boolean> {
   }
 
   if (exists === false) {
-    return applyMigrationViaManagementApi(WHITEBOARD_MIGRATION_PATH);
+    const applied = await applyMigrationViaManagementApi(WHITEBOARD_MIGRATION_PATH);
+    if (applied) await reloadPostgrestSchema();
+    return applied;
   }
 
   return false;
@@ -181,12 +212,17 @@ export async function withCompetitorsTable<T>(operation: () => Promise<T>): Prom
 }
 
 export async function withWhiteboardTable<T>(operation: () => Promise<T>): Promise<T> {
-  try {
-    return await operation();
-  } catch (error) {
-    if (!isMissingTableError(error, "internal_whiteboard")) throw error;
-    const applied = await ensureWhiteboardTable();
-    if (!applied) throw error;
-    return operation();
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (!isMissingTableError(error, "internal_whiteboard")) throw error;
+      await ensureWhiteboardTable();
+      await reloadPostgrestSchema();
+      if (attempt === 2) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 400));
+    }
   }
+
+  throw new Error("Failed to access internal whiteboard table.");
 }
