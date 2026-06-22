@@ -111,7 +111,7 @@ export default function InternalOperationsDashboard() {
 
         <div className="relative space-y-6">
           {activeView === "home" && (
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px] xl:items-start">
+            <div className="grid min-h-[calc(100dvh-7.5rem)] gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-stretch">
               <InternalDashboardHome onNavigate={handleViewChange} />
               <FleetPanel
                 liveTelemetry={liveTelemetry}

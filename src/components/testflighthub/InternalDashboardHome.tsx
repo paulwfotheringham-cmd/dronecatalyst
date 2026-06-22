@@ -34,18 +34,16 @@ type InternalDashboardHomeProps = {
 
 export default function InternalDashboardHome({ onNavigate }: InternalDashboardHomeProps) {
   return (
-    <section>
-      <div className="mb-3">
-        <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[#60a5fa]">
+    <section className="flex h-full min-h-0 flex-col">
+      <div className="mb-4 shrink-0">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#60a5fa]">
           Workspace
         </p>
-        <h2 className="mt-0.5 text-base font-semibold text-white sm:text-lg">Internal Operations</h2>
-        <p className="mt-1 text-xs text-white/50">
-          Barcelona · Porto · Oxford
-        </p>
+        <h2 className="mt-1 text-lg font-semibold text-white sm:text-xl">Internal Operations</h2>
+        <p className="mt-1 text-sm text-white/50">Barcelona · Porto · Oxford</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
+      <div className="grid min-h-0 flex-1 auto-rows-fr grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
         {internalHomeTiles.map((tile) => {
           const iconKey =
             tile.view === "clients"
@@ -63,24 +61,20 @@ export default function InternalDashboardHome({ onNavigate }: InternalDashboardH
                         : "telemetry";
           const Icon = tileIcons[iconKey];
           const className = cn(
-            "group flex gap-2.5 rounded-xl border bg-gradient-to-br p-2.5 text-left shadow-[0_12px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:shadow-[0_16px_40px_rgba(0,0,0,0.4)] sm:p-3",
+            "group flex h-full min-h-[7.5rem] flex-col rounded-2xl border bg-gradient-to-br p-4 text-left shadow-[0_16px_48px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:shadow-[0_20px_56px_rgba(0,0,0,0.45)] sm:min-h-[8.5rem] sm:p-5",
             tile.accent,
           );
 
           const content = (
             <>
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.06] text-[#60a5fa] transition-colors group-hover:bg-white/[0.1]">
-                <Icon className="h-4 w-4" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06] text-[#60a5fa] transition-colors group-hover:bg-white/[0.1]">
+                <Icon className="h-5 w-5" />
               </div>
-              <div className="min-w-0 flex-1">
-                <h3 className="text-sm font-semibold leading-tight text-white">{tile.title}</h3>
-                <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-white/50">
-                  {tile.description}
-                </p>
-                <p className="mt-1.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-white/35 transition-colors group-hover:text-sky-300">
-                  Open →
-                </p>
-              </div>
+              <h3 className="mt-3 text-base font-semibold text-white">{tile.title}</h3>
+              <p className="mt-1.5 flex-1 text-sm leading-snug text-white/55">{tile.description}</p>
+              <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/40 transition-colors group-hover:text-sky-300">
+                Open →
+              </p>
             </>
           );
 

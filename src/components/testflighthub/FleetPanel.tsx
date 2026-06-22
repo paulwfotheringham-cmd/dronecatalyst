@@ -71,7 +71,7 @@ export default function FleetPanel({
   return (
     <section
       className={cn(
-        "rounded-2xl border border-white/15 bg-white/[0.04] shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl",
+        "flex h-full flex-col rounded-2xl border border-white/15 bg-white/[0.04] shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl",
         compact ? "p-4" : "p-6",
       )}
     >
@@ -96,7 +96,7 @@ export default function FleetPanel({
         </div>
       </div>
 
-      <div className={cn("space-y-3", compact ? "mt-3" : "mt-4")}>
+      <div className={cn("flex min-h-0 flex-1 flex-col space-y-3", compact ? "mt-3" : "mt-4")}>
         {drones.map((drone) => (
           <div
             key={drone.id}
