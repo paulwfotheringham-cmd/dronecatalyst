@@ -19,6 +19,7 @@ import {
   FileSpreadsheet,
   FileText,
   Folder,
+  FolderInput,
   FolderPlus,
   Image as ImageIcon,
   Loader2,
@@ -27,7 +28,26 @@ import {
   Search,
   Trash2,
   Upload,
+  X,
 } from "lucide-react";
+
+function isFolderDescendant(
+  candidateId: string,
+  ancestorId: string,
+  folders: FileFolder[],
+): boolean {
+  if (candidateId === ancestorId) return true;
+
+  const byId = new Map(folders.map((folder) => [folder.id, folder]));
+  let current = byId.get(candidateId);
+
+  while (current?.parentId) {
+    if (current.parentId === ancestorId) return true;
+    current = byId.get(current.parentId);
+  }
+
+  return false;
+}
 
 function entryIcon(entry: BrowseEntry) {
   if (entry.kind === "folder") return Folder;
@@ -55,6 +75,15 @@ export default function FileRepositoryWorkspace() {
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedKind, setSelectedKind] = useState<"folder" | "file" | null>(null);
+  const [movePickerOpen, setMovePickerOpen] = useState(false);
+  const [movePickerFolderId, setMovePickerFolderId] = useState<string | null>(null);
+  const [movePickerBreadcrumb, setMovePickerBreadcrumb] = useState<BreadcrumbSegment[]>([
+    { id: null, name: "Internal Files" },
+  ]);
+  const [movePickerFolders, setMovePickerFolders] = useState<FileFolder[]>([]);
+  const [movePickerAllFolders, setMovePickerAllFolders] = useState<FileFolder[]>([]);
+  const [movePickerLoading, setMovePickerLoading] = useState(false);
+  const [movePickerError, setMovePickerError] = useState<string | null>(null);
 
   const categoryMap = useMemo(
     () => new Map(categories.map((category) => [category.id, category])),
@@ -196,40 +225,94 @@ export default function FileRepositoryWorkspace() {
     }
   }
 
-  async function handleMove() {
-    if (!selectedId || !selectedKind) return;
+  async function loadMovePicker(folderId: string | null) {
+    setMovePickerLoading(true);
+    setMovePickerError(null);
 
-    setBusy(true);
     try {
-      const foldersResponse = await fetch("/api/files/folders");
-      const foldersData = (await foldersResponse.json()) as {
-        folders?: FileFolder[];
+      const params = new URLSearchParams();
+      if (folderId) params.set("folderId", folderId);
+
+      const [browseResponse, foldersResponse] = await Promise.all([
+        fetch(`/api/files/browse?${params.toString()}`, { cache: "no-store" }),
+        movePickerAllFolders.length > 0
+          ? Promise.resolve(null)
+          : fetch("/api/files/folders", { cache: "no-store" }),
+      ]);
+
+      const browseData = (await browseResponse.json()) as {
+        entries?: BrowseEntry[];
+        breadcrumb?: BreadcrumbSegment[];
         error?: string;
       };
-      if (!foldersResponse.ok) throw new Error(foldersData.error ?? "Failed to load folders");
 
-      const folders = foldersData.folders ?? [];
-      const folderList = folders
-        .filter((folder) => !(selectedKind === "folder" && folder.id === selectedId))
-        .map((folder) => `${folder.id} — ${folder.name}`)
-        .join("\n");
+      if (!browseResponse.ok) {
+        throw new Error(browseData.error ?? "Failed to load folders");
+      }
 
-      const choice = window.prompt(
-        `Move to folder.\nLeave blank for Root, or paste a folder id:\n\n${folderList}`,
+      if (foldersResponse) {
+        const foldersData = (await foldersResponse.json()) as {
+          folders?: FileFolder[];
+          error?: string;
+        };
+        if (!foldersResponse.ok) {
+          throw new Error(foldersData.error ?? "Failed to load folders");
+        }
+        setMovePickerAllFolders(foldersData.folders ?? []);
+      }
+
+      setMovePickerFolderId(folderId);
+      setMovePickerBreadcrumb(browseData.breadcrumb ?? [{ id: null, name: "Internal Files" }]);
+      setMovePickerFolders(
+        (browseData.entries ?? [])
+          .filter((entry): entry is BrowseEntry & { kind: "folder" } => entry.kind === "folder")
+          .map((entry) => entry.item),
       );
-      if (choice === null) return;
+    } catch (loadError) {
+      setMovePickerError(loadError instanceof Error ? loadError.message : "Failed to load folders");
+      setMovePickerFolders([]);
+    } finally {
+      setMovePickerLoading(false);
+    }
+  }
 
-      const parentId =
-        choice.trim() === "" || choice.trim().toLowerCase() === "root"
-          ? null
-          : choice.trim().split(" — ")[0]?.trim() || choice.trim();
+  function isMoveDestinationDisabled(destinationId: string | null) {
+    if (!selectedId || selectedKind !== "folder") return false;
+    if (destinationId === null) return false;
+    return isFolderDescendant(destinationId, selectedId, movePickerAllFolders);
+  }
 
+  function openMovePicker() {
+    if (!selectedId || !selectedKind) return;
+
+    setMovePickerOpen(true);
+    setMovePickerFolderId(null);
+    setMovePickerBreadcrumb([{ id: null, name: "Internal Files" }]);
+    setMovePickerFolders([]);
+    setMovePickerAllFolders([]);
+    setMovePickerError(null);
+    void loadMovePicker(null);
+  }
+
+  function closeMovePicker() {
+    setMovePickerOpen(false);
+    setMovePickerError(null);
+  }
+
+  async function confirmMove(destinationId: string | null) {
+    if (!selectedId || !selectedKind) return;
+    if (isMoveDestinationDisabled(destinationId)) return;
+
+    setBusy(true);
+    setMovePickerError(null);
+
+    try {
       const endpoint =
         selectedKind === "folder"
           ? `/api/files/folders/${selectedId}`
           : `/api/files/objects/${selectedId}`;
 
-      const body = selectedKind === "folder" ? { parentId } : { folderId: parentId };
+      const body = selectedKind === "folder" ? { parentId: destinationId } : { folderId: destinationId };
 
       const response = await fetch(endpoint, {
         method: "PATCH",
@@ -238,12 +321,18 @@ export default function FileRepositoryWorkspace() {
       });
       const data = (await response.json()) as { error?: string };
       if (!response.ok) throw new Error(data.error ?? "Failed to move item");
+
+      closeMovePicker();
       await refreshAll();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Failed to move item");
+      setMovePickerError(actionError instanceof Error ? actionError.message : "Failed to move item");
     } finally {
       setBusy(false);
     }
+  }
+
+  async function handleMove() {
+    openMovePicker();
   }
 
   async function handleSetCategory(categoryId: string | null) {
@@ -652,6 +741,127 @@ export default function FileRepositoryWorkspace() {
           </div>
         )}
       </section>
+
+      {movePickerOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="move-picker-title"
+            className="flex max-h-[min(80vh,640px)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#0b1220] shadow-[0_24px_64px_rgba(0,0,0,0.55)]"
+          >
+            <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+              <div>
+                <p
+                  id="move-picker-title"
+                  className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#60a5fa]"
+                >
+                  Move item
+                </p>
+                <p className="mt-1 text-sm text-white/70">
+                  Choose a destination folder, then click <span className="text-white">Move here</span>.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeMovePicker}
+                className="rounded-lg p-2 text-white/50 transition-colors hover:bg-white/[0.06] hover:text-white"
+                aria-label="Close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="border-b border-white/10 px-5 py-3">
+              <div className="flex flex-wrap items-center gap-2 text-sm text-white/55">
+                {movePickerBreadcrumb.map((segment, index) => (
+                  <div key={`${segment.id ?? "root"}-${index}`} className="flex items-center gap-2">
+                    {index > 0 && <ChevronRight className="h-4 w-4 text-white/25" />}
+                    <button
+                      type="button"
+                      onClick={() => void loadMovePicker(segment.id)}
+                      className={cn(
+                        "rounded-lg px-2 py-1 transition-colors hover:bg-white/[0.06] hover:text-white",
+                        index === movePickerBreadcrumb.length - 1 ? "text-white" : "text-white/55",
+                      )}
+                    >
+                      {segment.name}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              {movePickerLoading ? (
+                <div className="flex items-center gap-3 px-5 py-10 text-sm text-white/55">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading folders...
+                </div>
+              ) : movePickerFolders.length === 0 ? (
+                <div className="px-5 py-10 text-sm text-white/55">
+                  No subfolders here. You can move the item to this location.
+                </div>
+              ) : (
+                <ul className="divide-y divide-white/5">
+                  {movePickerFolders.map((folder) => {
+                    const disabled = isMoveDestinationDisabled(folder.id);
+
+                    return (
+                      <li key={folder.id}>
+                        <button
+                          type="button"
+                          disabled={disabled}
+                          onClick={() => void loadMovePicker(folder.id)}
+                          className={cn(
+                            "flex w-full items-center gap-3 px-5 py-3 text-left transition-colors",
+                            disabled
+                              ? "cursor-not-allowed text-white/25"
+                              : "text-white hover:bg-white/[0.04]",
+                          )}
+                        >
+                          <Folder className="h-4 w-4 shrink-0 text-amber-300" />
+                          <span className="font-medium">{folder.name}</span>
+                          {disabled && (
+                            <span className="ml-auto text-[10px] uppercase tracking-[0.12em] text-white/30">
+                              Invalid
+                            </span>
+                          )}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+
+            {movePickerError && (
+              <div className="border-t border-red-400/20 bg-red-500/10 px-5 py-3 text-sm text-red-200">
+                {movePickerError}
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-2 border-t border-white/10 px-5 py-4">
+              <button
+                type="button"
+                onClick={closeMovePicker}
+                className="inline-flex h-10 items-center rounded-xl border border-white/10 px-4 text-sm text-white/70 transition-colors hover:bg-white/[0.05]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={busy || isMoveDestinationDisabled(movePickerFolderId)}
+                onClick={() => void confirmMove(movePickerFolderId)}
+                className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#2563eb] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8] disabled:opacity-50"
+              >
+                <FolderInput className="h-4 w-4" />
+                Move here
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
