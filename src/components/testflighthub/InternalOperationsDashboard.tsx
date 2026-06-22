@@ -127,7 +127,7 @@ export default function InternalOperationsDashboard() {
 
         <div className="relative space-y-6">
           {activeView === "home" && (
-            <div className="flex h-[calc(100dvh-4rem-1.25rem)] max-h-[calc(100dvh-4rem-1.25rem)] min-h-0 flex-col overflow-hidden">
+            <div className="2xl:flex 2xl:h-[calc(100dvh-4rem-1.5rem)] 2xl:max-h-[calc(100dvh-4rem-1.5rem)] 2xl:min-h-0 2xl:flex-col 2xl:overflow-hidden">
               <InternalDashboardHome onNavigate={handleViewChange} />
             </div>
           )}
