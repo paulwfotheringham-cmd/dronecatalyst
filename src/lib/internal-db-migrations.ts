@@ -10,8 +10,79 @@ function getDatabaseUrl() {
   return process.env.SUPABASE_DB_URL ?? process.env.DATABASE_URL ?? null;
 }
 
+function getSupabaseProjectRef() {
+  if (process.env.SUPABASE_PROJECT_REF) return process.env.SUPABASE_PROJECT_REF;
+  const url = process.env.SUPABASE_URL;
+  if (!url) return null;
+  try {
+    return new URL(url).hostname.split(".")[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
 function readMigrationSql(relativePath: string) {
   return readFileSync(join(process.cwd(), relativePath), "utf8");
+}
+
+async function tableExistsViaManagementApi(tableName: string) {
+  const token = process.env.SUPABASE_ACCESS_TOKEN;
+  const projectRef = getSupabaseProjectRef();
+  if (!token || !projectRef) return null;
+
+  const response = await fetch(
+    `https://api.supabase.com/v1/projects/${projectRef}/database/query`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query: `select exists (
+          select 1 from information_schema.tables
+          where table_schema = 'public' and table_name = '${tableName}'
+        ) as exists`,
+      }),
+    },
+  );
+
+  const data = (await response.json()) as Array<{ exists?: boolean }> | { message?: string };
+  if (!response.ok) return null;
+  if (Array.isArray(data)) return data[0]?.exists === true;
+  return null;
+}
+
+async function applyMigrationViaManagementApi(relativePath: string) {
+  const token = process.env.SUPABASE_ACCESS_TOKEN;
+  const projectRef = getSupabaseProjectRef();
+  if (!token || !projectRef) return false;
+
+  const sql = readMigrationSql(relativePath);
+  const response = await fetch(
+    `https://api.supabase.com/v1/projects/${projectRef}/database/query`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ query: sql }),
+    },
+  );
+
+  if (!response.ok) return false;
+
+  await fetch(`https://api.supabase.com/v1/projects/${projectRef}/database/query`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ query: `notify pgrst, 'reload schema'` }),
+  });
+
+  return true;
 }
 
 async function tableExists(client: ClientBase, tableName: string) {
@@ -45,35 +116,53 @@ export function isMissingTableError(error: unknown, tableName: string) {
 }
 
 export async function ensureCompetitorsTable(): Promise<boolean> {
+  const exists = await tableExistsViaManagementApi("competitors");
+  if (exists === true) return true;
+
   const dbUrl = getDatabaseUrl();
-  if (!dbUrl) return false;
+  if (dbUrl) {
+    const client = new Client({ connectionString: dbUrl, ssl: { rejectUnauthorized: false } });
 
-  const client = new Client({ connectionString: dbUrl, ssl: { rejectUnauthorized: false } });
-
-  try {
-    await client.connect();
-    if (await tableExists(client, "competitors")) return true;
-    await applyMigration(client, COMPETITORS_MIGRATION_PATH);
-    return true;
-  } finally {
-    await client.end().catch(() => undefined);
+    try {
+      await client.connect();
+      if (await tableExists(client, "competitors")) return true;
+      await applyMigration(client, COMPETITORS_MIGRATION_PATH);
+      return true;
+    } finally {
+      await client.end().catch(() => undefined);
+    }
   }
+
+  if (exists === false) {
+    return applyMigrationViaManagementApi(COMPETITORS_MIGRATION_PATH);
+  }
+
+  return false;
 }
 
 export async function ensureWhiteboardTable(): Promise<boolean> {
+  const exists = await tableExistsViaManagementApi("internal_whiteboard");
+  if (exists === true) return true;
+
   const dbUrl = getDatabaseUrl();
-  if (!dbUrl) return false;
+  if (dbUrl) {
+    const client = new Client({ connectionString: dbUrl, ssl: { rejectUnauthorized: false } });
 
-  const client = new Client({ connectionString: dbUrl, ssl: { rejectUnauthorized: false } });
-
-  try {
-    await client.connect();
-    if (await tableExists(client, "internal_whiteboard")) return true;
-    await applyMigration(client, WHITEBOARD_MIGRATION_PATH);
-    return true;
-  } finally {
-    await client.end().catch(() => undefined);
+    try {
+      await client.connect();
+      if (await tableExists(client, "internal_whiteboard")) return true;
+      await applyMigration(client, WHITEBOARD_MIGRATION_PATH);
+      return true;
+    } finally {
+      await client.end().catch(() => undefined);
+    }
   }
+
+  if (exists === false) {
+    return applyMigrationViaManagementApi(WHITEBOARD_MIGRATION_PATH);
+  }
+
+  return false;
 }
 
 export async function ensureInternalFeatureTables() {

@@ -10,8 +10,8 @@ if (!token) {
 }
 
 const migrations = [
-  "supabase/migrations/007_create_competitors.sql",
-  "supabase/migrations/008_create_internal_whiteboard.sql",
+  { table: "competitors", path: "supabase/migrations/007_create_competitors.sql" },
+  { table: "internal_whiteboard", path: "supabase/migrations/008_create_internal_whiteboard.sql" },
 ];
 
 async function query(sql) {
@@ -28,10 +28,25 @@ async function query(sql) {
   return { status: res.status, data };
 }
 
-for (const migrationPath of migrations) {
-  const sql = readFileSync(join(process.cwd(), migrationPath), "utf8");
+async function tableExists(tableName) {
+  const result = await query(
+    `select exists (
+      select 1 from information_schema.tables
+      where table_schema = 'public' and table_name = '${tableName}'
+    ) as exists`,
+  );
+  return result.status === 201 && result.data?.[0]?.exists === true;
+}
+
+for (const migration of migrations) {
+  if (await tableExists(migration.table)) {
+    console.log(`Already exists: ${migration.table}`);
+    continue;
+  }
+
+  const sql = readFileSync(join(process.cwd(), migration.path), "utf8");
   const result = await query(sql);
-  console.log(migrationPath, result.status, JSON.stringify(result.data).slice(0, 300));
+  console.log(migration.path, result.status, JSON.stringify(result.data).slice(0, 300));
 }
 
 const check = await query(
