@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   COMPETITOR_REGIONS,
@@ -8,7 +8,16 @@ import {
   type CompetitorRegion,
 } from "@/lib/competitors-data";
 import { cn } from "@/lib/utils";
-import { Binoculars, ChevronRight, ExternalLink, Loader2, Plus, Trash2, X } from "lucide-react";
+import {
+  Binoculars,
+  Check,
+  ExternalLink,
+  Loader2,
+  Pencil,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react";
 
 async function readApiJson<T>(response: Response): Promise<T> {
   const text = await response.text();
@@ -20,6 +29,11 @@ async function readApiJson<T>(response: Response): Promise<T> {
   }
 }
 
+type CompetitorDraft = Pick<
+  Competitor,
+  "companyName" | "website" | "services" | "lastRevenue" | "notes"
+>;
+
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
     <label className="text-[10px] font-medium uppercase tracking-[0.12em] text-white/45">
@@ -28,22 +42,12 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-function inputClassName() {
-  return "mt-1.5 w-full rounded-xl border border-white/10 bg-[#0b1524] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-sky-400/50";
-}
-
-function textareaClassName() {
-  return "mt-1.5 min-h-[4.5rem] w-full resize-y rounded-xl border border-white/10 bg-[#0b1524] px-3 py-2 text-sm leading-relaxed text-white outline-none transition-colors focus:border-sky-400/50";
+function cellInputClassName() {
+  return "w-full rounded-lg border border-white/10 bg-[#0b1524] px-2.5 py-2 text-sm text-white outline-none transition-colors focus:border-sky-400/50";
 }
 
 function selectClassName() {
   return "h-10 w-full min-w-[160px] rounded-xl border border-white/10 bg-[#0b1524] px-3 text-sm text-white outline-none transition-colors focus:border-sky-400/50 sm:w-auto";
-}
-
-function truncatePreview(value: string, max = 80) {
-  const trimmed = value.trim();
-  if (!trimmed) return "—";
-  return trimmed.length > max ? `${trimmed.slice(0, max)}…` : trimmed;
 }
 
 function formatWebsiteHref(website: string) {
@@ -52,14 +56,18 @@ function formatWebsiteHref(website: string) {
   return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
 }
 
+const TABLE_GRID =
+  "grid grid-cols-[minmax(140px,1.1fr)_minmax(140px,1fr)_minmax(180px,1.4fr)_minmax(120px,0.9fr)_5.5rem] gap-3";
+
 export default function CompetitorsWorkspace() {
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const [selectedRegion, setSelectedRegion] = useState<CompetitorRegion>("uk");
-  const [selectedCompetitorId, setSelectedCompetitorId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draft, setDraft] = useState<CompetitorDraft | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [savingId, setSavingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const saveTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   const regionMeta = useMemo(
     () => COMPETITOR_REGIONS.find((region) => region.id === selectedRegion) ?? COMPETITOR_REGIONS[0],
@@ -67,13 +75,11 @@ export default function CompetitorsWorkspace() {
   );
 
   const regionCompetitors = useMemo(
-    () => competitors.filter((competitor) => competitor.region === selectedRegion),
+    () =>
+      competitors
+        .filter((competitor) => competitor.region === selectedRegion)
+        .sort((a, b) => a.sortOrder - b.sortOrder || a.companyName.localeCompare(b.companyName)),
     [competitors, selectedRegion],
-  );
-
-  const selectedCompetitor = useMemo(
-    () => regionCompetitors.find((competitor) => competitor.id === selectedCompetitorId) ?? null,
-    [regionCompetitors, selectedCompetitorId],
   );
 
   const loadCompetitors = useCallback(async () => {
@@ -98,37 +104,46 @@ export default function CompetitorsWorkspace() {
   }, [loadCompetitors]);
 
   useEffect(() => {
-    setSelectedCompetitorId((current) => {
-      if (current && regionCompetitors.some((competitor) => competitor.id === current)) {
-        return current;
-      }
-      return null;
+    setEditingId(null);
+    setDraft(null);
+  }, [selectedRegion]);
+
+  function startEdit(competitor: Competitor) {
+    setEditingId(competitor.id);
+    setDraft({
+      companyName: competitor.companyName,
+      website: competitor.website,
+      services: competitor.services,
+      lastRevenue: competitor.lastRevenue,
+      notes: competitor.notes,
     });
-  }, [regionCompetitors]);
+  }
 
-  useEffect(() => {
-    const timers = saveTimersRef.current;
-    return () => {
-      for (const timer of timers.values()) {
-        clearTimeout(timer);
-      }
-      timers.clear();
-    };
-  }, []);
+  function cancelEdit() {
+    setEditingId(null);
+    setDraft(null);
+  }
 
-  async function persistCompetitor(competitor: Competitor) {
+  function patchDraft(patch: Partial<CompetitorDraft>) {
+    setDraft((current) => (current ? { ...current, ...patch } : current));
+  }
+
+  async function saveEdit(competitorId: string) {
+    if (!draft) return;
+
+    setSavingId(competitorId);
     setError(null);
 
     try {
-      const response = await fetch(`/api/competitors/${competitor.id}`, {
+      const response = await fetch(`/api/competitors/${competitorId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          companyName: competitor.companyName,
-          website: competitor.website,
-          services: competitor.services,
-          lastRevenue: competitor.lastRevenue,
-          notes: competitor.notes,
+          companyName: draft.companyName,
+          website: draft.website,
+          services: draft.services,
+          lastRevenue: draft.lastRevenue,
+          notes: draft.notes,
         }),
       });
 
@@ -138,34 +153,12 @@ export default function CompetitorsWorkspace() {
       setCompetitors((current) =>
         current.map((row) => (row.id === data.competitor!.id ? data.competitor! : row)),
       );
+      cancelEdit();
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Failed to save");
+    } finally {
+      setSavingId(null);
     }
-  }
-
-  function patchCompetitor(
-    id: string,
-    patch: Partial<Pick<Competitor, "companyName" | "website" | "services" | "lastRevenue" | "notes">>,
-  ) {
-    setCompetitors((current) => {
-      const next = current.map((item) => (item.id === id ? { ...item, ...patch } : item));
-      const updated = next.find((item) => item.id === id);
-      if (!updated) return current;
-
-      const timers = saveTimersRef.current;
-      const existing = timers.get(id);
-      if (existing) clearTimeout(existing);
-
-      timers.set(
-        id,
-        setTimeout(() => {
-          void persistCompetitor(updated);
-          timers.delete(id);
-        }, 500),
-      );
-
-      return next;
-    });
   }
 
   async function handleAddCompetitor() {
@@ -183,7 +176,7 @@ export default function CompetitorsWorkspace() {
       if (!response.ok || !data.competitor) throw new Error(data.error ?? "Failed to create competitor");
 
       setCompetitors((current) => [...current, data.competitor!]);
-      setSelectedCompetitorId(data.competitor.id);
+      startEdit(data.competitor!);
     } catch (createError) {
       setError(createError instanceof Error ? createError.message : "Failed to create competitor");
     } finally {
@@ -202,20 +195,14 @@ export default function CompetitorsWorkspace() {
       const data = await readApiJson<{ error?: string }>(response);
       if (!response.ok) throw new Error(data.error ?? "Failed to delete competitor");
 
-      const remaining = competitors.filter((item) => item.id !== competitor.id);
-      setCompetitors(remaining);
-      setSelectedCompetitorId((current) => {
-        if (current !== competitor.id) return current;
-        return remaining.find((item) => item.region === selectedRegion)?.id ?? null;
-      });
+      setCompetitors((current) => current.filter((item) => item.id !== competitor.id));
+      if (editingId === competitor.id) cancelEdit();
     } catch (deleteError) {
       setError(deleteError instanceof Error ? deleteError.message : "Failed to delete competitor");
     } finally {
       setBusy(false);
     }
   }
-
-  const websiteHref = selectedCompetitor ? formatWebsiteHref(selectedCompetitor.website) : null;
 
   return (
     <section className="space-y-4">
@@ -228,7 +215,8 @@ export default function CompetitorsWorkspace() {
             <div>
               <h2 className="text-lg font-semibold text-white">Competitors</h2>
               <p className="mt-1 max-w-2xl text-sm leading-relaxed text-white/50">
-                Select a country, review listed rivals, and open any row for full company details.
+                Select UK, Spain, or Portugal to view rivals in columns. Click Edit on any row to
+                update name, website, services, and revenue.
               </p>
             </div>
           </div>
@@ -267,7 +255,7 @@ export default function CompetitorsWorkspace() {
         </p>
       )}
 
-      <div className="rounded-2xl border border-white/15 bg-white/[0.04] shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
+      <div className="overflow-hidden rounded-2xl border border-white/15 bg-white/[0.04] shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
         <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3 sm:px-5">
           <div>
             <h3 className="text-sm font-semibold text-white sm:text-[15px]">{regionMeta.title}</h3>
@@ -288,155 +276,171 @@ export default function CompetitorsWorkspace() {
             No competitors listed for {regionMeta.title} yet. Click Add to create one.
           </p>
         ) : (
-          <ul className="divide-y divide-white/[0.06]">
-            {regionCompetitors.map((competitor) => {
-              const selected = competitor.id === selectedCompetitorId;
-
-              return (
-                <li key={competitor.id}>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedCompetitorId(competitor.id)}
-                    className={cn(
-                      "flex w-full items-center gap-3 px-4 py-4 text-left transition-colors sm:px-5",
-                      selected
-                        ? "bg-sky-500/10"
-                        : "hover:bg-white/[0.03]",
-                    )}
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                        <p className="min-w-[140px] truncate text-sm font-semibold text-white">
-                          {competitor.companyName}
-                        </p>
-                        <p className="min-w-[120px] truncate text-xs text-white/45">
-                          {competitor.website.trim() || "No website"}
-                        </p>
-                        <p className="min-w-[120px] truncate text-xs text-white/45">
-                          {truncatePreview(competitor.services, 48)}
-                        </p>
-                        <p className="truncate text-xs text-white/45">
-                          {competitor.lastRevenue.trim() || "Revenue unknown"}
-                        </p>
-                      </div>
-                    </div>
-                    <ChevronRight className="h-4 w-4 shrink-0 text-white/30" />
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </div>
-
-      {selectedCompetitor && (
-        <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-5 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-6">
-          <div className="mb-5 flex items-start justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#60a5fa]">
-                Competitor details
-              </p>
-              <h3 className="mt-1 text-lg font-semibold text-white">{selectedCompetitor.companyName}</h3>
-              <p className="mt-1 text-sm text-white/45">{regionMeta.title}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => void handleDeleteCompetitor(selectedCompetitor)}
-                disabled={busy}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-red-200 transition-colors hover:border-red-400/30 hover:bg-red-500/10 disabled:opacity-50"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-                Delete
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedCompetitorId(null)}
-                className="rounded-lg border border-white/10 p-2 text-white/45 transition-colors hover:bg-white/[0.05] hover:text-white"
-                aria-label="Close competitor details"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <FieldLabel>Company name</FieldLabel>
-              <input
-                value={selectedCompetitor.companyName}
-                onChange={(event) =>
-                  patchCompetitor(selectedCompetitor.id, { companyName: event.target.value })
-                }
-                className={inputClassName()}
-              />
-            </div>
-
-            <div>
-              <FieldLabel>Website</FieldLabel>
-              <div className="relative">
-                <input
-                  value={selectedCompetitor.website}
-                  onChange={(event) =>
-                    patchCompetitor(selectedCompetitor.id, { website: event.target.value })
-                  }
-                  placeholder="example.com"
-                  className={inputClassName()}
-                />
-                {websiteHref && (
-                  <a
-                    href={websiteHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-white/40 transition-colors hover:text-sky-300"
-                    aria-label={`Open ${selectedCompetitor.companyName} website`}
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                  </a>
+          <div className="overflow-x-auto">
+            <div className="min-w-[920px]">
+              <div
+                className={cn(
+                  TABLE_GRID,
+                  "border-b border-white/10 px-4 py-2.5 text-[10px] font-medium uppercase tracking-[0.12em] text-white/40 sm:px-5",
                 )}
+              >
+                <span>Name</span>
+                <span>Website</span>
+                <span>Services</span>
+                <span>Revenue</span>
+                <span className="text-right">Edit</span>
+              </div>
+
+              <div className="divide-y divide-white/[0.06]">
+                {regionCompetitors.map((competitor) => {
+                  const isEditing = editingId === competitor.id;
+                  const href = formatWebsiteHref(isEditing ? draft?.website ?? "" : competitor.website);
+                  const row = isEditing && draft ? draft : competitor;
+
+                  return (
+                    <div key={competitor.id} className="px-4 py-3 sm:px-5">
+                      <div className={cn(TABLE_GRID, "items-start")}>
+                        <div>
+                          {isEditing ? (
+                            <input
+                              value={row.companyName}
+                              onChange={(event) => patchDraft({ companyName: event.target.value })}
+                              className={cellInputClassName()}
+                            />
+                          ) : (
+                            <p className="text-sm font-semibold leading-snug text-white">
+                              {competitor.companyName}
+                            </p>
+                          )}
+                        </div>
+
+                        <div>
+                          {isEditing ? (
+                            <input
+                              value={row.website}
+                              onChange={(event) => patchDraft({ website: event.target.value })}
+                              placeholder="example.com"
+                              className={cellInputClassName()}
+                            />
+                          ) : (
+                            <div className="flex items-center gap-1.5">
+                              <p className="truncate text-sm text-white/70">
+                                {competitor.website.trim() || "—"}
+                              </p>
+                              {href && (
+                                <a
+                                  href={href}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="shrink-0 rounded-md p-1 text-white/40 transition-colors hover:text-sky-300"
+                                  aria-label={`Open ${competitor.companyName} website`}
+                                >
+                                  <ExternalLink className="h-3.5 w-3.5" />
+                                </a>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        <div>
+                          {isEditing ? (
+                            <textarea
+                              value={row.services}
+                              rows={2}
+                              onChange={(event) => patchDraft({ services: event.target.value })}
+                              className={cn(cellInputClassName(), "min-h-[3.25rem] resize-y")}
+                            />
+                          ) : (
+                            <p className="text-sm leading-relaxed text-white/65">
+                              {competitor.services.trim() || "—"}
+                            </p>
+                          )}
+                        </div>
+
+                        <div>
+                          {isEditing ? (
+                            <input
+                              value={row.lastRevenue}
+                              onChange={(event) => patchDraft({ lastRevenue: event.target.value })}
+                              placeholder="e.g. £2.4M (2024)"
+                              className={cellInputClassName()}
+                            />
+                          ) : (
+                            <p className="text-sm text-white/70">
+                              {competitor.lastRevenue.trim() || "—"}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="flex justify-end gap-1">
+                          {isEditing ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => void saveEdit(competitor.id)}
+                                disabled={savingId === competitor.id}
+                                className="rounded-lg border border-sky-500/40 bg-sky-500/15 p-2 text-sky-300 transition-colors hover:bg-sky-500/25 disabled:opacity-50"
+                                aria-label={`Save ${competitor.companyName}`}
+                              >
+                                {savingId === competitor.id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Check className="h-4 w-4" />
+                                )}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={cancelEdit}
+                                className="rounded-lg border border-white/10 p-2 text-white/45 transition-colors hover:bg-white/[0.05] hover:text-white"
+                                aria-label="Cancel edit"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => startEdit(competitor)}
+                                className="rounded-lg border border-white/10 p-2 text-white/45 transition-colors hover:border-sky-400/30 hover:bg-sky-500/10 hover:text-sky-200"
+                                aria-label={`Edit ${competitor.companyName}`}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => void handleDeleteCompetitor(competitor)}
+                                disabled={busy}
+                                className="rounded-lg border border-white/10 p-2 text-white/45 transition-colors hover:border-red-400/30 hover:bg-red-500/10 hover:text-red-200 disabled:opacity-50"
+                                aria-label={`Delete ${competitor.companyName}`}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {isEditing && draft && (
+                        <div className="mt-3 border-t border-white/[0.06] pt-3">
+                          <FieldLabel>Notes</FieldLabel>
+                          <textarea
+                            value={draft.notes}
+                            rows={2}
+                            onChange={(event) => patchDraft({ notes: event.target.value })}
+                            placeholder="Intel, pricing, strengths, weaknesses…"
+                            className={cn(cellInputClassName(), "mt-1.5 min-h-[3.25rem] resize-y")}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
-
-            <div>
-              <FieldLabel>Last revenue</FieldLabel>
-              <input
-                value={selectedCompetitor.lastRevenue}
-                onChange={(event) =>
-                  patchCompetitor(selectedCompetitor.id, { lastRevenue: event.target.value })
-                }
-                placeholder="e.g. £2.4M (2024)"
-                className={inputClassName()}
-              />
-            </div>
           </div>
-
-          <div className="mt-4">
-            <FieldLabel>Services</FieldLabel>
-            <textarea
-              value={selectedCompetitor.services}
-              rows={4}
-              placeholder="Surveying, inspection, media…"
-              onChange={(event) =>
-                patchCompetitor(selectedCompetitor.id, { services: event.target.value })
-              }
-              className={textareaClassName()}
-            />
-          </div>
-
-          <div className="mt-4">
-            <FieldLabel>Notes</FieldLabel>
-            <textarea
-              value={selectedCompetitor.notes}
-              rows={4}
-              placeholder="Intel, pricing, strengths, weaknesses…"
-              onChange={(event) =>
-                patchCompetitor(selectedCompetitor.id, { notes: event.target.value })
-              }
-              className={textareaClassName()}
-            />
-          </div>
-        </section>
-      )}
+        )}
+      </div>
     </section>
   );
 }
