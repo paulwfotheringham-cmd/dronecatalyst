@@ -4,6 +4,11 @@ import { useState } from "react";
 import { Menu } from "lucide-react";
 
 import {
+  internalViewTitles,
+  isInternalOperationsView,
+  type InternalOperationsView,
+} from "@/lib/internal-operations-data";
+import {
   surveyViewTitles,
   type SurveyOperationsBasePath,
   type SurveyOperationsView,
@@ -11,26 +16,38 @@ import {
 
 import SurveyOperationsSidebar from "./SurveyOperationsSidebar";
 
+type SurveyOperationsShellProps = {
+  children: React.ReactNode;
+  title?: string;
+  subtitle?: string;
+  mode?: "survey" | "internal";
+  activeView?: SurveyOperationsView | InternalOperationsView;
+  onViewChange?: (view: SurveyOperationsView | InternalOperationsView) => void;
+  basePath?: SurveyOperationsBasePath;
+};
+
 export default function SurveyOperationsShell({
   children,
   title = "Operations Dashboard",
   subtitle = "Survey Operations",
+  mode = "survey",
   activeView,
   onViewChange,
   basePath = "/testflighthub",
-}: {
-  children: React.ReactNode;
-  title?: string;
-  subtitle?: string;
-  activeView?: SurveyOperationsView;
-  onViewChange?: (view: SurveyOperationsView) => void;
-  basePath?: SurveyOperationsBasePath;
-}) {
+}: SurveyOperationsShellProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const resolvedTitle =
-    activeView != null ? surveyViewTitles[activeView].title : title;
+    activeView != null
+      ? mode === "internal" && isInternalOperationsView(activeView)
+        ? internalViewTitles[activeView].title
+        : surveyViewTitles[activeView as SurveyOperationsView].title
+      : title;
   const resolvedSubtitle =
-    activeView != null ? surveyViewTitles[activeView].subtitle : subtitle;
+    activeView != null
+      ? mode === "internal" && isInternalOperationsView(activeView)
+        ? internalViewTitles[activeView].subtitle
+        : surveyViewTitles[activeView as SurveyOperationsView].subtitle
+      : subtitle;
 
   return (
     <div className="flex h-full min-h-0 w-full">
@@ -46,6 +63,7 @@ export default function SurveyOperationsShell({
       <SurveyOperationsSidebar
         mobileOpen={mobileNavOpen}
         onClose={() => setMobileNavOpen(false)}
+        mode={mode}
         activeView={activeView}
         onViewChange={onViewChange}
         basePath={basePath}

@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import SurveyOperationsDashboard from "@/components/testflighthub/SurveyOperationsDashboard";
+import InternalOperationsDashboard from "@/components/testflighthub/InternalOperationsDashboard";
 
 export default function InternalDashboardPage() {
   return (
@@ -11,7 +11,7 @@ export default function InternalDashboardPage() {
         </div>
       }
     >
-      <SurveyOperationsDashboard basePath="/internaldashboard" />
+      <InternalOperationsDashboard />
     </Suspense>
   );
 }

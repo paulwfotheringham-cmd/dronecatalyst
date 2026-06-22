@@ -117,10 +117,11 @@ export type FlightHubSandboxHandle = {
 
 type FlightHubSandboxProps = {
   onTelemetryChange?: (telemetry: Telemetry | null, isRunning: boolean) => void;
+  excludedProfileIds?: FlightProfileId[];
 };
 
 const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProps>(
-  function FlightHubSandbox({ onTelemetryChange }, ref) {
+  function FlightHubSandbox({ onTelemetryChange, excludedProfileIds = [] }, ref) {
     const [telemetry, setTelemetry] = useState<Telemetry | null>(null);
     const [flightPath, setFlightPath] = useState<LatLng[]>([]);
     const [isRunning, setIsRunning] = useState(false);
@@ -308,6 +309,9 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
     }, [isRunning, persistTelemetry]);
 
     const hasTelemetry = telemetry !== null;
+    const visibleProfiles = FLIGHT_PROFILES.filter(
+      (profile) => !excludedProfileIds.includes(profile.id),
+    );
     const plannedOrbit = getOrbitPathSamples(activeProfile);
     const mapHomePosition = getMapHomePosition(activeProfile);
     const mapTerrainStyle = getProfileMapStyle(activeProfile);
@@ -340,7 +344,7 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
           </div>
 
           <div className="mt-6 flex flex-wrap gap-3">
-            {FLIGHT_PROFILES.map((profile) => (
+            {visibleProfiles.map((profile) => (
               <button
                 key={profile.id}
                 type="button"

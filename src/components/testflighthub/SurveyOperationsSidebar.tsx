@@ -4,6 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import {
+  getInternalNavHref,
+  internalSurveyNavItems,
+  isInternalNavItemActive,
+  type InternalOperationsView,
+} from "@/lib/internal-operations-data";
+import {
   getSurveyNavHref,
   isSurveyNavItemActive,
   isSurveyOperationsDashboardPath,
@@ -14,6 +20,9 @@ import {
 import { cn } from "@/lib/utils";
 import {
   Building2,
+  FlaskConical,
+  FolderKanban,
+  History,
   LayoutDashboard,
   MapPin,
   Package,
@@ -34,19 +43,24 @@ const iconMap = {
   Plane,
   Radio,
   ScrollText,
+  FlaskConical,
+  FolderKanban,
+  History,
 } as const;
 
 type SurveyOperationsSidebarProps = {
   mobileOpen?: boolean;
   onClose?: () => void;
-  activeView?: SurveyOperationsView;
-  onViewChange?: (view: SurveyOperationsView) => void;
+  mode?: "survey" | "internal";
+  activeView?: SurveyOperationsView | InternalOperationsView;
+  onViewChange?: (view: SurveyOperationsView | InternalOperationsView) => void;
   basePath?: SurveyOperationsBasePath;
 };
 
 export default function SurveyOperationsSidebar({
   mobileOpen = false,
   onClose,
+  mode = "survey",
   activeView,
   onViewChange,
   basePath = "/testflighthub",
@@ -54,6 +68,8 @@ export default function SurveyOperationsSidebar({
   const pathname = usePathname() ?? "";
   const inAppNavigation =
     isSurveyOperationsDashboardPath(pathname, basePath) && onViewChange != null;
+  const workspaceLabel = mode === "internal" ? "Internal Operations" : "Survey Operations";
+  const navItems = mode === "internal" ? internalSurveyNavItems : surveyNavItems;
 
   return (
     <aside
@@ -69,7 +85,7 @@ export default function SurveyOperationsSidebar({
           </div>
           <div>
             <p className="text-[11px] font-semibold tracking-wide text-white/90">DRONE CATALYST</p>
-            <p className="text-[10px] text-white/35">Survey Operations</p>
+            <p className="text-[10px] text-white/35">{workspaceLabel}</p>
           </div>
         </div>
         <button
@@ -90,11 +106,33 @@ export default function SurveyOperationsSidebar({
       </div>
 
       <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto px-2 py-3 lg:px-3 lg:py-4">
-        {surveyNavItems.map((item) => {
+        {navItems.map((item) => {
           const Icon = iconMap[item.icon];
-          const active = isSurveyNavItemActive(pathname, item, activeView ?? null, basePath);
+          const active =
+            mode === "internal"
+              ? isInternalNavItemActive(
+                  pathname,
+                  item as (typeof internalSurveyNavItems)[number],
+                  (activeView as InternalOperationsView | undefined) ?? "home",
+                )
+              : isSurveyNavItemActive(
+                  pathname,
+                  item as (typeof surveyNavItems)[number],
+                  activeView as SurveyOperationsView | null | undefined,
+                  basePath,
+                );
           const externalHref = "href" in item ? item.href : undefined;
-          const navHref = getSurveyNavHref(item.view, externalHref, basePath);
+          const navHref =
+            mode === "internal"
+              ? getInternalNavHref(
+                  item.view as InternalOperationsView | null,
+                  externalHref,
+                )
+              : getSurveyNavHref(
+                  item.view as SurveyOperationsView | null,
+                  externalHref,
+                  basePath,
+                );
           const className = cn(
             "flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-left text-[13px] transition-colors",
             active
@@ -109,7 +147,15 @@ export default function SurveyOperationsSidebar({
                 type="button"
                 aria-current={active ? "page" : undefined}
                 onClick={() => {
-                  onViewChange(item.view!);
+                  if (mode === "internal") {
+                    (onViewChange as (view: InternalOperationsView) => void)(
+                      item.view as InternalOperationsView,
+                    );
+                  } else {
+                    (onViewChange as (view: SurveyOperationsView) => void)(
+                      item.view as SurveyOperationsView,
+                    );
+                  }
                   onClose?.();
                 }}
                 className={className}

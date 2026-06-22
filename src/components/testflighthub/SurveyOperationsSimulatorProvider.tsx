@@ -11,6 +11,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 
+import type { FlightProfileId } from "@/lib/flight-simulation";
 import type { Telemetry } from "@/lib/telemetry";
 
 import FlightHubSandbox, { type FlightHubSandboxHandle } from "./FlightHubSandbox";
@@ -20,6 +21,7 @@ type SurveyOperationsSimulatorContextValue = {
   liveTelemetry: Telemetry | null;
   isRunning: boolean;
   setSandboxMountTarget: (target: HTMLElement | null) => void;
+  setExcludedProfileIds: (ids: FlightProfileId[]) => void;
 };
 
 const SurveyOperationsSimulatorContext =
@@ -42,6 +44,7 @@ export default function SurveyOperationsSimulatorProvider({ children }: { childr
   const [isRunning, setIsRunning] = useState(false);
   const [visibleMountTarget, setVisibleMountTarget] = useState<HTMLElement | null>(null);
   const [portalHost, setPortalHost] = useState<HTMLElement | null>(null);
+  const [excludedProfileIds, setExcludedProfileIds] = useState<FlightProfileId[]>([]);
 
   const handleTelemetryChange = useCallback((telemetry: Telemetry | null, running: boolean) => {
     setLiveTelemetry(telemetry);
@@ -59,7 +62,11 @@ export default function SurveyOperationsSimulatorProvider({ children }: { childr
   const sandbox =
     portalHost &&
     createPortal(
-      <FlightHubSandbox ref={sandboxRef} onTelemetryChange={handleTelemetryChange} />,
+      <FlightHubSandbox
+        ref={sandboxRef}
+        onTelemetryChange={handleTelemetryChange}
+        excludedProfileIds={excludedProfileIds}
+      />,
       portalHost,
     );
 
@@ -70,6 +77,7 @@ export default function SurveyOperationsSimulatorProvider({ children }: { childr
         liveTelemetry,
         isRunning,
         setSandboxMountTarget,
+        setExcludedProfileIds,
       }}
     >
       {children}
