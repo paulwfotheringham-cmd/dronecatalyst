@@ -9,7 +9,8 @@
     "lint": "eslint",
     "db:setup-files": "node scripts/setup-internal-files-db.mjs",
     "db:setup-internal": "node scripts/setup-internal-db.mjs",
-    "db:apply-internal-api": "node scripts/apply-internal-migrations-api.mjs"
+    "db:apply-internal-api": "node scripts/apply-internal-migrations-api.mjs",
+    "db:seed-uk-competitors": "node scripts/seed-uk-competitors.mjs"
   },
   "dependencies": {
     "@excalidraw/excalidraw": "^0.18.1",

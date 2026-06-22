@@ -17,6 +17,7 @@ const migrations = [
 const alterMigrations = [
   "supabase/migrations/009_add_competitors_notes.sql",
   "supabase/migrations/010_create_whiteboard_projects.sql",
+  "supabase/migrations/011_seed_uk_competitors.sql",
 ];
 
 async function query(sql) {
