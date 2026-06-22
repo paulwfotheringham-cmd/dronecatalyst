@@ -14,8 +14,8 @@ export default function MediaExampleWorkspace() {
           <div>
             <h2 className="text-lg font-semibold text-white">Media Example</h2>
             <p className="mt-1 max-w-2xl text-sm leading-relaxed text-white/50">
-              Sample DJI aerial footage for client demos — yacht maritime pass and stadium sports
-              coverage side by side.
+              High-impact DJI-style aerial samples for client demos — a luxury yacht pursuit and a
+              stadium crowd on match day, side by side.
             </p>
           </div>
         </div>
@@ -43,6 +43,9 @@ export default function MediaExampleWorkspace() {
                 src={clip.src}
                 poster={clip.poster}
                 controls
+                autoPlay
+                muted
+                loop
                 playsInline
                 preload="metadata"
               >
