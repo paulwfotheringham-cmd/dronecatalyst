@@ -60,57 +60,117 @@ export const internalViewTitles: Record<
   webodm: { title: "WebODM Processing", subtitle: "Internal Operations" },
 };
 
-export const internalHomeTiles = [
-  {
-    view: "clients" as const,
-    title: "Clients",
-    description: "Client accounts, contracts, and contacts.",
-    accent: "from-sky-500/20 to-blue-600/10 border-sky-400/30",
-  },
-  {
-    view: "assets" as const,
-    title: "Assets",
-    description: "Matrice 4T registry — Barcelona, Porto, Oxford.",
-    accent: "from-violet-500/20 to-indigo-600/10 border-violet-400/30",
-  },
-  {
-    view: "testing" as const,
-    title: "Testing",
-    description: "FlightHub simulator and flight path validation.",
-    accent: "from-emerald-500/20 to-teal-600/10 border-emerald-400/30",
-  },
-  {
-    view: "live-projects" as const,
-    title: "Live Projects",
-    description: "Active operations, progress, and airframes.",
-    accent: "from-amber-500/20 to-orange-600/10 border-amber-400/30",
-  },
-  {
-    view: "recent-missions" as const,
-    title: "Recent Missions",
-    description: "Mission history across all regions.",
-    accent: "from-cyan-500/20 to-sky-600/10 border-cyan-400/30",
-  },
-  {
-    view: "webodm" as const,
-    title: "WebODM",
-    description: "Orthophotos, point clouds, and 3D models.",
-    accent: "from-fuchsia-500/20 to-purple-600/10 border-fuchsia-400/30",
-  },
-  {
-    view: null,
-    href: "/telemetry" as const,
-    title: "Live Telemetry",
-    description: "Real-time drone OSD and telemetry feed.",
-    accent: "from-rose-500/20 to-red-600/10 border-rose-400/30",
-  },
+export const internalHomeTileRows = [
+  [
+    {
+      id: "clients",
+      view: "clients" as const,
+      icon: "clients" as const,
+      title: "Clients",
+      description: "Client accounts, contracts, and contacts.",
+      accent: "from-sky-500/20 to-blue-600/10 border-sky-400/30",
+    },
+    {
+      id: "live-projects",
+      view: "live-projects" as const,
+      icon: "live-projects" as const,
+      title: "Live Projects",
+      description: "Active operations, progress, and airframes.",
+      accent: "from-amber-500/20 to-orange-600/10 border-amber-400/30",
+    },
+    {
+      id: "recent-missions",
+      view: "recent-missions" as const,
+      icon: "recent-missions" as const,
+      title: "Recent Missions",
+      description: "Mission history across all regions.",
+      accent: "from-cyan-500/20 to-sky-600/10 border-cyan-400/30",
+    },
+  ],
+  [
+    {
+      id: "crm",
+      view: null,
+      href: "/crm" as const,
+      icon: "crm" as const,
+      title: "CRM",
+      description: "Lead pipeline, status, and next actions.",
+      accent: "from-indigo-500/20 to-blue-600/10 border-indigo-400/30",
+    },
+    {
+      id: "assets",
+      view: "assets" as const,
+      icon: "assets" as const,
+      title: "Assets",
+      description: "Matrice 4T registry — Barcelona, Porto, Oxford.",
+      accent: "from-violet-500/20 to-indigo-600/10 border-violet-400/30",
+    },
+    {
+      id: "testing",
+      view: "testing" as const,
+      icon: "testing" as const,
+      title: "Testing",
+      description: "FlightHub simulator and flight path validation.",
+      accent: "from-emerald-500/20 to-teal-600/10 border-emerald-400/30",
+    },
+  ],
+  [
+    {
+      id: "messaging",
+      view: null,
+      href: "/messaging" as const,
+      icon: "messaging" as const,
+      title: "Messaging",
+      description: "Internal operator chat and presence.",
+      accent: "from-blue-500/20 to-sky-600/10 border-blue-400/30",
+    },
+    {
+      id: "files",
+      view: null,
+      href: "/files" as const,
+      icon: "files" as const,
+      title: "Files",
+      description: "Internal document and asset repository.",
+      accent: "from-slate-500/20 to-zinc-600/10 border-slate-400/30",
+    },
+    {
+      id: "users",
+      view: null,
+      href: "/users" as const,
+      icon: "users" as const,
+      title: "Users",
+      description: "Operator roster, roles, and licences.",
+      accent: "from-orange-500/20 to-amber-600/10 border-orange-400/30",
+    },
+  ],
+  [
+    {
+      id: "telemetry",
+      view: null,
+      href: "/telemetry" as const,
+      icon: "telemetry" as const,
+      title: "Live Telemetry",
+      description: "Real-time drone OSD and telemetry feed.",
+      accent: "from-rose-500/20 to-red-600/10 border-rose-400/30",
+    },
+    {
+      id: "webodm",
+      view: "webodm" as const,
+      icon: "webodm" as const,
+      title: "WebODM",
+      description: "Orthophotos, point clouds, and 3D models.",
+      accent: "from-fuchsia-500/20 to-purple-600/10 border-fuchsia-400/30",
+    },
+  ],
 ] as const;
+
+export type InternalHomeTile = (typeof internalHomeTileRows)[number][number];
 
 export function getInternalNavHref(
   view: InternalOperationsView | null,
   externalHref: string | undefined,
 ) {
-  if (externalHref === "/telemetry") {
+  if (externalHref) {
     return externalHref;
   }
 
