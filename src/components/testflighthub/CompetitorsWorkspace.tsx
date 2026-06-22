@@ -7,7 +7,8 @@ import {
   type Competitor,
   type CompetitorRegion,
 } from "@/lib/competitors-data";
-import { Binoculars, ExternalLink, Loader2, Plus, Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Binoculars, ChevronRight, ExternalLink, Loader2, Plus, Trash2, X } from "lucide-react";
 
 async function readApiJson<T>(response: Response): Promise<T> {
   const text = await response.text();
@@ -35,26 +36,45 @@ function textareaClassName() {
   return "mt-1.5 min-h-[4.5rem] w-full resize-y rounded-xl border border-white/10 bg-[#0b1524] px-3 py-2 text-sm leading-relaxed text-white outline-none transition-colors focus:border-sky-400/50";
 }
 
+function selectClassName() {
+  return "h-10 w-full min-w-[160px] rounded-xl border border-white/10 bg-[#0b1524] px-3 text-sm text-white outline-none transition-colors focus:border-sky-400/50 sm:w-auto";
+}
+
+function truncatePreview(value: string, max = 80) {
+  const trimmed = value.trim();
+  if (!trimmed) return "—";
+  return trimmed.length > max ? `${trimmed.slice(0, max)}…` : trimmed;
+}
+
+function formatWebsiteHref(website: string) {
+  const trimmed = website.trim();
+  if (!trimmed) return null;
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
+
 export default function CompetitorsWorkspace() {
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
+  const [selectedRegion, setSelectedRegion] = useState<CompetitorRegion>("uk");
+  const [selectedCompetitorId, setSelectedCompetitorId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const saveTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
-  const competitorsByRegion = useMemo(() => {
-    const grouped: Record<CompetitorRegion, Competitor[]> = {
-      uk: [],
-      spain: [],
-      portugal: [],
-    };
+  const regionMeta = useMemo(
+    () => COMPETITOR_REGIONS.find((region) => region.id === selectedRegion) ?? COMPETITOR_REGIONS[0],
+    [selectedRegion],
+  );
 
-    for (const competitor of competitors) {
-      grouped[competitor.region].push(competitor);
-    }
+  const regionCompetitors = useMemo(
+    () => competitors.filter((competitor) => competitor.region === selectedRegion),
+    [competitors, selectedRegion],
+  );
 
-    return grouped;
-  }, [competitors]);
+  const selectedCompetitor = useMemo(
+    () => regionCompetitors.find((competitor) => competitor.id === selectedCompetitorId) ?? null,
+    [regionCompetitors, selectedCompetitorId],
+  );
 
   const loadCompetitors = useCallback(async () => {
     setLoading(true);
@@ -76,6 +96,15 @@ export default function CompetitorsWorkspace() {
   useEffect(() => {
     void loadCompetitors();
   }, [loadCompetitors]);
+
+  useEffect(() => {
+    setSelectedCompetitorId((current) => {
+      if (current && regionCompetitors.some((competitor) => competitor.id === current)) {
+        return current;
+      }
+      return null;
+    });
+  }, [regionCompetitors]);
 
   useEffect(() => {
     const timers = saveTimersRef.current;
@@ -114,7 +143,10 @@ export default function CompetitorsWorkspace() {
     }
   }
 
-  function patchCompetitor(id: string, patch: Partial<Pick<Competitor, "companyName" | "website" | "services" | "lastRevenue" | "notes">>) {
+  function patchCompetitor(
+    id: string,
+    patch: Partial<Pick<Competitor, "companyName" | "website" | "services" | "lastRevenue" | "notes">>,
+  ) {
     setCompetitors((current) => {
       const next = current.map((item) => (item.id === id ? { ...item, ...patch } : item));
       const updated = next.find((item) => item.id === id);
@@ -136,7 +168,7 @@ export default function CompetitorsWorkspace() {
     });
   }
 
-  async function handleAddCompetitor(region: CompetitorRegion) {
+  async function handleAddCompetitor() {
     setBusy(true);
     setError(null);
 
@@ -144,13 +176,14 @@ export default function CompetitorsWorkspace() {
       const response = await fetch("/api/competitors", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ region }),
+        body: JSON.stringify({ region: selectedRegion }),
       });
 
       const data = await readApiJson<{ competitor?: Competitor; error?: string }>(response);
       if (!response.ok || !data.competitor) throw new Error(data.error ?? "Failed to create competitor");
 
       setCompetitors((current) => [...current, data.competitor!]);
+      setSelectedCompetitorId(data.competitor.id);
     } catch (createError) {
       setError(createError instanceof Error ? createError.message : "Failed to create competitor");
     } finally {
@@ -169,7 +202,12 @@ export default function CompetitorsWorkspace() {
       const data = await readApiJson<{ error?: string }>(response);
       if (!response.ok) throw new Error(data.error ?? "Failed to delete competitor");
 
-      setCompetitors((current) => current.filter((item) => item.id !== competitor.id));
+      const remaining = competitors.filter((item) => item.id !== competitor.id);
+      setCompetitors(remaining);
+      setSelectedCompetitorId((current) => {
+        if (current !== competitor.id) return current;
+        return remaining.find((item) => item.region === selectedRegion)?.id ?? null;
+      });
     } catch (deleteError) {
       setError(deleteError instanceof Error ? deleteError.message : "Failed to delete competitor");
     } finally {
@@ -177,25 +215,48 @@ export default function CompetitorsWorkspace() {
     }
   }
 
-  function formatWebsiteHref(website: string) {
-    const trimmed = website.trim();
-    if (!trimmed) return null;
-    return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
-  }
+  const websiteHref = selectedCompetitor ? formatWebsiteHref(selectedCompetitor.website) : null;
 
   return (
     <section className="space-y-4">
       <div className="rounded-2xl border border-white/15 bg-white/[0.04] p-5 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-6">
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06] text-[#60a5fa]">
-            <Binoculars className="h-5 w-5" />
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06] text-[#60a5fa]">
+              <Binoculars className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-white">Competitors</h2>
+              <p className="mt-1 max-w-2xl text-sm leading-relaxed text-white/50">
+                Select a country, review listed rivals, and open any row for full company details.
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-lg font-semibold text-white">Competitors</h2>
-            <p className="mt-1 max-w-2xl text-sm leading-relaxed text-white/50">
-              Track rival operators across the UK, Spain, and Portugal — company details, services,
-              and latest revenue intelligence.
-            </p>
+
+          <div className="flex w-full flex-wrap items-end gap-3 sm:w-auto">
+            <div className="min-w-[160px] flex-1 sm:flex-none">
+              <FieldLabel>Country</FieldLabel>
+              <select
+                value={selectedRegion}
+                onChange={(event) => setSelectedRegion(event.target.value as CompetitorRegion)}
+                className={selectClassName()}
+              >
+                {COMPETITOR_REGIONS.map((region) => (
+                  <option key={region.id} value={region.id}>
+                    {region.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button
+              type="button"
+              onClick={() => void handleAddCompetitor()}
+              disabled={busy}
+              className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-sky-500/40 bg-sky-500/15 px-4 text-sm font-semibold text-sky-300 transition-colors hover:border-sky-400/60 hover:bg-sky-500/25 disabled:opacity-50"
+            >
+              <Plus className="h-4 w-4" />
+              Add
+            </button>
           </div>
         </div>
       </div>
@@ -203,157 +264,178 @@ export default function CompetitorsWorkspace() {
       {error && (
         <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
           {error}
-          {error.includes("competitors") && (
-            <>
-              {" "}
-              If this persists, run{" "}
-              <span className="font-mono">supabase/migrations/007_create_competitors.sql</span> in
-              Supabase or set <span className="font-mono">SUPABASE_DB_URL</span> on Vercel so the
-              table can be created automatically.
-            </>
-          )}
         </p>
       )}
 
-      {loading ? (
-        <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-8 text-sm text-white/55">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Loading competitors…
+      <div className="rounded-2xl border border-white/15 bg-white/[0.04] shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
+        <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3 sm:px-5">
+          <div>
+            <h3 className="text-sm font-semibold text-white sm:text-[15px]">{regionMeta.title}</h3>
+            <p className="mt-0.5 text-xs text-white/45">{regionMeta.subtitle}</p>
+          </div>
+          <p className="text-xs text-white/45">
+            {loading ? "Loading…" : `${regionCompetitors.length} listed`}
+          </p>
         </div>
-      ) : (
-        <div className="grid gap-4 xl:grid-cols-3">
-          {COMPETITOR_REGIONS.map((column) => {
-            const columnItems = competitorsByRegion[column.id];
-            const websiteHref = (website: string) => formatWebsiteHref(website);
 
-            return (
-              <div
-                key={column.id}
-                className="flex min-h-0 flex-col rounded-2xl border border-white/10 bg-white/[0.03] shadow-[0_16px_48px_rgba(0,0,0,0.28)]"
-              >
-                <div className="flex items-start justify-between gap-3 border-b border-white/10 px-4 py-3 sm:px-5">
-                  <div>
-                    <h3 className="text-sm font-semibold text-white sm:text-[15px]">{column.title}</h3>
-                    <p className="mt-0.5 text-xs text-white/45">{column.subtitle}</p>
-                  </div>
+        {loading ? (
+          <div className="flex items-center gap-2 px-4 py-10 text-sm text-white/55 sm:px-5">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Loading competitors…
+          </div>
+        ) : regionCompetitors.length === 0 ? (
+          <p className="px-4 py-10 text-center text-sm text-white/40 sm:px-5">
+            No competitors listed for {regionMeta.title} yet. Click Add to create one.
+          </p>
+        ) : (
+          <ul className="divide-y divide-white/[0.06]">
+            {regionCompetitors.map((competitor) => {
+              const selected = competitor.id === selectedCompetitorId;
+
+              return (
+                <li key={competitor.id}>
                   <button
                     type="button"
-                    onClick={() => void handleAddCompetitor(column.id)}
-                    disabled={busy}
-                    className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.05] px-2.5 py-1.5 text-xs font-medium text-white/80 transition-colors hover:bg-white/[0.08] disabled:opacity-50"
+                    onClick={() => setSelectedCompetitorId(competitor.id)}
+                    className={cn(
+                      "flex w-full items-center gap-3 px-4 py-4 text-left transition-colors sm:px-5",
+                      selected
+                        ? "bg-sky-500/10"
+                        : "hover:bg-white/[0.03]",
+                    )}
                   >
-                    <Plus className="h-3.5 w-3.5" />
-                    Add
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                        <p className="min-w-[140px] truncate text-sm font-semibold text-white">
+                          {competitor.companyName}
+                        </p>
+                        <p className="min-w-[120px] truncate text-xs text-white/45">
+                          {competitor.website.trim() || "No website"}
+                        </p>
+                        <p className="min-w-[120px] truncate text-xs text-white/45">
+                          {truncatePreview(competitor.services, 48)}
+                        </p>
+                        <p className="truncate text-xs text-white/45">
+                          {competitor.lastRevenue.trim() || "Revenue unknown"}
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-white/30" />
                   </button>
-                </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
 
-                <div className="flex flex-1 flex-col gap-3 p-4 sm:p-5">
-                  {columnItems.length === 0 ? (
-                    <p className="rounded-xl border border-dashed border-white/10 px-3 py-6 text-center text-sm text-white/40">
-                      No competitors yet. Click Add to start tracking.
-                    </p>
-                  ) : (
-                    columnItems.map((competitor) => {
-                      const href = websiteHref(competitor.website);
+      {selectedCompetitor && (
+        <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-5 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-6">
+          <div className="mb-5 flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#60a5fa]">
+                Competitor details
+              </p>
+              <h3 className="mt-1 text-lg font-semibold text-white">{selectedCompetitor.companyName}</h3>
+              <p className="mt-1 text-sm text-white/45">{regionMeta.title}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => void handleDeleteCompetitor(selectedCompetitor)}
+                disabled={busy}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-red-200 transition-colors hover:border-red-400/30 hover:bg-red-500/10 disabled:opacity-50"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Delete
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedCompetitorId(null)}
+                className="rounded-lg border border-white/10 p-2 text-white/45 transition-colors hover:bg-white/[0.05] hover:text-white"
+                aria-label="Close competitor details"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
 
-                      return (
-                        <article
-                          key={competitor.id}
-                          className="rounded-xl border border-white/10 bg-[#0b1524]/70 p-4"
-                        >
-                          <div className="mb-3 flex items-start justify-between gap-2">
-                            <div className="min-w-0 flex-1">
-                              <FieldLabel>Company name</FieldLabel>
-                              <input
-                                value={competitor.companyName}
-                                onChange={(event) =>
-                                  patchCompetitor(competitor.id, { companyName: event.target.value })
-                                }
-                                className={inputClassName()}
-                              />
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => void handleDeleteCompetitor(competitor)}
-                              disabled={busy}
-                              className="mt-5 rounded-lg border border-white/10 p-2 text-white/45 transition-colors hover:border-red-400/30 hover:bg-red-500/10 hover:text-red-200 disabled:opacity-50"
-                              aria-label={`Delete ${competitor.companyName}`}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <FieldLabel>Company name</FieldLabel>
+              <input
+                value={selectedCompetitor.companyName}
+                onChange={(event) =>
+                  patchCompetitor(selectedCompetitor.id, { companyName: event.target.value })
+                }
+                className={inputClassName()}
+              />
+            </div>
 
-                          <div>
-                            <FieldLabel>Website</FieldLabel>
-                            <div className="relative">
-                              <input
-                                value={competitor.website}
-                                onChange={(event) =>
-                                  patchCompetitor(competitor.id, { website: event.target.value })
-                                }
-                                placeholder="example.com"
-                                className={inputClassName()}
-                              />
-                              {href && (
-                                <a
-                                  href={href}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-white/40 transition-colors hover:text-sky-300"
-                                  aria-label={`Open ${competitor.companyName} website`}
-                                >
-                                  <ExternalLink className="h-4 w-4" />
-                                </a>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="mt-3">
-                            <FieldLabel>Services</FieldLabel>
-                            <textarea
-                              value={competitor.services}
-                              rows={3}
-                              placeholder="Surveying, inspection, media…"
-                              onChange={(event) =>
-                                patchCompetitor(competitor.id, { services: event.target.value })
-                              }
-                              className={textareaClassName()}
-                            />
-                          </div>
-
-                          <div className="mt-3">
-                            <FieldLabel>Last revenue</FieldLabel>
-                            <input
-                              value={competitor.lastRevenue}
-                              onChange={(event) =>
-                                patchCompetitor(competitor.id, { lastRevenue: event.target.value })
-                              }
-                              placeholder="e.g. £2.4M (2024)"
-                              className={inputClassName()}
-                            />
-                          </div>
-
-                          <div className="mt-3">
-                            <FieldLabel>Notes</FieldLabel>
-                            <textarea
-                              value={competitor.notes}
-                              rows={3}
-                              placeholder="Intel, pricing, strengths, weaknesses…"
-                              onChange={(event) =>
-                                patchCompetitor(competitor.id, { notes: event.target.value })
-                              }
-                              className={textareaClassName()}
-                            />
-                          </div>
-                        </article>
-                      );
-                    })
-                  )}
-                </div>
+            <div>
+              <FieldLabel>Website</FieldLabel>
+              <div className="relative">
+                <input
+                  value={selectedCompetitor.website}
+                  onChange={(event) =>
+                    patchCompetitor(selectedCompetitor.id, { website: event.target.value })
+                  }
+                  placeholder="example.com"
+                  className={inputClassName()}
+                />
+                {websiteHref && (
+                  <a
+                    href={websiteHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-white/40 transition-colors hover:text-sky-300"
+                    aria-label={`Open ${selectedCompetitor.companyName} website`}
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                )}
               </div>
-            );
-          })}
-        </div>
+            </div>
+
+            <div>
+              <FieldLabel>Last revenue</FieldLabel>
+              <input
+                value={selectedCompetitor.lastRevenue}
+                onChange={(event) =>
+                  patchCompetitor(selectedCompetitor.id, { lastRevenue: event.target.value })
+                }
+                placeholder="e.g. £2.4M (2024)"
+                className={inputClassName()}
+              />
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <FieldLabel>Services</FieldLabel>
+            <textarea
+              value={selectedCompetitor.services}
+              rows={4}
+              placeholder="Surveying, inspection, media…"
+              onChange={(event) =>
+                patchCompetitor(selectedCompetitor.id, { services: event.target.value })
+              }
+              className={textareaClassName()}
+            />
+          </div>
+
+          <div className="mt-4">
+            <FieldLabel>Notes</FieldLabel>
+            <textarea
+              value={selectedCompetitor.notes}
+              rows={4}
+              placeholder="Intel, pricing, strengths, weaknesses…"
+              onChange={(event) =>
+                patchCompetitor(selectedCompetitor.id, { notes: event.target.value })
+              }
+              className={textareaClassName()}
+            />
+          </div>
+        </section>
       )}
     </section>
   );
