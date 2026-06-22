@@ -22,7 +22,7 @@ import ClientManagementWorkspace from "./ClientManagementWorkspace";
 import CrmWorkspace from "./CrmWorkspace";
 import FileRepositoryReferenceImages from "./FileRepositoryReferenceImages";
 import FileRepositoryWorkspace from "./FileRepositoryWorkspace";
-import FleetPanel from "./FleetPanel";
+import FleetWorkspace from "./FleetWorkspace";
 import InternalDashboardHome from "./InternalDashboardHome";
 import LiveProjectsPanel from "./LiveProjectsPanel";
 import MessagingWorkspace from "./MessagingWorkspace";
@@ -127,16 +127,8 @@ export default function InternalOperationsDashboard() {
 
         <div className="relative space-y-6">
           {activeView === "home" && (
-            <div className="grid h-[calc(100dvh-4rem-1.25rem)] max-h-[calc(100dvh-4rem-1.25rem)] min-h-0 grid-cols-1 gap-2.5 overflow-hidden xl:grid-cols-[minmax(0,1fr)_12.5rem] xl:items-stretch">
+            <div className="flex h-[calc(100dvh-4rem-1.25rem)] max-h-[calc(100dvh-4rem-1.25rem)] min-h-0 flex-col overflow-hidden">
               <InternalDashboardHome onNavigate={handleViewChange} />
-              <div className="hidden min-h-0 min-w-0 xl:block">
-                <FleetPanel
-                  liveTelemetry={liveTelemetry}
-                  isRunning={isRunning}
-                  onOpenAssets={() => handleViewChange("assets")}
-                  compact
-                />
-              </div>
             </div>
           )}
 
@@ -160,6 +152,14 @@ export default function InternalOperationsDashboard() {
               onAssetsChange={setAssets}
               onCategoriesChange={setAssetCategories}
               onLocationsChange={setAssetLocations}
+            />
+          )}
+
+          {activeView === "fleet" && (
+            <FleetWorkspace
+              liveTelemetry={liveTelemetry}
+              isRunning={isRunning}
+              onOpenAssets={() => handleViewChange("assets")}
             />
           )}
 

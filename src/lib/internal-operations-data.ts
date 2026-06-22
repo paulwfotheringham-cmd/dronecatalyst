@@ -6,6 +6,7 @@ export type InternalOperationsView =
   | "crm"
   | "strategy"
   | "assets"
+  | "fleet"
   | "testing"
   | "live-projects"
   | "recent-missions"
@@ -23,6 +24,7 @@ export const internalOperationsViews: InternalOperationsView[] = [
   "crm",
   "strategy",
   "assets",
+  "fleet",
   "testing",
   "live-projects",
   "recent-missions",
@@ -53,6 +55,7 @@ export const internalSurveyNavItems = [
   { label: "CRM", icon: "ContactRound", view: "crm" as const },
   { label: "Strategy", icon: "Compass", view: "strategy" as const },
   { label: "Assets", icon: "Package", view: "assets" as const },
+  { label: "Fleet", icon: "Plane", view: "fleet" as const },
   { label: "Live Projects", icon: "FolderKanban", view: "live-projects" as const },
   { label: "Recent Missions", icon: "History", view: "recent-missions" as const },
   { label: "Live Telemetry", icon: "Radio", view: "telemetry" as const },
@@ -69,6 +72,7 @@ export const internalViewTitles: Record<
   crm: { title: "CRM", subtitle: "Internal Operations" },
   strategy: { title: "Strategy", subtitle: "Internal Operations" },
   assets: { title: "Asset Registry", subtitle: "Internal Operations" },
+  fleet: { title: "Fleet", subtitle: "Internal Operations" },
   testing: { title: "Flight Simulator Testing", subtitle: "Internal Operations" },
   "live-projects": { title: "Live Projects", subtitle: "Internal Operations" },
   "recent-missions": { title: "Recent Missions", subtitle: "Internal Operations" },

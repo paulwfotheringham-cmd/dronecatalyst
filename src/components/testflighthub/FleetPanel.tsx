@@ -10,6 +10,9 @@ type FleetPanelProps = {
   isRunning: boolean;
   onOpenAssets?: () => void;
   compact?: boolean;
+  showCurrentLocation?: boolean;
+  currentLocations?: Record<string, string>;
+  onCurrentLocationChange?: (droneId: string, value: string) => void;
 };
 
 function fleetStatusClass(status: FleetDroneStatus | string) {
@@ -65,17 +68,21 @@ export default function FleetPanel({
   isRunning,
   onOpenAssets,
   compact = false,
+  showCurrentLocation = false,
+  currentLocations = {},
+  onCurrentLocationChange,
 }: FleetPanelProps) {
   const drones = buildFleetRows(liveTelemetry, isRunning);
+  const isPageLayout = showCurrentLocation && !compact;
 
   return (
     <section
       className={cn(
-        "flex h-full flex-col rounded-2xl border border-white/15 bg-white/[0.04] shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl",
-        compact ? "p-4" : "p-6",
+        "flex flex-col rounded-2xl border border-white/15 bg-white/[0.04] shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl",
+        compact ? "h-full p-4" : "p-6",
       )}
     >
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className={cn("font-semibold text-white", compact ? "text-base" : "text-lg")}>
             Fleet
@@ -96,13 +103,17 @@ export default function FleetPanel({
         </div>
       </div>
 
-      <div className={cn("flex min-h-0 flex-1 flex-col space-y-3", compact ? "mt-3" : "mt-4")}>
+      <div
+        className={cn(
+          isPageLayout ? "mt-5 grid gap-4 lg:grid-cols-3" : cn("flex min-h-0 flex-1 flex-col space-y-3", compact ? "mt-3" : "mt-4"),
+        )}
+      >
         {drones.map((drone) => (
           <div
             key={drone.id}
             className={cn(
               "rounded-xl border border-white/10 bg-white/[0.03]",
-              compact ? "px-3 py-2.5" : "px-4 py-3",
+              compact ? "px-3 py-2.5" : "px-4 py-4",
             )}
           >
             <div className="flex items-start justify-between gap-3">
@@ -121,6 +132,25 @@ export default function FleetPanel({
                 {drone.status}
               </span>
             </div>
+
+            {showCurrentLocation && (
+              <div className="mt-3">
+                <label
+                  htmlFor={`fleet-location-${drone.id}`}
+                  className="text-[10px] font-medium uppercase tracking-[0.12em] text-white/45"
+                >
+                  Current location
+                </label>
+                <input
+                  id={`fleet-location-${drone.id}`}
+                  type="text"
+                  value={currentLocations[drone.id] ?? drone.homeBase}
+                  onChange={(event) => onCurrentLocationChange?.(drone.id, event.target.value)}
+                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#0b1524] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-sky-400/50"
+                />
+              </div>
+            )}
+
             <div className={cn(compact ? "mt-2" : "mt-3")}>
               <div className="mb-1 flex items-center justify-between text-[10px] uppercase tracking-[0.12em] text-white/45">
                 <span>Battery</span>
