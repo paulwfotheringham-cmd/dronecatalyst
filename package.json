@@ -13,7 +13,8 @@
     "db:seed-uk-competitors": "node scripts/seed-uk-competitors.mjs",
     "db:seed-competitors": "node scripts/seed-competitors.mjs",
     "db:seed-messaging": "node scripts/seed-messaging.mjs",
-    "db:seed-calendar": "node scripts/seed-calendar.mjs"
+    "db:seed-calendar": "node scripts/seed-calendar.mjs",
+    "db:seed-info-email": "node scripts/seed-info-email.mjs"
   },
   "dependencies": {
     "@excalidraw/excalidraw": "^0.18.1",

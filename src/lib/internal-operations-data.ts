@@ -15,6 +15,7 @@ export type InternalOperationsView =
   | "webodm"
   | "messaging"
   | "calendar"
+  | "info-email"
   | "files"
   | "users"
   | "telemetry"
@@ -37,6 +38,7 @@ export const internalOperationsViews: InternalOperationsView[] = [
   "webodm",
   "messaging",
   "calendar",
+  "info-email",
   "files",
   "users",
   "telemetry",
@@ -64,6 +66,7 @@ export const internalSurveyNavItems = [
   { label: "Users", icon: "Users", view: "users" as const },
   { label: "Messaging", icon: "MessageSquare", view: "messaging" as const },
   { label: "Calendar", icon: "CalendarDays", view: "calendar" as const },
+  { label: "Info Email", icon: "Mail", view: "info-email" as const },
   { label: "Files", icon: "FolderOpen", view: "files" as const },
   { label: "Media Example", icon: "Film", view: "media-example" as const },
 ] as const;
@@ -88,6 +91,7 @@ export const internalViewTitles: Record<
   webodm: { title: "WebODM Processing", subtitle: "Internal Operations" },
   messaging: { title: "Messaging", subtitle: "Internal Operations" },
   calendar: { title: "Calendar", subtitle: "Internal Operations" },
+  "info-email": { title: "Info Email", subtitle: "Internal Operations" },
   files: { title: "File Repository", subtitle: "Internal Operations" },
   users: { title: "Users", subtitle: "Internal Operations" },
   telemetry: { title: "Live Telemetry", subtitle: "Internal Operations" },

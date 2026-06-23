@@ -25,6 +25,7 @@ import CrmWorkspace from "./CrmWorkspace";
 import FileRepositoryReferenceImages from "./FileRepositoryReferenceImages";
 import FileRepositoryWorkspace from "./FileRepositoryWorkspace";
 import FleetWorkspace from "./FleetWorkspace";
+import InfoEmailWorkspace from "./InfoEmailWorkspace";
 import InternalDashboardHome from "./InternalDashboardHome";
 import LiveProjectsPanel from "./LiveProjectsPanel";
 import MediaExampleWorkspace from "./MediaExampleWorkspace";
@@ -188,6 +189,8 @@ export default function InternalOperationsDashboard() {
           {activeView === "messaging" && <MessagingWorkspace />}
 
           {activeView === "calendar" && <CalendarWorkspace />}
+
+          {activeView === "info-email" && <InfoEmailWorkspace />}
 
           {activeView === "files" && (
             <div className="space-y-6">

@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
       { source: "/crm", destination: "/internaldashboard?view=crm", permanent: false },
       { source: "/messaging", destination: "/internaldashboard?view=messaging", permanent: false },
       { source: "/calendar", destination: "/internaldashboard?view=calendar", permanent: false },
+      { source: "/info-email", destination: "/internaldashboard?view=info-email", permanent: false },
       { source: "/files", destination: "/internaldashboard?view=files", permanent: false },
       { source: "/users", destination: "/internaldashboard?view=users", permanent: false },
       { source: "/telemetry", destination: "/internaldashboard?view=telemetry", permanent: false },
