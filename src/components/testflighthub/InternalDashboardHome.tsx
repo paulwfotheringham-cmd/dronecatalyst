@@ -1,88 +1,191 @@
 "use client";
 
 import {
-  internalHomeTileRows,
-  type InternalHomeTile,
+  internalSurveyNavSections,
   type InternalOperationsView,
 } from "@/lib/internal-operations-data";
+import { getHomeModule, homeKpis } from "@/lib/internal-home-modules";
 import { cn } from "@/lib/utils";
 import {
+  Binoculars,
   Building2,
+  CalendarDays,
+  ChevronRight,
   Compass,
   ContactRound,
+  Film,
   FlaskConical,
   FolderKanban,
   FolderOpen,
   History,
   Layers,
+  Mail,
   MessageSquare,
   Package,
+  PenLine,
+  Plane,
   Radio,
+  Sparkles,
   Users,
+  Wallet,
 } from "lucide-react";
 
-const tileIcons = {
-  clients: Building2,
-  crm: ContactRound,
-  assets: Package,
-  testing: FlaskConical,
-  projects: FolderKanban,
-  "recent-missions": History,
-  messaging: MessageSquare,
-  files: FolderOpen,
-  users: Users,
-  telemetry: Radio,
-  webodm: Layers,
-  strategy: Compass,
+const iconMap = {
+  Building2,
+  ContactRound,
+  Wallet,
+  FolderKanban,
+  History,
+  Package,
+  Plane,
+  FolderOpen,
+  CalendarDays,
+  Mail,
+  MessageSquare,
+  Compass,
+  Binoculars,
+  PenLine,
+  Film,
+  FlaskConical,
+  Layers,
+  Radio,
+  Users,
 } as const;
 
 type InternalDashboardHomeProps = {
   onNavigate: (view: InternalOperationsView) => void;
+  onViewMockups?: () => void;
 };
 
-function renderTile(
-  tile: InternalHomeTile,
-  onNavigate: (view: InternalOperationsView) => void,
-) {
-  const Icon = tileIcons[tile.icon];
-  const className = cn(
-    "group flex w-full min-w-0 flex-col rounded-xl border bg-gradient-to-br p-3.5 text-left shadow-[0_8px_24px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(0,0,0,0.36)] sm:rounded-2xl sm:p-4 2xl:min-h-0 2xl:h-full 2xl:p-5",
-    "min-h-[8.75rem] sm:min-h-[9.25rem]",
-    tile.accent,
-  );
+function ModuleCard({
+  label,
+  description,
+  accent,
+  iconKey,
+  onClick,
+  featured = false,
+}: {
+  label: string;
+  description: string;
+  accent: string;
+  iconKey: string;
+  onClick: () => void;
+  featured?: boolean;
+}) {
+  const Icon = iconMap[iconKey as keyof typeof iconMap] ?? Compass;
 
   return (
     <button
-      key={tile.id}
       type="button"
-      onClick={() => onNavigate(tile.view)}
-      className={className}
+      onClick={onClick}
+      className={cn(
+        "group relative flex w-full min-w-0 items-center gap-3 overflow-hidden rounded-xl border bg-gradient-to-br from-white/[0.04] to-transparent p-3 text-left shadow-[0_8px_32px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:shadow-[0_16px_40px_rgba(0,0,0,0.45)] sm:gap-3.5 sm:rounded-2xl sm:p-3.5",
+        accent,
+        featured && "sm:col-span-2 lg:col-span-1",
+      )}
     >
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.06] text-[#60a5fa] transition-colors group-hover:bg-white/[0.1] sm:h-9 sm:w-9 sm:rounded-xl 2xl:h-10 2xl:w-10">
-        <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 2xl:h-[18px] 2xl:w-[18px]" />
+      <div
+        className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/[0.03] blur-2xl transition-opacity group-hover:opacity-100"
+        aria-hidden
+      />
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-black/20 text-sky-300 transition-colors group-hover:border-white/20 group-hover:bg-black/30 sm:h-10 sm:w-10">
+        <Icon className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
       </div>
-      <h3 className="mt-2.5 line-clamp-1 text-base font-semibold leading-tight text-white sm:mt-3 sm:text-lg 2xl:text-[22px]">
-        {tile.title}
-      </h3>
-      <p className="mt-1.5 line-clamp-2 text-sm leading-snug text-white/55 sm:mt-2 sm:text-[0.9375rem] sm:leading-relaxed 2xl:text-lg">
-        {tile.description}
-      </p>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <h3 className="truncate text-sm font-semibold text-white sm:text-[15px]">{label}</h3>
+          <ChevronRight className="h-3.5 w-3.5 shrink-0 text-white/25 transition-all group-hover:translate-x-0.5 group-hover:text-white/60" />
+        </div>
+        <p className="mt-0.5 line-clamp-1 text-xs text-white/50 sm:text-[13px]">{description}</p>
+      </div>
     </button>
   );
 }
 
-const homeTiles = internalHomeTileRows.flat();
+export default function InternalDashboardHome({
+  onNavigate,
+  onViewMockups,
+}: InternalDashboardHomeProps) {
+  const sections = internalSurveyNavSections.filter((section) => section.label !== null);
 
-export default function InternalDashboardHome({ onNavigate }: InternalDashboardHomeProps) {
   return (
-    <section
-      aria-label="Internal operations home"
-      className="min-w-0 2xl:flex 2xl:min-h-0 2xl:flex-1 2xl:flex-col 2xl:overflow-hidden"
-    >
-      <div className="grid grid-cols-1 gap-3 p-1 pb-4 sm:grid-cols-2 sm:gap-3.5 sm:p-2 xl:grid-cols-3 xl:gap-4 2xl:min-h-0 2xl:flex-1 2xl:grid-rows-4 2xl:overflow-hidden 2xl:pb-0">
-        {homeTiles.map((tile) => (
-          <div key={tile.id} className="min-w-0 2xl:min-h-0">
-            {renderTile(tile, onNavigate)}
+    <section aria-label="Internal operations home" className="min-w-0 space-y-5 pb-6 sm:space-y-6">
+      <header className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/90 via-[#0b1220] to-[#060a12] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] sm:p-5 lg:p-6">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-80"
+          aria-hidden
+          style={{
+            background:
+              "radial-gradient(ellipse 70% 80% at 0% 0%, rgba(56, 189, 248, 0.14), transparent 55%), radial-gradient(ellipse 50% 60% at 100% 0%, rgba(99, 102, 241, 0.12), transparent 50%)",
+          }}
+        />
+        <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0 space-y-2">
+            <div className="inline-flex items-center gap-2 rounded-full border border-sky-400/20 bg-sky-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-300/90">
+              <Sparkles className="h-3 w-3" />
+              Command center
+            </div>
+            <h2 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
+              Operations at a glance
+            </h2>
+            <p className="max-w-2xl text-sm leading-relaxed text-white/55 sm:text-[15px]">
+              Live projects, revenue, and field activity — grouped the same way as your sidebar.
+            </p>
+          </div>
+          {onViewMockups ? (
+            <button
+              type="button"
+              onClick={onViewMockups}
+              className="shrink-0 self-start rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-medium text-white/70 transition-colors hover:border-white/20 hover:bg-white/[0.08] hover:text-white lg:self-auto"
+            >
+              Compare 3 design concepts
+            </button>
+          ) : null}
+        </div>
+
+        <div className="relative mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+          {homeKpis.map((kpi) => (
+            <div
+              key={kpi.label}
+              className="rounded-xl border border-white/[0.08] bg-black/25 px-3 py-2.5 backdrop-blur-sm sm:px-3.5 sm:py-3"
+            >
+              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/40 sm:text-[11px]">
+                {kpi.label}
+              </p>
+              <p className="mt-1 text-lg font-semibold tabular-nums text-white sm:text-xl">{kpi.value}</p>
+              <p className="mt-0.5 line-clamp-1 text-[11px] text-white/45 sm:text-xs">{kpi.hint}</p>
+            </div>
+          ))}
+        </div>
+      </header>
+
+      <div className="space-y-5 sm:space-y-6">
+        {sections.map((section) => (
+          <div key={section.label} className="space-y-2.5 sm:space-y-3">
+            <div className="flex items-center gap-3">
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-sky-400/90">
+                {section.label}
+              </h3>
+              <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
+            </div>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-2.5 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              {section.items.map((item) => {
+                const module = getHomeModule(item);
+                if (!module) return null;
+
+                return (
+                  <ModuleCard
+                    key={item.view}
+                    label={item.label}
+                    description={module.description}
+                    accent={module.accent}
+                    iconKey={module.icon}
+                    onClick={() => onNavigate(item.view)}
+                    featured={item.view === "projects"}
+                  />
+                );
+              })}
+            </div>
           </div>
         ))}
       </div>

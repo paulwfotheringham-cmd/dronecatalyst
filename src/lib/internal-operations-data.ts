@@ -20,7 +20,8 @@ export type InternalOperationsView =
   | "files"
   | "users"
   | "telemetry"
-  | "media-example";
+  | "media-example"
+  | "design-mockups";
 
 export const INTERNAL_OPERATIONS_BASE_PATH: SurveyOperationsBasePath = "/internaldashboard";
 
@@ -45,6 +46,7 @@ export const internalOperationsViews: InternalOperationsView[] = [
   "users",
   "telemetry",
   "media-example",
+  "design-mockups",
 ];
 
 export function isInternalOperationsView(value: string | null): value is InternalOperationsView {
@@ -146,6 +148,7 @@ export const internalViewTitles: Record<
   users: { title: "Users", subtitle: "Internal Operations" },
   telemetry: { title: "Live Telemetry", subtitle: "Internal Operations" },
   "media-example": { title: "Media Example", subtitle: "Internal Operations" },
+  "design-mockups": { title: "Design Concepts", subtitle: "Internal Operations" },
 };
 
 export const internalHomeTileRows = [

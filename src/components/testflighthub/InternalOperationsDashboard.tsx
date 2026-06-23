@@ -28,6 +28,7 @@ import FinancialsWorkspace from "./FinancialsWorkspace";
 import FleetWorkspace from "./FleetWorkspace";
 import InfoEmailWorkspace from "./InfoEmailWorkspace";
 import InternalDashboardHome from "./InternalDashboardHome";
+import InternalDesignMockups from "./InternalDesignMockups";
 import ProjectsWorkspace from "./ProjectsWorkspace";
 import MediaExampleWorkspace from "./MediaExampleWorkspace";
 import MessagingWorkspace from "./MessagingWorkspace";
@@ -136,9 +137,14 @@ export default function InternalOperationsDashboard() {
 
         <div className="relative space-y-6">
           {activeView === "home" && (
-            <div className="2xl:flex 2xl:h-[calc(100dvh-4rem-1.5rem)] 2xl:max-h-[calc(100dvh-4rem-1.5rem)] 2xl:min-h-0 2xl:flex-col 2xl:overflow-hidden">
-              <InternalDashboardHome onNavigate={handleViewChange} />
-            </div>
+            <InternalDashboardHome
+              onNavigate={handleViewChange}
+              onViewMockups={() => handleViewChange("design-mockups")}
+            />
+          )}
+
+          {activeView === "design-mockups" && (
+            <InternalDesignMockups onBack={() => handleViewChange("home")} />
           )}
 
           {activeView === "clients" && (
