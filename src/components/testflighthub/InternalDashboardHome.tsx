@@ -24,16 +24,16 @@ function SectionPanel({
   return (
     <section
       className={cn(
-        "rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-white/[0.015] shadow-[0_20px_60px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-xl",
+        "rounded-xl border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-white/[0.015] shadow-[0_12px_40px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-xl",
         className,
       )}
     >
-      <div className="border-b border-white/[0.06] px-5 py-4 sm:px-6">
-        <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
+      <div className="border-b border-white/[0.06] px-3.5 py-2 sm:px-4">
+        <h3 className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/45">
           {title}
         </h3>
       </div>
-      <div className="px-5 py-4 sm:px-6 sm:py-5">{children}</div>
+      <div className="px-3.5 py-2.5 sm:px-4">{children}</div>
     </section>
   );
 }
@@ -41,47 +41,38 @@ function SectionPanel({
 function ActionRow({ item }: { item: ActionItem }) {
   return (
     <tr className="border-b border-white/[0.05] last:border-0">
-      <td className="w-10 py-3.5 pr-3 align-middle">
+      <td className="w-7 py-1.5 pr-2 align-middle">
         <span
-          className={cn("inline-block h-2 w-2 rounded-full", priorityDotClass(item.priority))}
+          className={cn("inline-block h-1.5 w-1.5 rounded-full", priorityDotClass(item.priority))}
           aria-label={`${item.priority} priority`}
         />
       </td>
-      <td className="py-3.5 pr-4 text-sm text-white/85">{item.task}</td>
-      <td className="hidden py-3.5 pr-4 text-sm text-white/50 sm:table-cell">{item.assignedTo}</td>
-      <td className="py-3.5 text-right text-sm text-white/45 sm:text-left">{item.due}</td>
+      <td className="py-1.5 pr-3 text-[13px] leading-snug text-white/85">{item.task}</td>
+      <td className="hidden py-1.5 pr-3 text-[13px] text-white/50 sm:table-cell">{item.assignedTo}</td>
+      <td className="py-1.5 text-right text-[13px] text-white/45 sm:text-left">{item.due}</td>
     </tr>
   );
 }
 
 export default function InternalDashboardHome() {
   return (
-    <section aria-label="Internal operations command centre" className="min-w-0 pb-10">
-      <div className="mx-auto max-w-6xl space-y-10 sm:space-y-12">
-        <header className="space-y-2 pt-1">
-          <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-            Internal Operations
-          </h2>
-          <p className="text-base text-white/50 sm:text-[17px]">
-            Everything that needs attention this week.
-          </p>
-        </header>
-
+    <section aria-label="Internal operations command centre" className="min-w-0">
+      <div className="mx-auto flex max-w-6xl flex-col gap-3">
         <SectionPanel title="Action required">
           <div className="hidden overflow-x-auto sm:block">
             <table className="w-full border-collapse text-left">
               <thead>
-                <tr className="border-b border-white/[0.06] text-[10px] font-medium uppercase tracking-[0.14em] text-white/35">
-                  <th className="pb-3 pr-3 font-medium" scope="col">
+                <tr className="border-b border-white/[0.06] text-[9px] font-medium uppercase tracking-[0.12em] text-white/35">
+                  <th className="pb-1.5 pr-2 font-medium" scope="col">
                     <span className="sr-only">Priority</span>
                   </th>
-                  <th className="pb-3 pr-4 font-medium" scope="col">
+                  <th className="pb-1.5 pr-3 font-medium" scope="col">
                     Task
                   </th>
-                  <th className="hidden pb-3 pr-4 font-medium sm:table-cell" scope="col">
+                  <th className="hidden pb-1.5 pr-3 font-medium sm:table-cell" scope="col">
                     Assigned to
                   </th>
-                  <th className="pb-3 font-medium" scope="col">
+                  <th className="pb-1.5 font-medium" scope="col">
                     Due
                   </th>
                 </tr>
@@ -93,18 +84,18 @@ export default function InternalDashboardHome() {
               </tbody>
             </table>
           </div>
-          <div className="mt-3 space-y-3 sm:hidden">
+          <div className="space-y-2 sm:hidden">
             {actionRequiredItems.map((item) => (
               <div
                 key={`${item.id}-mobile`}
-                className="flex gap-3 border-b border-white/[0.05] pb-3 last:border-0 last:pb-0"
+                className="flex gap-2 border-b border-white/[0.05] pb-2 last:border-0 last:pb-0"
               >
                 <span
-                  className={cn("mt-1.5 h-2 w-2 shrink-0 rounded-full", priorityDotClass(item.priority))}
+                  className={cn("mt-1 h-1.5 w-1.5 shrink-0 rounded-full", priorityDotClass(item.priority))}
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm text-white/85">{item.task}</p>
-                  <p className="mt-1 text-xs text-white/40">
+                  <p className="text-[13px] leading-snug text-white/85">{item.task}</p>
+                  <p className="mt-0.5 text-[11px] text-white/40">
                     {item.assignedTo} · {item.due}
                   </p>
                 </div>
@@ -113,24 +104,22 @@ export default function InternalDashboardHome() {
           </div>
         </SectionPanel>
 
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,13fr)_minmax(0,7fr)] lg:gap-10">
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
           <SectionPanel title="This week">
-            <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-x-3 gap-y-2.5 sm:grid-cols-3 lg:grid-cols-5">
               {thisWeekSchedule.map((day) => (
-                <div key={day.day}>
-                  <p className="text-sm font-medium text-white/70">{day.day}</p>
-                  <ul className="mt-2.5 space-y-2">
+                <div key={day.day} className="min-w-0">
+                  <p className="text-[11px] font-medium text-white/65">{day.day}</p>
+                  <ul className="mt-1 space-y-0.5">
                     {day.entries.map((entry, index) => (
                       <li
                         key={`${day.day}-${index}`}
-                        className="flex gap-3 text-sm leading-relaxed text-white/55"
+                        className="text-[11px] leading-snug text-white/55"
                       >
                         {entry.time ? (
-                          <span className="w-12 shrink-0 tabular-nums text-white/35">{entry.time}</span>
-                        ) : (
-                          <span className="w-12 shrink-0" aria-hidden />
-                        )}
-                        <span className="text-white/75">{entry.label}</span>
+                          <span className="tabular-nums text-white/35">{entry.time} </span>
+                        ) : null}
+                        <span className="text-white/70">{entry.label}</span>
                       </li>
                     ))}
                   </ul>
@@ -141,22 +130,22 @@ export default function InternalDashboardHome() {
 
           <SectionPanel title="Upcoming missions">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[18rem] border-collapse text-left">
+              <table className="w-full min-w-[16rem] border-collapse text-left">
                 <thead>
-                  <tr className="border-b border-white/[0.06] text-[10px] font-medium uppercase tracking-[0.14em] text-white/35">
-                    <th className="pb-3 pr-3 font-medium" scope="col">
+                  <tr className="border-b border-white/[0.06] text-[9px] font-medium uppercase tracking-[0.12em] text-white/35">
+                    <th className="pb-1.5 pr-2 font-medium" scope="col">
                       Mission
                     </th>
-                    <th className="hidden pb-3 pr-3 font-medium sm:table-cell" scope="col">
+                    <th className="hidden pb-1.5 pr-2 font-medium sm:table-cell" scope="col">
                       Client
                     </th>
-                    <th className="pb-3 pr-3 font-medium" scope="col">
+                    <th className="pb-1.5 pr-2 font-medium" scope="col">
                       Date
                     </th>
-                    <th className="hidden pb-3 pr-3 font-medium md:table-cell" scope="col">
+                    <th className="hidden pb-1.5 pr-2 font-medium md:table-cell" scope="col">
                       Pilot
                     </th>
-                    <th className="pb-3 font-medium" scope="col">
+                    <th className="pb-1.5 font-medium" scope="col">
                       Status
                     </th>
                   </tr>
@@ -164,21 +153,21 @@ export default function InternalDashboardHome() {
                 <tbody>
                   {upcomingMissions.map((mission) => (
                     <tr key={mission.id} className="border-b border-white/[0.05] last:border-0">
-                      <td className="py-3 pr-3 align-top">
-                        <p className="text-sm font-medium text-white/80">{mission.name}</p>
-                        <p className="mt-0.5 text-xs text-white/40 sm:hidden">{mission.client}</p>
+                      <td className="py-1.5 pr-2 align-top">
+                        <p className="text-[13px] font-medium leading-snug text-white/80">{mission.name}</p>
+                        <p className="mt-0.5 text-[10px] text-white/40 sm:hidden">{mission.client}</p>
                       </td>
-                      <td className="hidden py-3 pr-3 text-sm text-white/50 sm:table-cell">
+                      <td className="hidden py-1.5 pr-2 text-[13px] text-white/50 sm:table-cell">
                         {mission.client}
                       </td>
-                      <td className="py-3 pr-3 text-sm text-white/45">{mission.date}</td>
-                      <td className="hidden py-3 pr-3 text-sm text-white/50 md:table-cell">
+                      <td className="py-1.5 pr-2 text-[13px] text-white/45">{mission.date}</td>
+                      <td className="hidden py-1.5 pr-2 text-[13px] text-white/50 md:table-cell">
                         {mission.pilot}
                       </td>
-                      <td className="py-3 align-top">
+                      <td className="py-1.5 align-top">
                         <span
                           className={cn(
-                            "inline-flex rounded-md border px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.08em]",
+                            "inline-flex rounded border px-1.5 py-px text-[9px] font-medium uppercase tracking-[0.06em]",
                             missionStatusClass(mission.status),
                           )}
                         >
@@ -195,22 +184,22 @@ export default function InternalDashboardHome() {
 
         <SectionPanel title="Projects in progress">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[32rem] border-collapse text-left">
+            <table className="w-full min-w-[28rem] border-collapse text-left">
               <thead>
-                <tr className="border-b border-white/[0.06] text-[10px] font-medium uppercase tracking-[0.14em] text-white/35">
-                  <th className="pb-3 pr-4 font-medium" scope="col">
+                <tr className="border-b border-white/[0.06] text-[9px] font-medium uppercase tracking-[0.12em] text-white/35">
+                  <th className="pb-1.5 pr-3 font-medium" scope="col">
                     Project
                   </th>
-                  <th className="hidden pb-3 pr-4 font-medium sm:table-cell" scope="col">
+                  <th className="hidden pb-1.5 pr-3 font-medium sm:table-cell" scope="col">
                     Client
                   </th>
-                  <th className="pb-3 pr-4 font-medium" scope="col">
+                  <th className="pb-1.5 pr-3 font-medium" scope="col">
                     Progress
                   </th>
-                  <th className="pb-3 pr-4 font-medium" scope="col">
+                  <th className="pb-1.5 pr-3 font-medium" scope="col">
                     Status
                   </th>
-                  <th className="pb-3 font-medium" scope="col">
+                  <th className="pb-1.5 font-medium" scope="col">
                     Last update
                   </th>
                 </tr>
@@ -218,20 +207,20 @@ export default function InternalDashboardHome() {
               <tbody>
                 {projectsInProgress.map((project) => (
                   <tr key={project.id} className="border-b border-white/[0.05] last:border-0">
-                    <td className="py-3.5 pr-4 text-sm font-medium text-white/80">{project.project}</td>
-                    <td className="hidden py-3.5 pr-4 text-sm text-white/50 sm:table-cell">
+                    <td className="py-1.5 pr-3 text-[13px] font-medium text-white/80">{project.project}</td>
+                    <td className="hidden py-1.5 pr-3 text-[13px] text-white/50 sm:table-cell">
                       {project.client}
                     </td>
-                    <td className="py-3.5 pr-4">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-mono text-[11px] tracking-tight text-white/35">
+                    <td className="py-1.5 pr-3">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="font-mono text-[10px] tracking-tight text-white/35">
                           {progressBar(project.progress)}
                         </span>
-                        <span className="text-xs tabular-nums text-white/45">{project.progress}%</span>
+                        <span className="text-[11px] tabular-nums text-white/45">{project.progress}%</span>
                       </div>
                     </td>
-                    <td className="py-3.5 pr-4 text-sm text-white/55">{project.status}</td>
-                    <td className="py-3.5 text-sm text-white/40">{project.lastUpdate}</td>
+                    <td className="py-1.5 pr-3 text-[13px] text-white/55">{project.status}</td>
+                    <td className="py-1.5 text-[13px] text-white/40">{project.lastUpdate}</td>
                   </tr>
                 ))}
               </tbody>

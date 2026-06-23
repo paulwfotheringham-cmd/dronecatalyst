@@ -122,7 +122,7 @@ export default function InternalOperationsDashboard() {
       <div
         className={
           activeView === "home"
-            ? "relative px-3 py-3 sm:px-5 lg:px-6 lg:py-4"
+            ? "relative px-3 py-2 sm:px-4 lg:px-5 lg:py-3"
             : "relative px-3 py-3 sm:px-6 lg:px-8 lg:py-4"
         }
       >
@@ -135,7 +135,7 @@ export default function InternalOperationsDashboard() {
           }}
         />
 
-        <div className="relative space-y-6">
+        <div className={activeView === "home" ? "relative" : "relative space-y-6"}>
           {activeView === "home" && <InternalDashboardHome />}
 
           {activeView === "design-mockups" && (
