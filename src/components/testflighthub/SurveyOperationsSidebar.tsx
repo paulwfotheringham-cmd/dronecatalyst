@@ -77,7 +77,7 @@ const navItemClass = (active: boolean, compact = false) =>
   cn(
     "flex w-full items-center rounded-lg text-left leading-tight transition-colors",
     compact
-      ? "gap-2 px-2 py-[0.3rem] text-[11px] lg:py-[0.22rem] lg:text-[10.5px]"
+      ? "gap-2 px-2.5 py-1.5 text-[12px] lg:py-[0.4rem] lg:text-[11.5px]"
       : "gap-2.5 px-3 py-2 text-[13px] leading-snug sm:px-3.5 sm:py-2 sm:text-sm",
     active
       ? "bg-[#0D1B2A] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
@@ -85,7 +85,7 @@ const navItemClass = (active: boolean, compact = false) =>
   );
 
 const sectionHeaderClass =
-  "mb-1 px-2 text-[9px] font-bold uppercase tracking-[0.12em] text-sky-400/90 lg:mb-0.5 lg:text-[8.5px]";
+  "mb-1.5 px-2.5 pt-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-sky-400/90 lg:mb-2 lg:text-[9.5px]";
 
 type SurveyOperationsSidebarProps = {
   mobileOpen?: boolean;
@@ -123,7 +123,7 @@ export default function SurveyOperationsSidebar({
         <Icon
           className={cn(
             "shrink-0",
-            compact ? "h-3.5 w-3.5 lg:h-3 lg:w-3" : "h-4 w-4 sm:h-[18px] sm:w-[18px]",
+            compact ? "h-3.5 w-3.5 lg:h-[15px] lg:w-[15px]" : "h-4 w-4 sm:h-[18px] sm:w-[18px]",
           )}
         />
         <span className="flex-1 truncate">{item.label}</span>
@@ -182,6 +182,23 @@ export default function SurveyOperationsSidebar({
     return renderNavItem(item, active, () => undefined, true, navHref, true);
   }
 
+  function renderInternalSection(
+    section: (typeof internalSurveyNavSections)[number],
+    className?: string,
+  ) {
+    return (
+      <div key={section.label ?? "home"} className={className}>
+        {section.label ? <p className={sectionHeaderClass}>{section.label}</p> : null}
+        <div className="space-y-0.5 lg:space-y-1">
+          {section.items.map((item) => renderInternalNavItemBlock(item))}
+        </div>
+      </div>
+    );
+  }
+
+  const internalHomeSection = internalSurveyNavSections[0];
+  const internalBusinessCentralSection = internalSurveyNavSections[1];
+  const internalFillSections = internalSurveyNavSections.slice(2);
   const isInternalCompact = mode === "internal";
 
   return (
@@ -221,22 +238,19 @@ export default function SurveyOperationsSidebar({
 
       <nav
         className={cn(
-          "flex min-h-0 flex-1 flex-col overflow-x-hidden px-2 pb-2 lg:px-2.5",
+          "flex min-h-0 flex-1 flex-col overflow-x-hidden px-2 pb-3 lg:px-2.5 lg:pb-4",
           isInternalCompact
-            ? "justify-start overflow-y-auto pt-2 [scrollbar-width:none] lg:overflow-hidden lg:pt-2.5 [&::-webkit-scrollbar]:hidden"
+            ? "overflow-y-auto pt-3 [scrollbar-width:none] lg:overflow-hidden lg:pt-3.5 [&::-webkit-scrollbar]:hidden"
             : "overflow-y-auto pt-4 lg:px-3 lg:pt-5",
         )}
       >
         {mode === "internal" ? (
-          <div className="space-y-1.5 lg:space-y-1">
-            {internalSurveyNavSections.map((section) => (
-              <div key={section.label ?? "home"}>
-                {section.label && <p className={sectionHeaderClass}>{section.label}</p>}
-                <div className="space-y-px">
-                  {section.items.map((item) => renderInternalNavItemBlock(item))}
-                </div>
-              </div>
-            ))}
+          <div className="flex min-h-0 flex-1 flex-col">
+            {renderInternalSection(internalHomeSection, "mb-5 shrink-0 lg:mb-7")}
+            {renderInternalSection(internalBusinessCentralSection, "mb-5 shrink-0 lg:mb-7")}
+            <div className="flex min-h-0 flex-1 flex-col justify-between gap-4 lg:gap-0">
+              {internalFillSections.map((section) => renderInternalSection(section))}
+            </div>
           </div>
         ) : (
           <div className="space-y-1">
