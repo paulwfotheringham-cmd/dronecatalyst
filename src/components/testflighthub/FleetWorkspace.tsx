@@ -1,47 +1,50 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
+import {
+  buildDefaultFleetAssignments,
+} from "@/lib/survey-operations-mock-data";
 import type { Telemetry } from "@/lib/telemetry";
+import { createInitialUsers, type ManagedUser } from "@/lib/user-management-data";
 import FleetPanel from "./FleetPanel";
 
-const FLEET_LOCATIONS_STORAGE_KEY = "dc-fleet-current-locations";
-
-const defaultLocations: Record<string, string> = {
-  "DC-M4T-BCN": "Barcelona",
-  "DC-M4T-PRT": "Porto",
-  "DC-M4T-OXF": "Oxford",
-};
+const FLEET_ASSIGNMENTS_STORAGE_KEY = "dc-fleet-user-assignments";
 
 type FleetWorkspaceProps = {
   liveTelemetry: Telemetry | null;
   isRunning: boolean;
   onOpenAssets?: () => void;
+  users?: ManagedUser[];
 };
 
 export default function FleetWorkspace({
   liveTelemetry,
   isRunning,
   onOpenAssets,
+  users: usersProp,
 }: FleetWorkspaceProps) {
-  const [currentLocations, setCurrentLocations] = useState<Record<string, string>>(defaultLocations);
+  const users = useMemo(() => usersProp ?? createInitialUsers(), [usersProp]);
+  const [assignments, setAssignments] = useState<Record<string, string>>(() =>
+    buildDefaultFleetAssignments(),
+  );
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(FLEET_LOCATIONS_STORAGE_KEY);
+      const stored = localStorage.getItem(FLEET_ASSIGNMENTS_STORAGE_KEY);
       if (!stored) return;
       const parsed = JSON.parse(stored) as Record<string, string>;
-      setCurrentLocations((current) => ({ ...current, ...parsed }));
+      setAssignments((current) => ({ ...current, ...parsed }));
     } catch {
       // ignore invalid storage
     }
   }, []);
 
-  function updateLocation(droneId: string, value: string) {
-    setCurrentLocations((current) => {
-      const next = { ...current, [droneId]: value };
+  function updateAssignment(droneId: string, userId: string) {
+    setAssignments((current) => {
+      const next = { ...current, [droneId]: userId };
       try {
-        localStorage.setItem(FLEET_LOCATIONS_STORAGE_KEY, JSON.stringify(next));
+        localStorage.setItem(FLEET_ASSIGNMENTS_STORAGE_KEY, JSON.stringify(next));
       } catch {
         // ignore storage errors
       }
@@ -54,9 +57,10 @@ export default function FleetWorkspace({
       liveTelemetry={liveTelemetry}
       isRunning={isRunning}
       onOpenAssets={onOpenAssets}
-      showCurrentLocation
-      currentLocations={currentLocations}
-      onCurrentLocationChange={updateLocation}
+      showLocationMap
+      users={users}
+      assignments={assignments}
+      onAssignmentChange={updateAssignment}
     />
   );
 }

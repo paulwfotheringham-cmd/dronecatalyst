@@ -1,18 +1,34 @@
+"use client";
+
+import dynamic from "next/dynamic";
+
 import { DRONE_ID, type Telemetry } from "@/lib/telemetry";
 import {
   fleetDrones,
+  getFleetDronePosition,
   type FleetDroneStatus,
 } from "@/lib/survey-operations-mock-data";
+import type { ManagedUser } from "@/lib/user-management-data";
 import { cn } from "@/lib/utils";
+
+const FleetDroneLocationMap = dynamic(() => import("./FleetDroneLocationMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-[168px] items-center justify-center rounded-xl border border-white/10 bg-[#0b1524] text-xs text-white/45">
+      Loading FlightHub map…
+    </div>
+  ),
+});
 
 type FleetPanelProps = {
   liveTelemetry: Telemetry | null;
   isRunning: boolean;
   onOpenAssets?: () => void;
   compact?: boolean;
-  showCurrentLocation?: boolean;
-  currentLocations?: Record<string, string>;
-  onCurrentLocationChange?: (droneId: string, value: string) => void;
+  showLocationMap?: boolean;
+  users?: ManagedUser[];
+  assignments?: Record<string, string>;
+  onAssignmentChange?: (droneId: string, userId: string) => void;
 };
 
 function fleetStatusClass(status: FleetDroneStatus | string) {
@@ -39,6 +55,10 @@ function formatLastContact(date: Date) {
     second: "2-digit",
     hour12: false,
   });
+}
+
+function selectClassName() {
+  return "mt-1.5 h-10 w-full rounded-xl border border-white/10 bg-[#0b1524] px-3 text-sm text-white outline-none transition-colors focus:border-sky-400/50";
 }
 
 function buildFleetRows(liveTelemetry: Telemetry | null, isRunning: boolean) {
@@ -68,12 +88,13 @@ export default function FleetPanel({
   isRunning,
   onOpenAssets,
   compact = false,
-  showCurrentLocation = false,
-  currentLocations = {},
-  onCurrentLocationChange,
+  showLocationMap = false,
+  users = [],
+  assignments = {},
+  onAssignmentChange,
 }: FleetPanelProps) {
   const drones = buildFleetRows(liveTelemetry, isRunning);
-  const isPageLayout = showCurrentLocation && !compact;
+  const isPageLayout = showLocationMap && !compact;
 
   return (
     <section
@@ -87,7 +108,9 @@ export default function FleetPanel({
           <h2 className={cn("font-semibold text-white", compact ? "text-base" : "text-lg")}>
             Fleet
           </h2>
-          <p className="mt-0.5 text-xs text-white/45">3 virtual Matrice 4T assets</p>
+          <p className="mt-0.5 text-xs text-white/45">
+            3 virtual Matrice 4T assets · FlightHub 2 OSD (simulated)
+          </p>
         </div>
         <div className="flex items-center gap-2">
           {onOpenAssets && (
@@ -105,66 +128,92 @@ export default function FleetPanel({
 
       <div
         className={cn(
-          isPageLayout ? "mt-5 grid gap-4 lg:grid-cols-3" : cn("flex min-h-0 flex-1 flex-col space-y-3", compact ? "mt-3" : "mt-4"),
+          isPageLayout
+            ? "mt-5 grid gap-4 lg:grid-cols-3"
+            : cn("flex min-h-0 flex-1 flex-col space-y-3", compact ? "mt-3" : "mt-4"),
         )}
       >
-        {drones.map((drone) => (
-          <div
-            key={drone.id}
-            className={cn(
-              "rounded-xl border border-white/10 bg-white/[0.03]",
-              compact ? "px-3 py-2.5" : "px-4 py-4",
-            )}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="font-mono text-sm font-semibold text-white">{drone.id}</p>
-                <p className="mt-0.5 text-xs text-white/55">{drone.model}</p>
-                {!compact && (
-                  <p className="mt-0.5 text-xs text-white/45">
-                    Based in {drone.homeBase} · Last contact {drone.lastContact}
-                  </p>
-                )}
-              </div>
-              <span
-                className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${fleetStatusClass(drone.status)}`}
-              >
-                {drone.status}
-              </span>
-            </div>
+        {drones.map((drone) => {
+          const assignedUserId = assignments[drone.id] ?? drone.defaultAssignedUserId;
+          const position = getFleetDronePosition(drone, liveTelemetry, isRunning);
 
-            {showCurrentLocation && (
-              <div className="mt-3">
-                <label
-                  htmlFor={`fleet-location-${drone.id}`}
-                  className="text-[10px] font-medium uppercase tracking-[0.12em] text-white/45"
+          return (
+            <div
+              key={drone.id}
+              className={cn(
+                "flex flex-col rounded-xl border border-white/10 bg-white/[0.03]",
+                compact ? "px-3 py-2.5" : "px-4 py-4",
+              )}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-mono text-sm font-semibold text-white">{drone.id}</p>
+                  <p className="mt-0.5 text-xs text-white/55">{drone.model}</p>
+                  {!compact && (
+                    <p className="mt-0.5 text-xs text-white/45">
+                      Based in {drone.homeBase} · Last contact {drone.lastContact}
+                    </p>
+                  )}
+                </div>
+                <span
+                  className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${fleetStatusClass(drone.status)}`}
                 >
-                  Current location
-                </label>
-                <input
-                  id={`fleet-location-${drone.id}`}
-                  type="text"
-                  value={currentLocations[drone.id] ?? drone.homeBase}
-                  onChange={(event) => onCurrentLocationChange?.(drone.id, event.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#0b1524] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-sky-400/50"
-                />
+                  {drone.status}
+                </span>
               </div>
-            )}
 
-            <div className={cn(compact ? "mt-2" : "mt-3")}>
-              <div className="mb-1 flex items-center justify-between text-[10px] uppercase tracking-[0.12em] text-white/45">
-                <span>Battery</span>
-                <span className="font-mono text-white/70">{drone.battery}%</span>
+              {users.length > 0 && onAssignmentChange && (
+                <div className="mt-3">
+                  <label
+                    htmlFor={`fleet-user-${drone.id}`}
+                    className="text-[10px] font-medium uppercase tracking-[0.12em] text-white/45"
+                  >
+                    Assigned operator
+                  </label>
+                  <select
+                    id={`fleet-user-${drone.id}`}
+                    value={assignedUserId}
+                    onChange={(event) => onAssignmentChange(drone.id, event.target.value)}
+                    className={selectClassName()}
+                  >
+                    {users.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.fullName} · {user.region}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className={cn(compact ? "mt-2" : "mt-3")}>
+                <div className="mb-1 flex items-center justify-between text-[10px] uppercase tracking-[0.12em] text-white/45">
+                  <span>Battery</span>
+                  <span className="font-mono text-white/70">{drone.battery}%</span>
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-sky-500 transition-all duration-500"
+                    style={{ width: `${Math.max(0, Math.min(100, drone.battery))}%` }}
+                  />
+                </div>
               </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-sky-500 transition-all duration-500"
-                  style={{ width: `${Math.max(0, Math.min(100, drone.battery))}%` }}
-                />
-              </div>
+
+              {showLocationMap && (
+                <div className="mt-3">
+                  <p className="mb-1.5 text-[10px] font-medium uppercase tracking-[0.12em] text-white/45">
+                    FlightHub 2 location
+                  </p>
+                  <FleetDroneLocationMap
+                    latitude={position.latitude}
+                    longitude={position.longitude}
+                    label={position.label}
+                    live={position.live}
+                  />
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

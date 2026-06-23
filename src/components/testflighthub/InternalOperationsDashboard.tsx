@@ -164,6 +164,7 @@ export default function InternalOperationsDashboard() {
               liveTelemetry={liveTelemetry}
               isRunning={isRunning}
               onOpenAssets={() => handleViewChange("assets")}
+              users={users}
             />
           )}
 

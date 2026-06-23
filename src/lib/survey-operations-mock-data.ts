@@ -1,3 +1,7 @@
+import { DRONE_ID, type Telemetry } from "@/lib/telemetry";
+import { OXFORD_FLIGHT_PROFILE, SPAIN_FLIGHT_PROFILE } from "@/lib/flight-simulation";
+import { REGION_OWNER_USER_IDS } from "@/lib/user-management-data";
+
 export type MissionStatus = "Active" | "Scheduled" | "Completed" | "On Hold";
 
 export type FleetDroneStatus =
@@ -7,6 +11,12 @@ export type FleetDroneStatus =
   | "Maintenance"
   | "Stopped";
 
+export type FleetDronePosition = {
+  latitude: number;
+  longitude: number;
+  label: string;
+};
+
 export type FleetDroneSummary = {
   id: string;
   model: string;
@@ -15,6 +25,15 @@ export type FleetDroneSummary = {
   battery: number;
   lastContact: string;
   telemetryDroneId?: string;
+  flightHubPosition: FleetDronePosition;
+  defaultAssignedUserId: string;
+};
+
+/** Douro berth survey point — simulated FlightHub 2 home for Porto fleet asset. */
+const PORTO_FLIGHT_HUB_POSITION: FleetDronePosition = {
+  latitude: 41.1403,
+  longitude: -8.6088,
+  label: "Douro Berth Survey Home, Porto",
 };
 
 export const fleetDrones: FleetDroneSummary[] = [
@@ -25,6 +44,12 @@ export const fleetDrones: FleetDroneSummary[] = [
     status: "Standby",
     battery: 96,
     lastContact: "4 min ago",
+    flightHubPosition: {
+      latitude: SPAIN_FLIGHT_PROFILE.startPosition.latitude,
+      longitude: SPAIN_FLIGHT_PROFILE.startPosition.longitude,
+      label: SPAIN_FLIGHT_PROFILE.startPosition.label,
+    },
+    defaultAssignedUserId: REGION_OWNER_USER_IDS.Barcelona,
   },
   {
     id: "DC-M4T-PRT",
@@ -33,6 +58,8 @@ export const fleetDrones: FleetDroneSummary[] = [
     status: "In Hangar",
     battery: 100,
     lastContact: "18 min ago",
+    flightHubPosition: PORTO_FLIGHT_HUB_POSITION,
+    defaultAssignedUserId: REGION_OWNER_USER_IDS.Porto,
   },
   {
     id: "DC-M4T-OXF",
@@ -42,8 +69,40 @@ export const fleetDrones: FleetDroneSummary[] = [
     battery: 94,
     lastContact: "Awaiting link",
     telemetryDroneId: "DC-TEST-001",
+    flightHubPosition: {
+      latitude: OXFORD_FLIGHT_PROFILE.startPosition.latitude,
+      longitude: OXFORD_FLIGHT_PROFILE.startPosition.longitude,
+      label: OXFORD_FLIGHT_PROFILE.startPosition.label,
+    },
+    defaultAssignedUserId: REGION_OWNER_USER_IDS.Oxford,
   },
 ];
+
+export function getFleetDronePosition(
+  drone: FleetDroneSummary,
+  liveTelemetry: Telemetry | null,
+  isRunning: boolean,
+): FleetDronePosition & { live: boolean } {
+  const linkedId = drone.telemetryDroneId ?? drone.id;
+  if (linkedId === DRONE_ID && liveTelemetry) {
+    return {
+      latitude: liveTelemetry.latitude,
+      longitude: liveTelemetry.longitude,
+      label: isRunning
+        ? "Live FlightHub 2 telemetry stream"
+        : `${liveTelemetry.latitude.toFixed(5)}, ${liveTelemetry.longitude.toFixed(5)}`,
+      live: isRunning,
+    };
+  }
+
+  return { ...drone.flightHubPosition, live: false };
+}
+
+export function buildDefaultFleetAssignments() {
+  return Object.fromEntries(
+    fleetDrones.map((drone) => [drone.id, drone.defaultAssignedUserId]),
+  ) as Record<string, string>;
+}
 
 export const recentMissions = [
   {
