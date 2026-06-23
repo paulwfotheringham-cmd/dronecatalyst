@@ -56,30 +56,71 @@ export function normalizeInternalOperationsView(value: string | null): InternalO
   return isInternalOperationsView(value) ? value : "home";
 }
 
-export const internalSurveyNavItems = [
-  { label: "Home", icon: "LayoutDashboard", view: "home" as const },
-  { label: "Clients", icon: "Building2", view: "clients" as const },
-  { label: "CRM", icon: "ContactRound", view: "crm" as const },
-  { label: "Financials", icon: "Wallet", view: "financials" as const },
-  { label: "Strategy", icon: "Compass", view: "strategy" as const },
-  { label: "Whiteboard", icon: "PenLine", view: "whiteboard" as const },
-  { label: "Competitors", icon: "Binoculars", view: "competitors" as const },
-  { label: "Assets", icon: "Package", view: "assets" as const },
-  { label: "Fleet", icon: "Plane", view: "fleet" as const },
-  { label: "Projects", icon: "FolderKanban", view: "projects" as const },
-  { label: "Recent Missions", icon: "History", view: "recent-missions" as const },
-  { label: "Live Telemetry", icon: "Radio", view: "telemetry" as const },
-  { label: "WebODM", icon: "Layers", view: "webodm" as const },
-  { label: "Testing", icon: "FlaskConical", view: "testing" as const },
-  { label: "Users", icon: "Users", view: "users" as const },
-  { label: "Messaging", icon: "MessageSquare", view: "messaging" as const },
-  { label: "Calendar", icon: "CalendarDays", view: "calendar" as const },
-  { label: "Info Email", icon: "Mail", view: "info-email" as const },
-  { label: "Files", icon: "FolderOpen", view: "files" as const },
-  { label: "Media Example", icon: "Film", view: "media-example" as const },
-] as const;
+export type InternalNavItem = {
+  readonly label: string;
+  readonly icon: string;
+  readonly view: InternalOperationsView;
+};
 
-export type InternalNavItem = (typeof internalSurveyNavItems)[number];
+export type InternalNavSection = {
+  readonly label: string | null;
+  readonly items: readonly InternalNavItem[];
+};
+
+export const internalSurveyNavSections: readonly InternalNavSection[] = [
+  {
+    label: null,
+    items: [{ label: "Home", icon: "LayoutDashboard", view: "home" as const }],
+  },
+  {
+    label: "Business Central",
+    items: [
+      { label: "Clients", icon: "Building2", view: "clients" as const },
+      { label: "CRM", icon: "ContactRound", view: "crm" as const },
+      { label: "Projects", icon: "FolderKanban", view: "projects" as const },
+      { label: "Recent Missions", icon: "History", view: "recent-missions" as const },
+      { label: "Financials", icon: "Wallet", view: "financials" as const },
+    ],
+  },
+  {
+    label: "Inventory Management",
+    items: [
+      { label: "Assets", icon: "Package", view: "assets" as const },
+      { label: "Fleet", icon: "Plane", view: "fleet" as const },
+    ],
+  },
+  {
+    label: "Business Productivity",
+    items: [
+      { label: "Files", icon: "FolderOpen", view: "files" as const },
+      { label: "Calendar", icon: "CalendarDays", view: "calendar" as const },
+      { label: "Email", icon: "Mail", view: "info-email" as const },
+      { label: "Messaging", icon: "MessageSquare", view: "messaging" as const },
+    ],
+  },
+  {
+    label: "Strategy",
+    items: [
+      { label: "Strategy", icon: "Compass", view: "strategy" as const },
+      { label: "Competitors", icon: "Binoculars", view: "competitors" as const },
+      { label: "Whiteboard", icon: "PenLine", view: "whiteboard" as const },
+      { label: "Media Example", icon: "Film", view: "media-example" as const },
+    ],
+  },
+  {
+    label: "Tools",
+    items: [
+      { label: "Testing", icon: "FlaskConical", view: "testing" as const },
+      { label: "WebODM", icon: "Layers", view: "webodm" as const },
+      { label: "Live Telemetry", icon: "Radio", view: "telemetry" as const },
+      { label: "Users", icon: "Users", view: "users" as const },
+    ],
+  },
+];
+
+export const internalSurveyNavItems: InternalNavItem[] = internalSurveyNavSections.flatMap(
+  (section) => [...section.items],
+);
 
 export const internalViewTitles: Record<
   InternalOperationsView,
@@ -100,7 +141,7 @@ export const internalViewTitles: Record<
   webodm: { title: "WebODM Processing", subtitle: "Internal Operations" },
   messaging: { title: "Messaging", subtitle: "Internal Operations" },
   calendar: { title: "Calendar", subtitle: "Internal Operations" },
-  "info-email": { title: "Info Email", subtitle: "Internal Operations" },
+  "info-email": { title: "Email", subtitle: "Internal Operations" },
   files: { title: "File Repository", subtitle: "Internal Operations" },
   users: { title: "Users", subtitle: "Internal Operations" },
   telemetry: { title: "Live Telemetry", subtitle: "Internal Operations" },

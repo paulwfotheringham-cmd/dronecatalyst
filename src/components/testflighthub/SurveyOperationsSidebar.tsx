@@ -6,8 +6,9 @@ import { usePathname } from "next/navigation";
 import Logo from "@/components/layout/Logo";
 import {
   getInternalNavHref,
-  internalSurveyNavItems,
+  internalSurveyNavSections,
   isInternalNavItemActive,
+  type InternalNavItem,
   type InternalOperationsView,
 } from "@/lib/internal-operations-data";
 import {
@@ -100,11 +101,10 @@ export default function SurveyOperationsSidebar({
   const pathname = usePathname() ?? "";
   const inAppNavigation =
     isSurveyOperationsDashboardPath(pathname, basePath) && onViewChange != null;
-  const navItems = mode === "internal" ? internalSurveyNavItems : surveyNavItems;
   const logoHref = mode === "internal" ? "/internaldashboard" : basePath;
 
   function renderNavItem(
-    item: (typeof navItems)[number],
+    item: { label: string; icon: string },
     active: boolean,
     onNavigate: () => void,
     asLink: boolean,
@@ -145,6 +145,30 @@ export default function SurveyOperationsSidebar({
     );
   }
 
+  function renderInternalNavItemBlock(item: InternalNavItem) {
+    const active = isInternalNavItemActive(
+      pathname,
+      item,
+      (activeView as InternalOperationsView | undefined) ?? "home",
+    );
+    const navHref = getInternalNavHref(item.view as InternalOperationsView);
+
+    if (inAppNavigation) {
+      return renderNavItem(
+        item,
+        active,
+        () => {
+          (onViewChange as (view: InternalOperationsView) => void)(item.view as InternalOperationsView);
+          onClose?.();
+        },
+        false,
+        navHref,
+      );
+    }
+
+    return renderNavItem(item, active, () => undefined, true, navHref);
+  }
+
   return (
     <aside
       className={cn(
@@ -167,68 +191,56 @@ export default function SurveyOperationsSidebar({
       </div>
 
       <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden px-2.5 pt-4 pb-2 lg:px-3 lg:pt-5">
-        <div className="space-y-1">
-          {navItems.map((item) => {
-            const active =
-              mode === "internal"
-                ? isInternalNavItemActive(
-                    pathname,
-                    item as (typeof internalSurveyNavItems)[number],
-                    (activeView as InternalOperationsView | undefined) ?? "home",
-                  )
-                : isSurveyNavItemActive(
-                    pathname,
-                    item as (typeof surveyNavItems)[number],
-                    activeView as SurveyOperationsView | null | undefined,
-                    basePath,
-                  );
-            const externalHref = "href" in item ? item.href : undefined;
-            const navHref =
-              mode === "internal"
-                ? getInternalNavHref(item.view as InternalOperationsView)
-                : getSurveyNavHref(
-                    item.view as SurveyOperationsView | null,
-                    externalHref,
-                    basePath,
-                  );
-
-            if (mode === "internal" && inAppNavigation) {
-              return renderNavItem(
-                item,
-                active,
-                () => {
-                  (onViewChange as (view: InternalOperationsView) => void)(
-                    item.view as InternalOperationsView,
-                  );
-                  onClose?.();
-                },
-                false,
-                navHref,
+        {mode === "internal" ? (
+          <div className="space-y-4">
+            {internalSurveyNavSections.map((section) => (
+              <div key={section.label ?? "home"}>
+                {section.label && (
+                  <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/35">
+                    {section.label}
+                  </p>
+                )}
+                <div className="space-y-1">
+                  {section.items.map((item) => renderInternalNavItemBlock(item))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-1">
+            {surveyNavItems.map((item) => {
+              const active = isSurveyNavItemActive(
+                pathname,
+                item as (typeof surveyNavItems)[number],
+                activeView as SurveyOperationsView | null | undefined,
+                basePath,
               );
-            }
+              const externalHref = "href" in item ? item.href : undefined;
+              const navHref = getSurveyNavHref(
+                item.view as SurveyOperationsView | null,
+                externalHref,
+                basePath,
+              );
 
-            if (mode === "internal") {
+              if (inAppNavigation && item.view) {
+                return renderNavItem(
+                  item,
+                  active,
+                  () => {
+                    (onViewChange as (view: SurveyOperationsView) => void)(
+                      item.view as SurveyOperationsView,
+                    );
+                    onClose?.();
+                  },
+                  false,
+                  navHref,
+                );
+              }
+
               return renderNavItem(item, active, () => undefined, true, navHref);
-            }
-
-            if (inAppNavigation && item.view) {
-              return renderNavItem(
-                item,
-                active,
-                () => {
-                  (onViewChange as (view: SurveyOperationsView) => void)(
-                    item.view as SurveyOperationsView,
-                  );
-                  onClose?.();
-                },
-                false,
-                navHref,
-              );
-            }
-
-            return renderNavItem(item, active, () => undefined, true, navHref);
-          })}
-        </div>
+            })}
+          </div>
+        )}
       </nav>
     </aside>
   );
