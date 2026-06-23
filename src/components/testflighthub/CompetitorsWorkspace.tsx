@@ -87,7 +87,7 @@ function resolveServiceCategories(competitor: Competitor) {
 }
 
 const TABLE_GRID =
-  "grid grid-cols-[minmax(120px,1fr)_minmax(130px,0.95fr)_minmax(150px,1.1fr)_minmax(150px,1.1fr)_minmax(100px,0.85fr)_5.5rem] gap-3";
+  "grid gap-3 max-lg:grid-cols-1 lg:grid-cols-[minmax(120px,1fr)_minmax(130px,0.95fr)_minmax(150px,1.1fr)_minmax(150px,1.1fr)_minmax(100px,0.85fr)_5.5rem]";
 
 export default function CompetitorsWorkspace() {
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
@@ -325,12 +325,11 @@ export default function CompetitorsWorkspace() {
             No competitors listed for {regionMeta.title} yet. Click Add to create one.
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <div className="min-w-[1080px]">
+          <div className="min-w-0">
               <div
                 className={cn(
                   TABLE_GRID,
-                  "border-b border-white/10 px-4 py-2.5 text-[10px] font-medium uppercase tracking-[0.12em] text-white/40 sm:px-5",
+                  "hidden border-b border-white/10 px-4 py-2.5 text-[10px] font-medium uppercase tracking-[0.12em] text-white/40 sm:px-5 lg:grid",
                 )}
               >
                 <span>Name</span>
@@ -538,7 +537,6 @@ export default function CompetitorsWorkspace() {
                   );
                 })}
               </div>
-            </div>
           </div>
         )}
       </div>

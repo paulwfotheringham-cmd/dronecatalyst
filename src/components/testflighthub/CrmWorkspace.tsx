@@ -12,6 +12,7 @@ import {
   type LeadStatus,
 } from "@/lib/crm-data";
 import { cn } from "@/lib/utils";
+import ResponsiveMasterDetail, { useMobileDetailPanel } from "@/components/ui/ResponsiveMasterDetail";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 
 async function readApiJson<T>(response: Response): Promise<T> {
@@ -44,6 +45,7 @@ export default function CrmWorkspace() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { showDetail, openDetail, closeDetail } = useMobileDetailPanel();
 
   const selectedLead = useMemo(
     () => leads.find((lead) => lead.id === selectedLeadId) ?? leads[0] ?? null,
@@ -159,6 +161,7 @@ export default function CrmWorkspace() {
       setLeads((current) => [data.lead!, ...current]);
       setSelectedLeadId(data.lead.id);
       setStatusFilter("All");
+      openDetail();
     } catch (createError) {
       setError(createError instanceof Error ? createError.message : "Failed to create lead");
     } finally {
@@ -181,6 +184,7 @@ export default function CrmWorkspace() {
       const remaining = leads.filter((lead) => lead.id !== selectedLead.id);
       setLeads(remaining);
       setSelectedLeadId(remaining[0]?.id ?? null);
+      if (remaining.length === 0) closeDetail();
     } catch (deleteError) {
       setError(deleteError instanceof Error ? deleteError.message : "Failed to delete lead");
     } finally {
@@ -243,8 +247,12 @@ export default function CrmWorkspace() {
         </div>
       )}
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
-        <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
+      <ResponsiveMasterDetail
+        showDetail={showDetail && !!selectedLead}
+        onBack={closeDetail}
+        backLabel="Back to leads"
+        master={
+        <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-4 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-6">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-white">Leads</h2>
@@ -279,7 +287,10 @@ export default function CrmWorkspace() {
                   <li key={lead.id}>
                     <button
                       type="button"
-                      onClick={() => setSelectedLeadId(lead.id)}
+                      onClick={() => {
+                        setSelectedLeadId(lead.id);
+                        openDetail();
+                      }}
                       className={cn(
                         "w-full rounded-xl border px-4 py-3 text-left transition-colors",
                         selected
@@ -315,9 +326,10 @@ export default function CrmWorkspace() {
             </ul>
           )}
         </section>
-
-        {selectedLead ? (
-          <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
+        }
+        detail={
+        selectedLead ? (
+          <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-4 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#60a5fa]">
@@ -473,14 +485,13 @@ export default function CrmWorkspace() {
               </div>
             </div>
           </section>
-        ) : (
-          !loading && (
-            <section className="flex min-h-[320px] items-center justify-center rounded-2xl border border-white/15 bg-white/[0.04] p-6 text-sm text-white/45">
-              Select a lead or create a new one to get started.
-            </section>
-          )
-        )}
-      </div>
+        ) : !loading ? (
+          <section className="flex min-h-[320px] items-center justify-center rounded-2xl border border-white/15 bg-white/[0.04] p-6 text-sm text-white/45">
+            Select a lead or create a new one to get started.
+          </section>
+        ) : null
+        }
+      />
     </div>
   );
 }

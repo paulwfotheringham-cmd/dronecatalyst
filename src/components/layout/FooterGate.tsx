@@ -14,7 +14,11 @@ export default function FooterGate() {
     pathname?.startsWith("/users") ||
     pathname?.startsWith("/messaging") ||
     pathname?.startsWith("/crm") ||
-    pathname?.startsWith("/telemetry")
+    pathname?.startsWith("/telemetry") ||
+    pathname?.startsWith("/financials") ||
+    pathname?.startsWith("/projects") ||
+    pathname?.startsWith("/calendar") ||
+    pathname?.startsWith("/info-email")
   ) {
     return null;
   }

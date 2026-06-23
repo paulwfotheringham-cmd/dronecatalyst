@@ -13,6 +13,7 @@ import {
   type ManagedClient,
 } from "@/lib/client-management-data";
 import { cn } from "@/lib/utils";
+import ResponsiveMasterDetail, { useMobileDetailPanel } from "@/components/ui/ResponsiveMasterDetail";
 import { ExternalLink } from "lucide-react";
 
 type ClientManagementWorkspaceProps = {
@@ -40,6 +41,7 @@ export default function ClientManagementWorkspace({
   onSelectClient,
   onClientsChange,
 }: ClientManagementWorkspaceProps) {
+  const { showDetail, openDetail, closeDetail } = useMobileDetailPanel();
   const selectedClient = useMemo(
     () => clients.find((client) => client.id === selectedClientId) ?? clients[0],
     [clients, selectedClientId],
@@ -53,6 +55,7 @@ export default function ClientManagementWorkspace({
     const next = createBlankClient();
     onClientsChange([next, ...clients]);
     onSelectClient(next.id);
+    openDetail();
   }
 
   function patchSelected(patch: Partial<ManagedClient>) {
@@ -62,8 +65,12 @@ export default function ClientManagementWorkspace({
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
-        <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
+      <ResponsiveMasterDetail
+        showDetail={showDetail && !!selectedClient}
+        onBack={closeDetail}
+        backLabel="Back to clients"
+        master={
+        <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-4 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-6">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-white">Clients</h2>
@@ -86,7 +93,10 @@ export default function ClientManagementWorkspace({
                 <li key={client.id}>
                   <button
                     type="button"
-                    onClick={() => onSelectClient(client.id)}
+                    onClick={() => {
+                      onSelectClient(client.id);
+                      openDetail();
+                    }}
                     className={cn(
                       "w-full rounded-xl border px-4 py-3 text-left transition-colors",
                       selected
@@ -117,9 +127,10 @@ export default function ClientManagementWorkspace({
             })}
           </ul>
         </section>
-
-        {selectedClient && (
-          <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
+        }
+        detail={
+        selectedClient ? (
+          <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-4 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#60a5fa]">
@@ -292,8 +303,9 @@ export default function ClientManagementWorkspace({
               </div>
             </div>
           </section>
-        )}
-      </div>
+        ) : null
+        }
+      />
     </div>
   );
 }

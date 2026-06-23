@@ -519,8 +519,8 @@ export default function FileRepositoryWorkspace() {
   }
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[240px_minmax(0,1fr)]">
-      <aside className="rounded-2xl border border-white/15 bg-white/[0.04] p-4 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
+    <div className="grid gap-4 max-xl:grid-cols-1 xl:grid-cols-[240px_minmax(0,1fr)]">
+      <aside className="rounded-2xl border border-white/15 bg-white/[0.04] p-4 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl xl:sticky xl:top-0 xl:self-start">
         <div className="flex items-center justify-between gap-2">
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#60a5fa]">
             Categories
@@ -534,12 +534,12 @@ export default function FileRepositoryWorkspace() {
           </button>
         </div>
 
-        <div className="mt-3 space-y-1">
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1 xl:block xl:space-y-1 xl:overflow-visible xl:pb-0">
           <button
             type="button"
             onClick={() => setCategoryFilter(null)}
             className={cn(
-              "flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm transition-colors",
+              "flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-left text-sm transition-colors xl:w-full",
               categoryFilter === null
                 ? "bg-[#0D1B2A] text-white"
                 : "text-white/55 hover:bg-white/[0.04] hover:text-white/80",
@@ -555,7 +555,7 @@ export default function FileRepositoryWorkspace() {
               type="button"
               onClick={() => setCategoryFilter(category.id)}
               className={cn(
-                "flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm transition-colors",
+                "flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-left text-sm transition-colors xl:w-full",
                 categoryFilter === category.id
                   ? "bg-[#0D1B2A] text-white"
                   : "text-white/55 hover:bg-white/[0.04] hover:text-white/80",
@@ -598,7 +598,7 @@ export default function FileRepositoryWorkspace() {
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <div className="relative min-w-[220px] flex-1">
+            <div className="relative min-w-0 flex-1 basis-full sm:min-w-[12rem] sm:flex-none">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35" />
               <input
                 value={searchInput}

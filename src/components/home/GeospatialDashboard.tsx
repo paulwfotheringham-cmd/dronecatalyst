@@ -165,7 +165,7 @@ export default function GeospatialDashboard() {
       </div>
 
       {/* KPI strip ? horizontal */}
-      <div className="mt-2 grid grid-cols-4 gap-1.5">
+      <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
         {[
           { label: "Reports", value: "12", sub: "3 pending" },
           { label: "Issues", value: "3", sub: "Zone B,D,F", warn: true },
@@ -173,11 +173,11 @@ export default function GeospatialDashboard() {
           { label: "Cut/Fill", value: "+18K", sub: "On tolerance" },
         ].map((kpi) => (
           <GlassCard key={kpi.label} className="px-2 py-1.5">
-            <p className="text-[7px] uppercase tracking-wide text-white/40">{kpi.label}</p>
-            <p className={`text-[11px] font-semibold ${kpi.warn ? "text-amber-300" : "text-white"}`}>
+            <p className="text-[9px] uppercase tracking-wide text-white/40 sm:text-[10px]">{kpi.label}</p>
+            <p className={`text-sm font-semibold sm:text-base ${kpi.warn ? "text-amber-300" : "text-white"}`}>
               {kpi.value}
             </p>
-            <p className="text-[7px] text-[#60a5fa]">{kpi.sub}</p>
+            <p className="text-[9px] text-[#60a5fa] sm:text-[10px]">{kpi.sub}</p>
           </GlassCard>
         ))}
       </div>

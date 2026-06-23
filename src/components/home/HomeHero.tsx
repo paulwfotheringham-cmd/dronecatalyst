@@ -29,11 +29,11 @@ export default function HomeHero() {
         }}
       />
 
-      <div className="relative z-10 mx-auto max-w-[1400px] px-6 pb-32 pt-[104px] sm:px-8 lg:px-10 lg:pb-40 lg:pt-[120px]">
-        <div className="grid items-center gap-12 lg:grid-cols-[42%_58%] lg:gap-10 xl:gap-12">
+      <div className="relative z-10 mx-auto max-w-[1400px] px-5 pb-24 pt-24 sm:px-8 sm:pb-32 sm:pt-[104px] lg:px-10 lg:pb-40 lg:pt-[120px]">
+        <div className="grid items-center gap-10 lg:grid-cols-[42%_58%] lg:gap-10 xl:gap-12">
           {/* Left column */}
           <div className="relative max-w-[560px]">
-            <h1 className="text-[2.65rem] font-bold leading-[0.92] tracking-[-0.03em] text-white sm:text-[3.4rem] lg:text-[4rem] xl:text-[4.5rem]">
+            <h1 className="text-4xl font-bold leading-[0.95] tracking-[-0.03em] text-white sm:text-[3.4rem] lg:text-[4rem] xl:text-[4.5rem]">
               FROM DRONE
               <br />
               TO INTELLIGENCE
@@ -70,8 +70,8 @@ export default function HomeHero() {
           </div>
 
           {/* Right column — drone scan upper; horizontal dashboard lower */}
-          <div className="relative min-h-[480px] sm:min-h-[540px] lg:min-h-[600px]">
-            <div className="absolute bottom-0 right-0 left-0 z-10 flex justify-end translate-y-10 sm:translate-y-12 lg:translate-y-16 xl:translate-y-20">
+          <div className="relative min-h-[320px] sm:min-h-[480px] lg:min-h-[600px]">
+            <div className="relative z-10 flex justify-center translate-y-2 sm:absolute sm:bottom-0 sm:right-0 sm:left-0 sm:translate-y-10 lg:translate-y-16 xl:translate-y-20">
               <GeospatialDashboard />
             </div>
           </div>

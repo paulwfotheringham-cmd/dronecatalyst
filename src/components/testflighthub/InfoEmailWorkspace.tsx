@@ -13,6 +13,7 @@ import {
 } from "@/lib/info-email-data";
 import { createInitialUsers } from "@/lib/user-management-data";
 import { cn } from "@/lib/utils";
+import ResponsiveMasterDetail, { useMobileDetailPanel } from "@/components/ui/ResponsiveMasterDetail";
 import { Inbox, Loader2, Mail, Reply, Send } from "lucide-react";
 
 const operators = createInitialUsers();
@@ -39,6 +40,7 @@ export default function InfoEmailWorkspace() {
   const [error, setError] = useState<string | null>(null);
   const [replyBody, setReplyBody] = useState("");
   const [replyAsUserId, setReplyAsUserId] = useState(operators[0]?.id ?? "");
+  const { showDetail, openDetail, closeDetail } = useMobileDetailPanel();
 
   const selectedThread = useMemo(
     () => threads.find((thread) => thread.id === selectedThreadId) ?? threads[0] ?? null,
@@ -133,7 +135,13 @@ export default function InfoEmailWorkspace() {
         </p>
       )}
 
-      <div className="grid min-h-[32rem] gap-4 xl:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
+      <ResponsiveMasterDetail
+        showDetail={showDetail && !!selectedThread}
+        onBack={closeDetail}
+        backLabel="Back to inbox"
+        columnsClassName="xl:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]"
+        className="min-h-[32rem]"
+        master={
         <section className="flex min-h-0 flex-col rounded-2xl border border-white/10 bg-[#0a1422]/80">
           <div className="border-b border-white/10 px-4 py-3">
             <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-white/45">
@@ -158,7 +166,10 @@ export default function InfoEmailWorkspace() {
                   <button
                     key={thread.id}
                     type="button"
-                    onClick={() => setSelectedThreadId(thread.id)}
+                    onClick={() => {
+                      setSelectedThreadId(thread.id);
+                      openDetail();
+                    }}
                     className={cn(
                       "w-full border-b border-white/5 px-4 py-3 text-left transition-colors",
                       active ? "bg-sky-500/10" : "hover:bg-white/[0.03]",
@@ -197,8 +208,9 @@ export default function InfoEmailWorkspace() {
             </div>
           )}
         </section>
-
-        <section className="flex min-h-0 flex-col rounded-2xl border border-white/10 bg-[#0a1422]/80">
+        }
+        detail={
+        <section className="flex min-h-[24rem] min-h-0 flex-col rounded-2xl border border-white/10 bg-[#0a1422]/80 xl:min-h-0">
           {!selectedThread ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 py-16 text-center text-white/45">
               <Mail className="h-8 w-8 text-white/25" />
@@ -310,7 +322,8 @@ export default function InfoEmailWorkspace() {
             </>
           )}
         </section>
-      </div>
+        }
+      />
     </div>
   );
 }

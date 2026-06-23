@@ -13,6 +13,7 @@ import {
   type WhiteboardScene,
 } from "@/lib/whiteboard-data";
 import { cn } from "@/lib/utils";
+import ResponsiveMasterDetail, { useMobileDetailPanel } from "@/components/ui/ResponsiveMasterDetail";
 
 import "@excalidraw/excalidraw/index.css";
 
@@ -55,6 +56,7 @@ export default function WhiteboardWorkspace() {
   const [creating, setCreating] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { showDetail, openDetail, closeDetail } = useMobileDetailPanel();
 
   const pendingSceneRef = useRef<WhiteboardScene>(EMPTY_WHITEBOARD_SCENE);
   const skipNextChangeRef = useRef(true);
@@ -120,8 +122,9 @@ export default function WhiteboardWorkspace() {
       if (projectId === selectedProjectId) return;
       if (dirty && !window.confirm("Discard unsaved changes on this project?")) return;
       await loadProject(projectId);
+      openDetail();
     },
-    [dirty, loadProject, selectedProjectId],
+    [dirty, loadProject, openDetail, selectedProjectId],
   );
 
   const handleNewProject = useCallback(async () => {
@@ -160,12 +163,13 @@ export default function WhiteboardWorkspace() {
       setDirty(false);
       setEditorKey((current) => current + 1);
       skipNextChangeRef.current = true;
+      openDetail();
     } catch (createError) {
       setError(createError instanceof Error ? createError.message : "Failed to create project");
     } finally {
       setCreating(false);
     }
-  }, [dirty]);
+  }, [dirty, openDetail]);
 
   const handleSave = useCallback(async () => {
     if (!selectedProjectId) return;
@@ -258,7 +262,13 @@ export default function WhiteboardWorkspace() {
         </p>
       )}
 
-      <div className="grid min-h-[calc(100dvh-14rem)] gap-4 xl:grid-cols-[280px_minmax(0,1fr)]">
+      <ResponsiveMasterDetail
+        showDetail={showDetail && !!selectedProjectId}
+        onBack={closeDetail}
+        backLabel="Back to projects"
+        columnsClassName="xl:grid-cols-[280px_minmax(0,1fr)]"
+        className="min-h-[calc(100dvh-14rem)]"
+        master={
         <aside className="flex min-h-0 flex-col rounded-2xl border border-white/15 bg-white/[0.04] shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
           <div className="flex items-center justify-between gap-2 border-b border-white/10 px-4 py-3">
             <div>
@@ -310,8 +320,9 @@ export default function WhiteboardWorkspace() {
             </ul>
           )}
         </aside>
-
-        <div className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#1e1e1e] shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)]">
+        }
+        detail={
+        <div className="flex min-h-0 min-h-[min(60dvh,640px)] flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#1e1e1e] shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] xl:min-h-0">
           <div className="flex flex-wrap items-end gap-3 border-b border-white/10 bg-[#121212] px-4 py-3 sm:px-5">
             <div className="min-w-[180px] flex-1">
               <label className="text-[10px] font-medium uppercase tracking-[0.12em] text-white/45">
@@ -382,7 +393,8 @@ export default function WhiteboardWorkspace() {
             )}
           </div>
         </div>
-      </div>
+        }
+      />
     </div>
   );
 }

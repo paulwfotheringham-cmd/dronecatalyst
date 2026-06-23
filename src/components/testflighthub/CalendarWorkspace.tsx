@@ -19,6 +19,7 @@ import {
   type CalendarEventType,
 } from "@/lib/calendar-data";
 import { cn } from "@/lib/utils";
+import ResponsiveMasterDetail, { useMobileDetailPanel } from "@/components/ui/ResponsiveMasterDetail";
 import {
   CalendarDays,
   ChevronLeft,
@@ -105,6 +106,7 @@ export default function CalendarWorkspace() {
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState<EventDraft>(() => blankDraft(today));
   const [editing, setEditing] = useState(false);
+  const { showDetail, openDetail, closeDetail } = useMobileDetailPanel();
 
   const monthLabel = useMemo(
     () =>
@@ -189,12 +191,14 @@ export default function CalendarWorkspace() {
     setSelectedDate(date);
     setDraft(blankDraft(date));
     setEditing(true);
+    openDetail();
   }
 
   function editEvent(event: CalendarEvent) {
     setSelectedDate(new Date(event.startsAt));
     setDraft(eventToDraft(event));
     setEditing(true);
+    openDetail();
   }
 
   async function saveDraft() {
@@ -268,8 +272,13 @@ export default function CalendarWorkspace() {
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
-      <section className="min-w-0 rounded-2xl border border-white/10 bg-[#0a1422]/80 p-4 shadow-[0_12px_40px_rgba(0,0,0,0.35)] sm:p-5">
+    <ResponsiveMasterDetail
+      showDetail={showDetail}
+      onBack={closeDetail}
+      backLabel="Back to calendar"
+      columnsClassName="xl:grid-cols-[minmax(0,1fr)_22rem]"
+      master={
+      <section className="min-w-0 rounded-2xl border border-white/10 bg-[#0a1422]/80 p-3 shadow-[0_12px_40px_rgba(0,0,0,0.35)] sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <CalendarDays className="h-5 w-5 text-sky-300" />
@@ -302,7 +311,7 @@ export default function CalendarWorkspace() {
           </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-7 gap-1 text-center text-[11px] font-medium uppercase tracking-[0.08em] text-white/40">
+        <div className="mt-3 grid grid-cols-7 gap-0.5 text-center text-[10px] font-medium uppercase tracking-[0.08em] text-white/40 sm:mt-4 sm:gap-1 sm:text-[11px]">
           {weekdayLabels.map((label) => (
             <div key={label} className="py-2">
               {label}
@@ -329,7 +338,7 @@ export default function CalendarWorkspace() {
                   type="button"
                   onClick={() => selectDay(date)}
                   className={cn(
-                    "flex min-h-[5.5rem] flex-col rounded-xl border p-2 text-left transition-colors sm:min-h-[6.5rem]",
+                    "flex min-h-[4.25rem] flex-col rounded-lg border p-1.5 text-left transition-colors sm:min-h-[5.5rem] sm:rounded-xl sm:p-2 lg:min-h-[6.5rem]",
                     inMonth ? "border-white/8 bg-[#0b1524]/70" : "border-transparent bg-transparent opacity-40",
                     isSelected && "border-sky-400/40 bg-sky-500/10",
                     !isSelected && "hover:border-white/15 hover:bg-[#0d1828]",
@@ -365,7 +374,8 @@ export default function CalendarWorkspace() {
           </div>
         )}
       </section>
-
+      }
+      detail={
       <aside className="space-y-4">
         <section className="rounded-2xl border border-white/10 bg-[#0a1422]/80 p-4 shadow-[0_12px_40px_rgba(0,0,0,0.35)] sm:p-5">
           <div className="flex items-center justify-between gap-2">
@@ -386,6 +396,7 @@ export default function CalendarWorkspace() {
               onClick={() => {
                 setDraft(blankDraft(selectedDate));
                 setEditing(true);
+                openDetail();
               }}
               className="inline-flex items-center gap-1.5 rounded-lg border border-sky-400/30 bg-sky-500/10 px-3 py-1.5 text-xs font-medium text-sky-200 transition-colors hover:bg-sky-500/20"
             >
@@ -581,6 +592,7 @@ export default function CalendarWorkspace() {
           </section>
         )}
       </aside>
-    </div>
+      }
+    />
   );
 }

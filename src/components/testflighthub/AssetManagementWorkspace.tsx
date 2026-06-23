@@ -19,6 +19,7 @@ import {
 import type { ManagedClient } from "@/lib/client-management-data";
 import { getOwnerUserIdForRegion, type ManagedUser } from "@/lib/user-management-data";
 import { cn } from "@/lib/utils";
+import ResponsiveMasterDetail, { useMobileDetailPanel } from "@/components/ui/ResponsiveMasterDetail";
 
 type AssetManagementWorkspaceProps = {
   assets: ManagedAsset[];
@@ -82,6 +83,7 @@ export default function AssetManagementWorkspace({
   onCategoriesChange,
   onLocationsChange,
 }: AssetManagementWorkspaceProps) {
+  const { showDetail, openDetail, closeDetail } = useMobileDetailPanel();
   const [categoryFilter, setCategoryFilter] = useState<string>("All");
   const [locationFilter, setLocationFilter] = useState<string>("All");
   const [newCategory, setNewCategory] = useState("");
@@ -115,6 +117,7 @@ export default function AssetManagementWorkspace({
     const next = createBlankAsset(categories, locations, addCategory, addLocation);
     onAssetsChange([next, ...assets]);
     onSelectAsset(next.id);
+    openDetail();
     setCategoryFilter(addCategory);
     setLocationFilter(addLocation);
   }
@@ -282,8 +285,12 @@ export default function AssetManagementWorkspace({
         </div>
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
-        <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
+      <ResponsiveMasterDetail
+        showDetail={showDetail && !!selectedAsset}
+        onBack={closeDetail}
+        backLabel="Back to assets"
+        master={
+        <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-4 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-6">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-white">Asset List</h2>
@@ -307,7 +314,10 @@ export default function AssetManagementWorkspace({
                 <li key={asset.id}>
                   <button
                     type="button"
-                    onClick={() => onSelectAsset(asset.id)}
+                    onClick={() => {
+                      onSelectAsset(asset.id);
+                      openDetail();
+                    }}
                     className={cn(
                       "w-full rounded-xl border px-4 py-3 text-left transition-colors",
                       selected
@@ -341,9 +351,10 @@ export default function AssetManagementWorkspace({
             })}
           </ul>
         </section>
-
-        {selectedAsset && (
-          <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
+        }
+        detail={
+        selectedAsset ? (
+          <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-4 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#60a5fa]">
@@ -625,8 +636,9 @@ export default function AssetManagementWorkspace({
               </div>
             </div>
           </section>
-        )}
-      </div>
+        ) : null
+        }
+      />
     </div>
   );
 }

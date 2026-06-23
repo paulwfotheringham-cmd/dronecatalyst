@@ -10,6 +10,7 @@ import {
   type ManagedUser,
 } from "@/lib/user-management-data";
 import { cn } from "@/lib/utils";
+import ResponsiveMasterDetail, { useMobileDetailPanel } from "@/components/ui/ResponsiveMasterDetail";
 
 type UserManagementWorkspaceProps = {
   users: ManagedUser[];
@@ -36,6 +37,7 @@ export default function UserManagementWorkspace({
   onSelectUser,
   onUsersChange,
 }: UserManagementWorkspaceProps) {
+  const { showDetail, openDetail, closeDetail } = useMobileDetailPanel();
   const selectedUser = useMemo(
     () => users.find((user) => user.id === selectedUserId) ?? users[0],
     [users, selectedUserId],
@@ -52,8 +54,12 @@ export default function UserManagementWorkspace({
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
-        <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
+      <ResponsiveMasterDetail
+        showDetail={showDetail && !!selectedUser}
+        onBack={closeDetail}
+        backLabel="Back to operators"
+        master={
+        <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-4 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-6">
           <div>
             <h2 className="text-lg font-semibold text-white">Operators</h2>
             <p className="mt-1 text-xs text-white/45">{users.length} active accounts</p>
@@ -67,7 +73,10 @@ export default function UserManagementWorkspace({
                 <li key={user.id}>
                   <button
                     type="button"
-                    onClick={() => onSelectUser(user.id)}
+                    onClick={() => {
+                      onSelectUser(user.id);
+                      openDetail();
+                    }}
                     className={cn(
                       "w-full rounded-xl border px-4 py-3 text-left transition-colors",
                       selected
@@ -98,9 +107,10 @@ export default function UserManagementWorkspace({
             })}
           </ul>
         </section>
-
-        {selectedUser && (
-          <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
+        }
+        detail={
+        selectedUser ? (
+          <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-4 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#60a5fa]">
@@ -220,8 +230,9 @@ export default function UserManagementWorkspace({
               </div>
             </div>
           </section>
-        )}
-      </div>
+        ) : null
+        }
+      />
     </div>
   );
 }

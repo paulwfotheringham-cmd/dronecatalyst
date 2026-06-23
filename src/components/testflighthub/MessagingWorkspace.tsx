@@ -18,6 +18,7 @@ import {
 import { createInitialUsers } from "@/lib/user-management-data";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import ResponsiveMasterDetail, { useMobileDetailPanel } from "@/components/ui/ResponsiveMasterDetail";
 import {
   CalendarClock,
   Hash,
@@ -142,6 +143,7 @@ export default function MessagingWorkspace() {
   const [scheduleParticipants, setScheduleParticipants] = useState<string[]>([]);
   const [scheduleCallType, setScheduleCallType] = useState<"voice" | "video">("video");
   const [scheduling, setScheduling] = useState(false);
+  const { showDetail: showChat, openDetail: openChat, closeDetail: closeChat } = useMobileDetailPanel();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -388,6 +390,7 @@ export default function MessagingWorkspace() {
     setActiveRoom(room);
     window.localStorage.setItem(MESSAGING_ACTIVE_CHANNEL_KEY, room);
     setShowAddMembers(false);
+    openChat();
   }
 
   async function postMessage(payload: {
@@ -613,7 +616,12 @@ export default function MessagingWorkspace() {
   }
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
+    <ResponsiveMasterDetail
+      showDetail={showChat && !!joinedOperator}
+      onBack={closeChat}
+      backLabel="Back to channels"
+      columnsClassName="xl:grid-cols-[320px_minmax(0,1fr)]"
+      master={
       <aside className="space-y-4">
         <div className="rounded-2xl border border-white/15 bg-white/[0.04] p-5 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
           <div className="flex items-center gap-2">
@@ -865,8 +873,9 @@ export default function MessagingWorkspace() {
           </p>
         </div>
       </aside>
-
-      <section className="flex min-h-[min(72vh,760px)] flex-col overflow-hidden rounded-2xl border border-white/15 bg-white/[0.04] shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
+      }
+      detail={
+      <section className="flex min-h-[min(60dvh,640px)] flex-col overflow-hidden rounded-2xl border border-white/15 bg-white/[0.04] shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl xl:min-h-[min(72vh,760px)]">
         <div className="border-b border-white/10 px-5 py-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -1084,6 +1093,7 @@ export default function MessagingWorkspace() {
           </div>
         </form>
       </section>
-    </div>
+      }
+    />
   );
 }
