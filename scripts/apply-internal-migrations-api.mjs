@@ -19,6 +19,7 @@ const alterMigrations = [
   "supabase/migrations/010_create_whiteboard_projects.sql",
   "supabase/migrations/011_seed_uk_competitors.sql",
   "supabase/migrations/012_competitors_drone_tech_spain_portugal.sql",
+  "supabase/migrations/013_messaging_channels_calls.sql",
 ];
 
 async function query(sql) {

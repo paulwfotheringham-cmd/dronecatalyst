@@ -3,30 +3,108 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
+  buildScheduledCallDateTime,
   formatMessageTime,
+  formatScheduledCallTime,
+  generateCallLink,
   INTERNAL_MESSAGING_ROOM,
+  MESSAGING_ACTIVE_CHANNEL_KEY,
   MESSAGING_STORAGE_KEY,
   type ChatMessage,
+  type MessageChannel,
   type MessagingParticipant,
+  type ScheduledCall,
 } from "@/lib/internal-messaging-data";
 import { createInitialUsers } from "@/lib/user-management-data";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
-import { Loader2, MessageSquare, Send, Users } from "lucide-react";
+import {
+  CalendarClock,
+  Hash,
+  Loader2,
+  MessageSquare,
+  Mic,
+  Paperclip,
+  Phone,
+  Plus,
+  Send,
+  UserPlus,
+  Users,
+  Video,
+  X,
+} from "lucide-react";
 
 const operators = createInitialUsers();
 
 async function readApiJson<T>(response: Response): Promise<T> {
   const text = await response.text();
-  if (!text) {
-    throw new Error(`Request failed (${response.status})`);
-  }
-
+  if (!text) throw new Error(`Request failed (${response.status})`);
   try {
     return JSON.parse(text) as T;
   } catch {
     throw new Error(response.ok ? "Invalid server response." : text.slice(0, 180));
   }
+}
+
+function inputClassName() {
+  return "w-full rounded-xl border border-white/10 bg-[#0b1524] px-3 py-2 text-sm text-white outline-none focus:border-sky-400/50";
+}
+
+function MessageBody({
+  message,
+  isSelf,
+}: {
+  message: ChatMessage;
+  isSelf: boolean;
+}) {
+  if (message.messageType === "call" && message.callLink) {
+    return (
+      <div className="mt-2 space-y-2">
+        <p className="text-sm leading-relaxed text-white/80">{message.content}</p>
+        <a
+          href={message.callLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-lg border border-sky-400/30 bg-sky-500/10 px-3 py-2 text-sm font-medium text-sky-200 transition-colors hover:bg-sky-500/20"
+        >
+          <Video className="h-4 w-4" />
+          Join call
+        </a>
+      </div>
+    );
+  }
+
+  if (message.messageType === "file" && message.attachmentUrl) {
+    return (
+      <div className="mt-2 space-y-2">
+        {message.content && message.content !== message.attachmentName && (
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/80">
+            {message.content}
+          </p>
+        )}
+        <a
+          href={message.attachmentUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(
+            "inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors",
+            isSelf
+              ? "border-sky-400/30 bg-sky-500/10 text-sky-100 hover:bg-sky-500/20"
+              : "border-white/10 bg-white/[0.04] text-white/80 hover:bg-white/[0.08]",
+          )}
+        >
+          <Paperclip className="h-4 w-4 shrink-0" />
+          <span className="truncate">{message.attachmentName ?? "Attachment"}</span>
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-white/80">
+      {message.content}
+    </p>
+  );
 }
 
 export default function MessagingWorkspace() {
@@ -37,40 +115,95 @@ export default function MessagingWorkspace() {
 
   const [joinedOperatorId, setJoinedOperatorId] = useState<string | null>(null);
   const [pendingOperatorId, setPendingOperatorId] = useState(operators[0]?.id ?? "");
+  const [activeRoom, setActiveRoom] = useState(INTERNAL_MESSAGING_ROOM);
+  const [channels, setChannels] = useState<MessageChannel[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [participants, setParticipants] = useState<MessagingParticipant[]>([]);
+  const [scheduledCalls, setScheduledCalls] = useState<ScheduledCall[]>([]);
   const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [realtimeStatus, setRealtimeStatus] = useState<"connecting" | "live" | "polling">(
     "connecting",
   );
+  const [showCreateChannel, setShowCreateChannel] = useState(false);
+  const [newChannelName, setNewChannelName] = useState("");
+  const [newChannelMembers, setNewChannelMembers] = useState<string[]>(
+    operators.map((operator) => operator.id),
+  );
+  const [showAddMembers, setShowAddMembers] = useState(false);
+  const [memberDraft, setMemberDraft] = useState<string[]>([]);
+  const [activeCallLink, setActiveCallLink] = useState<string | null>(null);
+  const [scheduleTitle, setScheduleTitle] = useState("");
+  const [scheduleDate, setScheduleDate] = useState("");
+  const [scheduleTime, setScheduleTime] = useState("");
+  const [scheduleParticipants, setScheduleParticipants] = useState<string[]>([]);
+  const [scheduleCallType, setScheduleCallType] = useState<"voice" | "video">("video");
+  const [scheduling, setScheduling] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const joinedOperator = joinedOperatorId ? operatorsById.get(joinedOperatorId) : undefined;
+  const activeChannel =
+    channels.find((channel) => channel.room === activeRoom) ??
+    ({
+      id: "default",
+      room: INTERNAL_MESSAGING_ROOM,
+      name: "Internal Operations Room",
+      createdByOperatorId: "user-1",
+      createdByOperatorName: "Paul Fotheringham",
+      memberOperatorIds: operators.map((operator) => operator.id),
+      createdAt: new Date().toISOString(),
+    } satisfies MessageChannel);
+
+  const channelMembers = useMemo(
+    () =>
+      activeChannel.memberOperatorIds
+        .map((id) => operatorsById.get(id))
+        .filter((operator): operator is NonNullable<typeof operator> => Boolean(operator)),
+    [activeChannel.memberOperatorIds, operatorsById],
+  );
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  const loadMessages = useCallback(async () => {
-    const response = await fetch(`/api/messaging/messages?room=${INTERNAL_MESSAGING_ROOM}`, {
+  const loadChannels = useCallback(async () => {
+    const response = await fetch("/api/messaging/channels", { cache: "no-store" });
+    const data = await readApiJson<{ channels?: MessageChannel[]; error?: string }>(response);
+    if (!response.ok) throw new Error(data.error ?? "Failed to load channels");
+    setChannels(data.channels ?? []);
+  }, []);
+
+  const loadMessages = useCallback(async (room: string) => {
+    const response = await fetch(`/api/messaging/messages?room=${encodeURIComponent(room)}`, {
       cache: "no-store",
     });
     const data = await readApiJson<{ messages?: ChatMessage[]; error?: string }>(response);
-    if (!response.ok) {
-      throw new Error(data.error ?? "Failed to load messages");
-    }
+    if (!response.ok) throw new Error(data.error ?? "Failed to load messages");
     setMessages(data.messages ?? []);
   }, []);
 
+  const loadScheduledCalls = useCallback(async (room: string) => {
+    const response = await fetch(
+      `/api/messaging/scheduled-calls?room=${encodeURIComponent(room)}`,
+      { cache: "no-store" },
+    );
+    const data = await readApiJson<{ scheduledCalls?: ScheduledCall[]; error?: string }>(response);
+    if (!response.ok) throw new Error(data.error ?? "Failed to load scheduled calls");
+    setScheduledCalls(data.scheduledCalls ?? []);
+  }, []);
+
   useEffect(() => {
-    const stored = window.localStorage.getItem(MESSAGING_STORAGE_KEY);
-    if (stored && operatorsById.has(stored)) {
-      setJoinedOperatorId(stored);
-      setPendingOperatorId(stored);
+    const storedOperator = window.localStorage.getItem(MESSAGING_STORAGE_KEY);
+    const storedChannel = window.localStorage.getItem(MESSAGING_ACTIVE_CHANNEL_KEY);
+    if (storedOperator && operatorsById.has(storedOperator)) {
+      setJoinedOperatorId(storedOperator);
+      setPendingOperatorId(storedOperator);
     }
+    if (storedChannel) setActiveRoom(storedChannel);
   }, [operatorsById]);
 
   useEffect(() => {
@@ -79,17 +212,16 @@ export default function MessagingWorkspace() {
     async function bootstrap() {
       setLoading(true);
       setError(null);
-
       try {
-        await loadMessages();
+        await loadChannels();
+        await loadMessages(activeRoom);
+        await loadScheduledCalls(activeRoom);
       } catch (loadError) {
         if (!cancelled) {
-          setError(loadError instanceof Error ? loadError.message : "Failed to load messages");
+          setError(loadError instanceof Error ? loadError.message : "Failed to load messaging");
         }
       } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        if (!cancelled) setLoading(false);
       }
     }
 
@@ -97,7 +229,7 @@ export default function MessagingWorkspace() {
     return () => {
       cancelled = true;
     };
-  }, [loadMessages]);
+  }, [activeRoom, loadChannels, loadMessages, loadScheduledCalls]);
 
   useEffect(() => {
     scrollToBottom();
@@ -130,7 +262,7 @@ export default function MessagingWorkspace() {
         supabase = createSupabaseBrowserClient(config.supabaseUrl, config.supabaseAnonKey);
 
         channel = supabase
-          .channel(`internal-messaging:${INTERNAL_MESSAGING_ROOM}`, {
+          .channel(`internal-messaging:${activeRoom}`, {
             config: { presence: { key: operator.id } },
           })
           .on(
@@ -139,7 +271,7 @@ export default function MessagingWorkspace() {
               event: "INSERT",
               schema: "public",
               table: "internal_messages",
-              filter: `room=eq.${INTERNAL_MESSAGING_ROOM}`,
+              filter: `room=eq.${activeRoom}`,
             },
             (payload) => {
               const row = payload.new as {
@@ -149,14 +281,16 @@ export default function MessagingWorkspace() {
                 operator_name: string;
                 username: string;
                 content: string;
+                message_type?: string | null;
+                attachment_name?: string | null;
+                attachment_url?: string | null;
+                attachment_mime?: string | null;
+                call_link?: string | null;
                 created_at: string;
               };
 
               setMessages((current) => {
-                if (current.some((message) => message.id === row.id)) {
-                  return current;
-                }
-
+                if (current.some((message) => message.id === row.id)) return current;
                 return [
                   ...current,
                   {
@@ -166,6 +300,16 @@ export default function MessagingWorkspace() {
                     operatorName: row.operator_name,
                     username: row.username,
                     content: row.content,
+                    messageType:
+                      row.message_type === "file" ||
+                      row.message_type === "call" ||
+                      row.message_type === "system"
+                        ? row.message_type
+                        : "text",
+                    attachmentName: row.attachment_name ?? null,
+                    attachmentUrl: row.attachment_url ?? null,
+                    attachmentMime: row.attachment_mime ?? null,
+                    callLink: row.call_link ?? null,
                     createdAt: row.created_at,
                   },
                 ];
@@ -212,21 +356,20 @@ export default function MessagingWorkspace() {
         if (cancelled) return;
         setRealtimeStatus("polling");
         pollTimer = setInterval(() => {
-          void loadMessages().catch(() => undefined);
+          void loadMessages(activeRoom).catch(() => undefined);
         }, 3000);
       }
     }
 
+    setRealtimeStatus("connecting");
     void connectRealtime();
 
     return () => {
       cancelled = true;
       if (pollTimer) clearInterval(pollTimer);
-      if (channel && supabase) {
-        void supabase.removeChannel(channel);
-      }
+      if (channel && supabase) void supabase.removeChannel(channel);
     };
-  }, [joinedOperator, loadMessages]);
+  }, [joinedOperator, activeRoom, loadMessages]);
 
   function handleJoin(operatorId: string) {
     setJoinedOperatorId(operatorId);
@@ -241,40 +384,53 @@ export default function MessagingWorkspace() {
     setRealtimeStatus("connecting");
   }
 
+  function selectChannel(room: string) {
+    setActiveRoom(room);
+    window.localStorage.setItem(MESSAGING_ACTIVE_CHANNEL_KEY, room);
+    setShowAddMembers(false);
+  }
+
+  async function postMessage(payload: {
+    content: string;
+    messageType?: ChatMessage["messageType"];
+    attachmentName?: string | null;
+    attachmentUrl?: string | null;
+    attachmentMime?: string | null;
+    callLink?: string | null;
+  }) {
+    if (!joinedOperator) return;
+
+    const response = await fetch("/api/messaging/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        operatorId: joinedOperator.id,
+        operatorName: joinedOperator.fullName,
+        username: joinedOperator.username,
+        room: activeRoom,
+        ...payload,
+      }),
+    });
+
+    const data = await readApiJson<{ message?: ChatMessage; error?: string }>(response);
+    if (!response.ok) throw new Error(data.error ?? "Failed to send message");
+
+    if (data.message) {
+      setMessages((current) => {
+        if (current.some((message) => message.id === data.message!.id)) return current;
+        return [...current, data.message!];
+      });
+    }
+  }
+
   async function handleSend(event: React.FormEvent) {
     event.preventDefault();
     if (!joinedOperator || !draft.trim()) return;
 
     setSending(true);
     setError(null);
-
     try {
-      const response = await fetch("/api/messaging/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          operatorId: joinedOperator.id,
-          operatorName: joinedOperator.fullName,
-          username: joinedOperator.username,
-          content: draft,
-          room: INTERNAL_MESSAGING_ROOM,
-        }),
-      });
-
-      const data = await readApiJson<{ message?: ChatMessage; error?: string }>(response);
-      if (!response.ok) {
-        throw new Error(data.error ?? "Failed to send message");
-      }
-
-      if (data.message) {
-        setMessages((current) => {
-          if (current.some((message) => message.id === data.message!.id)) {
-            return current;
-          }
-          return [...current, data.message!];
-        });
-      }
-
+      await postMessage({ content: draft.trim() });
       setDraft("");
     } catch (sendError) {
       setError(sendError instanceof Error ? sendError.message : "Failed to send message");
@@ -283,62 +439,313 @@ export default function MessagingWorkspace() {
     }
   }
 
+  async function handleCreateChannel() {
+    if (!joinedOperator || !newChannelName.trim()) return;
+
+    setSending(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/messaging/channels", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newChannelName.trim(),
+          createdByOperatorId: joinedOperator.id,
+          createdByOperatorName: joinedOperator.fullName,
+          memberOperatorIds: newChannelMembers,
+        }),
+      });
+      const data = await readApiJson<{ channel?: MessageChannel; error?: string }>(response);
+      if (!response.ok || !data.channel) throw new Error(data.error ?? "Failed to create channel");
+
+      setChannels((current) => [...current, data.channel!]);
+      setNewChannelName("");
+      setShowCreateChannel(false);
+      selectChannel(data.channel.room);
+    } catch (createError) {
+      setError(createError instanceof Error ? createError.message : "Failed to create channel");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function handleSaveMembers() {
+    if (!activeChannel.id || activeChannel.id === "default") return;
+
+    setSending(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/messaging/channels", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          channelId: activeChannel.id,
+          memberOperatorIds: memberDraft,
+        }),
+      });
+      const data = await readApiJson<{ channel?: MessageChannel; error?: string }>(response);
+      if (!response.ok || !data.channel) throw new Error(data.error ?? "Failed to update members");
+
+      setChannels((current) =>
+        current.map((channel) => (channel.id === data.channel!.id ? data.channel! : channel)),
+      );
+      setShowAddMembers(false);
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : "Failed to update members");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function handleStartCall(type: "voice" | "video") {
+    if (!joinedOperator) return;
+
+    setSending(true);
+    setError(null);
+    try {
+      const callLink = generateCallLink(type);
+      await postMessage({
+        content: `Started a ${type} call in ${activeChannel.name}.`,
+        messageType: "call",
+        callLink,
+      });
+      setActiveCallLink(callLink);
+    } catch (callError) {
+      setError(callError instanceof Error ? callError.message : "Failed to start call");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function handleScheduleCall(event: React.FormEvent) {
+    event.preventDefault();
+    if (!joinedOperator || !scheduleTitle.trim() || !scheduleDate || !scheduleTime) return;
+
+    setScheduling(true);
+    setError(null);
+    try {
+      const callLink = generateCallLink(scheduleCallType);
+      const scheduledAt = buildScheduledCallDateTime(scheduleDate, scheduleTime);
+      const response = await fetch("/api/messaging/scheduled-calls", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          room: activeRoom,
+          title: scheduleTitle.trim(),
+          scheduledAt,
+          participantOperatorIds: scheduleParticipants,
+          callLink,
+          callType: scheduleCallType,
+          createdByOperatorId: joinedOperator.id,
+          createdByOperatorName: joinedOperator.fullName,
+        }),
+      });
+      const data = await readApiJson<{ scheduledCall?: ScheduledCall; error?: string }>(response);
+      if (!response.ok || !data.scheduledCall) {
+        throw new Error(data.error ?? "Failed to schedule call");
+      }
+
+      setScheduledCalls((current) =>
+        [...current, data.scheduledCall!].sort(
+          (a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime(),
+        ),
+      );
+      setScheduleTitle("");
+      setScheduleDate("");
+      setScheduleTime("");
+      setScheduleParticipants([]);
+    } catch (scheduleError) {
+      setError(scheduleError instanceof Error ? scheduleError.message : "Failed to schedule call");
+    } finally {
+      setScheduling(false);
+    }
+  }
+
+  async function handleAttachFile(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !joinedOperator) return;
+
+    setUploading(true);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("room", activeRoom);
+
+      const response = await fetch("/api/messaging/attachments", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await readApiJson<{
+        attachment?: { name: string; url: string; mimeType: string };
+        error?: string;
+      }>(response);
+      if (!response.ok || !data.attachment) {
+        throw new Error(data.error ?? "Failed to upload attachment");
+      }
+
+      await postMessage({
+        content: draft.trim() || `Shared ${data.attachment.name}`,
+        messageType: "file",
+        attachmentName: data.attachment.name,
+        attachmentUrl: data.attachment.url,
+        attachmentMime: data.attachment.mimeType,
+      });
+      setDraft("");
+    } catch (attachError) {
+      setError(attachError instanceof Error ? attachError.message : "Failed to attach file");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function toggleMemberSelection(
+    operatorId: string,
+    current: string[],
+    setter: (value: string[]) => void,
+  ) {
+    setter(
+      current.includes(operatorId)
+        ? current.filter((id) => id !== operatorId)
+        : [...current, operatorId],
+    );
+  }
+
   return (
-    <div className="grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)]">
-      <aside className="rounded-2xl border border-white/15 bg-white/[0.04] p-5 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
-        <div className="flex items-center gap-2">
-          <Users className="h-4 w-4 text-sky-300" />
-          <h2 className="text-sm font-semibold text-white">Join as operator</h2>
+    <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
+      <aside className="space-y-4">
+        <div className="rounded-2xl border border-white/15 bg-white/[0.04] p-5 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-sky-300" />
+            <h2 className="text-sm font-semibold text-white">Join as operator</h2>
+          </div>
+
+          {!joinedOperator ? (
+            <div className="mt-4 space-y-3">
+              <select
+                value={pendingOperatorId}
+                onChange={(event) => setPendingOperatorId(event.target.value)}
+                className={inputClassName()}
+              >
+                {operators.map((operator) => (
+                  <option key={operator.id} value={operator.id}>
+                    {operator.fullName} (@{operator.username})
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => handleJoin(pendingOperatorId)}
+                className="inline-flex h-10 w-full items-center justify-center rounded-xl bg-[#2563eb] text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8]"
+              >
+                Join messaging
+              </button>
+            </div>
+          ) : (
+            <div className="mt-4 rounded-xl border border-sky-400/30 bg-sky-500/10 p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-300">
+                Connected
+              </p>
+              <p className="mt-1 text-sm font-semibold text-white">{joinedOperator.fullName}</p>
+              <button
+                type="button"
+                onClick={handleLeave}
+                className="mt-3 text-xs font-medium text-white/55 transition-colors hover:text-white"
+              >
+                Switch operator
+              </button>
+            </div>
+          )}
         </div>
-        <p className="mt-2 text-xs text-white/45">
-          Pick your operator profile to join the internal operations room.
-        </p>
 
-        {!joinedOperator ? (
-          <div className="mt-4 space-y-3">
-            <select
-              value={pendingOperatorId}
-              onChange={(event) => setPendingOperatorId(event.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-[#0b1524] px-3 py-2 text-sm text-white outline-none focus:border-sky-400/50"
-            >
-              {operators.map((operator) => (
-                <option key={operator.id} value={operator.id}>
-                  {operator.fullName} (@{operator.username})
-                </option>
-              ))}
-            </select>
+        <div className="rounded-2xl border border-white/15 bg-white/[0.04] p-5 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Hash className="h-4 w-4 text-violet-300" />
+              <h2 className="text-sm font-semibold text-white">Channels</h2>
+            </div>
             <button
               type="button"
-              onClick={() => handleJoin(pendingOperatorId)}
-              className="inline-flex h-10 w-full items-center justify-center rounded-xl bg-[#2563eb] text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8]"
+              onClick={() => setShowCreateChannel((current) => !current)}
+              className="inline-flex h-8 items-center gap-1 rounded-lg border border-white/10 px-2.5 text-xs font-medium text-white/70 transition-colors hover:bg-white/[0.06]"
             >
-              Join room
+              <Plus className="h-3.5 w-3.5" />
+              New
             </button>
           </div>
-        ) : (
-          <div className="mt-4 rounded-xl border border-sky-400/30 bg-sky-500/10 p-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-300">
-              Connected
-            </p>
-            <p className="mt-1 text-sm font-semibold text-white">{joinedOperator.fullName}</p>
-            <p className="mt-0.5 font-mono text-xs text-white/45">@{joinedOperator.username}</p>
-            <button
-              type="button"
-              onClick={handleLeave}
-              className="mt-3 text-xs font-medium text-white/55 transition-colors hover:text-white"
-            >
-              Switch operator
-            </button>
-          </div>
-        )}
 
-        <div className="mt-6 border-t border-white/10 pt-4">
+          {showCreateChannel && (
+            <div className="mt-3 space-y-3 rounded-xl border border-white/10 bg-white/[0.03] p-3">
+              <input
+                value={newChannelName}
+                onChange={(event) => setNewChannelName(event.target.value)}
+                placeholder="Channel name"
+                className={inputClassName()}
+              />
+              <div>
+                <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-white/45">
+                  Add users
+                </p>
+                <div className="mt-2 space-y-1.5">
+                  {operators.map((operator) => (
+                    <label
+                      key={operator.id}
+                      className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-white/70"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={newChannelMembers.includes(operator.id)}
+                        onChange={() =>
+                          toggleMemberSelection(operator.id, newChannelMembers, setNewChannelMembers)
+                        }
+                      />
+                      {operator.fullName}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <button
+                type="button"
+                disabled={!joinedOperator || sending || !newChannelName.trim()}
+                onClick={() => void handleCreateChannel()}
+                className="inline-flex h-9 w-full items-center justify-center rounded-xl bg-violet-600 text-sm font-semibold text-white transition-colors hover:bg-violet-500 disabled:opacity-50"
+              >
+                Create channel
+              </button>
+            </div>
+          )}
+
+          <ul className="mt-3 space-y-1.5">
+            {(channels.length > 0 ? channels : [activeChannel]).map((channel) => (
+              <li key={channel.room}>
+                <button
+                  type="button"
+                  onClick={() => selectChannel(channel.room)}
+                  className={cn(
+                    "flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-left transition-colors",
+                    channel.room === activeRoom
+                      ? "border-sky-400/30 bg-sky-500/10 text-white"
+                      : "border-white/10 bg-white/[0.03] text-white/70 hover:bg-white/[0.06]",
+                  )}
+                >
+                  <span className="truncate text-sm font-medium">{channel.name}</span>
+                  <span className="ml-2 shrink-0 text-[10px] text-white/40">
+                    {channel.memberOperatorIds.length}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="rounded-2xl border border-white/15 bg-white/[0.04] p-5 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/40">
             Online now
           </p>
           <ul className="mt-3 space-y-2">
             {participants.length === 0 ? (
-              <li className="text-xs text-white/40">No operators in the room yet.</li>
+              <li className="text-xs text-white/40">No operators in this channel yet.</li>
             ) : (
               participants.map((participant) => (
                 <li
@@ -351,43 +758,228 @@ export default function MessagingWorkspace() {
               ))
             )}
           </ul>
-        </div>
 
-        <p className="mt-4 text-[10px] uppercase tracking-[0.12em] text-white/30">
-          {realtimeStatus === "live"
-            ? "Realtime connected"
-            : realtimeStatus === "polling"
-              ? "Polling fallback"
-              : "Connecting…"}
-        </p>
+          <form onSubmit={(event) => void handleScheduleCall(event)} className="mt-5 border-t border-white/10 pt-4">
+            <div className="flex items-center gap-2">
+              <CalendarClock className="h-4 w-4 text-amber-300" />
+              <h3 className="text-sm font-semibold text-white">Schedule a call</h3>
+            </div>
+            <div className="mt-3 space-y-2">
+              <input
+                value={scheduleTitle}
+                onChange={(event) => setScheduleTitle(event.target.value)}
+                placeholder="Call title"
+                className={inputClassName()}
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="date"
+                  value={scheduleDate}
+                  onChange={(event) => setScheduleDate(event.target.value)}
+                  className={inputClassName()}
+                />
+                <input
+                  type="time"
+                  value={scheduleTime}
+                  onChange={(event) => setScheduleTime(event.target.value)}
+                  className={inputClassName()}
+                />
+              </div>
+              <select
+                value={scheduleCallType}
+                onChange={(event) =>
+                  setScheduleCallType(event.target.value as "voice" | "video")
+                }
+                className={inputClassName()}
+              >
+                <option value="video">Video call</option>
+                <option value="voice">Voice call</option>
+              </select>
+              <div>
+                <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-white/45">
+                  People
+                </p>
+                <div className="mt-2 space-y-1.5">
+                  {operators.map((operator) => (
+                    <label
+                      key={operator.id}
+                      className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-white/70"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={scheduleParticipants.includes(operator.id)}
+                        onChange={() =>
+                          toggleMemberSelection(
+                            operator.id,
+                            scheduleParticipants,
+                            setScheduleParticipants,
+                          )
+                        }
+                      />
+                      {operator.fullName}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <button
+                type="submit"
+                disabled={!joinedOperator || scheduling}
+                className="inline-flex h-9 w-full items-center justify-center rounded-xl border border-amber-400/30 bg-amber-500/10 text-sm font-semibold text-amber-100 transition-colors hover:bg-amber-500/20 disabled:opacity-50"
+              >
+                {scheduling ? "Scheduling…" : "Schedule call"}
+              </button>
+            </div>
+          </form>
+
+          {scheduledCalls.length > 0 && (
+            <div className="mt-4 space-y-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/40">
+                Upcoming calls
+              </p>
+              {scheduledCalls.map((call) => (
+                <div
+                  key={call.id}
+                  className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5 text-xs"
+                >
+                  <p className="font-medium text-white">{call.title}</p>
+                  <p className="mt-1 text-white/45">{formatScheduledCallTime(call.scheduledAt)}</p>
+                  <a
+                    href={call.callLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-flex items-center gap-1 text-sky-300 underline-offset-2 hover:underline"
+                  >
+                    Open call link
+                  </a>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <p className="mt-4 text-[10px] uppercase tracking-[0.12em] text-white/30">
+            {realtimeStatus === "live"
+              ? "Realtime connected"
+              : realtimeStatus === "polling"
+                ? "Polling fallback"
+                : "Connecting…"}
+          </p>
+        </div>
       </aside>
 
       <section className="flex min-h-[min(72vh,760px)] flex-col overflow-hidden rounded-2xl border border-white/15 bg-white/[0.04] shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
-        <div className="flex items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-500/15 text-sky-300">
-              <MessageSquare className="h-5 w-5" />
+        <div className="border-b border-white/10 px-5 py-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-500/15 text-sky-300">
+                <MessageSquare className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-white">{activeChannel.name}</h2>
+                <p className="text-xs text-white/45">
+                  {channelMembers.map((member) => member.fullName).join(" · ") || "No members"}
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-lg font-semibold text-white">Internal Operations Room</h2>
-              <p className="text-xs text-white/45">Real-time messaging for operators and staff</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                disabled={!joinedOperator}
+                onClick={() => {
+                  setMemberDraft(activeChannel.memberOperatorIds);
+                  setShowAddMembers(true);
+                }}
+                className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-white/10 px-3 text-xs font-semibold text-white/75 transition-colors hover:bg-white/[0.06] disabled:opacity-50"
+              >
+                <UserPlus className="h-3.5 w-3.5" />
+                Add users
+              </button>
+              <button
+                type="button"
+                disabled={!joinedOperator || sending}
+                onClick={() => void handleStartCall("voice")}
+                className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3 text-xs font-semibold text-emerald-200 transition-colors hover:bg-emerald-500/20 disabled:opacity-50"
+              >
+                <Phone className="h-3.5 w-3.5" />
+                Voice
+              </button>
+              <button
+                type="button"
+                disabled={!joinedOperator || sending}
+                onClick={() => void handleStartCall("video")}
+                className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-sky-400/30 bg-sky-500/10 px-3 text-xs font-semibold text-sky-200 transition-colors hover:bg-sky-500/20 disabled:opacity-50"
+              >
+                <Video className="h-3.5 w-3.5" />
+                Video
+              </button>
             </div>
           </div>
-          <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-300">
-            {messages.length} messages
-          </span>
+
+          {activeCallLink && (
+            <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+              <div className="flex items-center gap-2">
+                <Mic className="h-4 w-4" />
+                <span>Call started (simulated FlightHub 2 bridge)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <a
+                  href={activeCallLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium underline underline-offset-2"
+                >
+                  Join call
+                </a>
+                <button type="button" onClick={() => setActiveCallLink(null)} aria-label="Dismiss">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
+
+        {showAddMembers && (
+          <div className="border-b border-white/10 bg-white/[0.03] px-5 py-4">
+            <p className="text-sm font-semibold text-white">Add users to channel</p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-3">
+              {operators.map((operator) => (
+                <label
+                  key={operator.id}
+                  className="flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-white/75"
+                >
+                  <input
+                    type="checkbox"
+                    checked={memberDraft.includes(operator.id)}
+                    onChange={() =>
+                      toggleMemberSelection(operator.id, memberDraft, setMemberDraft)
+                    }
+                  />
+                  {operator.fullName}
+                </label>
+              ))}
+            </div>
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                disabled={sending}
+                onClick={() => void handleSaveMembers()}
+                className="inline-flex h-9 items-center rounded-xl bg-[#2563eb] px-4 text-sm font-semibold text-white disabled:opacity-50"
+              >
+                Save members
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowAddMembers(false)}
+                className="inline-flex h-9 items-center rounded-xl border border-white/10 px-4 text-sm text-white/70"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
 
         {error && (
           <div className="border-b border-red-400/20 bg-red-500/10 px-5 py-3 text-sm text-red-200">
             {error}
-            {error.includes("internal_messages") && (
-              <p className="mt-1 text-xs text-red-200/70">
-                Run{" "}
-                <span className="font-mono">supabase/migrations/003_create_internal_messaging.sql</span>{" "}
-                in Supabase SQL Editor.
-              </p>
-            )}
           </div>
         )}
 
@@ -399,13 +991,12 @@ export default function MessagingWorkspace() {
             </div>
           ) : messages.length === 0 ? (
             <div className="flex h-full min-h-[280px] items-center justify-center text-sm text-white/45">
-              No messages yet. Join the room and send the first message.
+              No messages yet. Send the first message in this channel.
             </div>
           ) : (
             <div className="space-y-3">
               {messages.map((message) => {
                 const isSelf = message.operatorId === joinedOperatorId;
-
                 return (
                   <div
                     key={message.id}
@@ -426,9 +1017,7 @@ export default function MessagingWorkspace() {
                           {formatMessageTime(message.createdAt)}
                         </p>
                       </div>
-                      <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-white/80">
-                        {message.content}
-                      </p>
+                      <MessageBody message={message} isSelf={isSelf} />
                     </div>
                   </div>
                 );
@@ -443,6 +1032,25 @@ export default function MessagingWorkspace() {
           className="border-t border-white/10 px-5 py-4"
         >
           <div className="flex gap-3">
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              onChange={(event) => void handleAttachFile(event)}
+            />
+            <button
+              type="button"
+              disabled={!joinedOperator || uploading}
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-xl border border-white/10 text-white/70 transition-colors hover:bg-white/[0.06] disabled:opacity-50"
+              aria-label="Attach file"
+            >
+              {uploading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Paperclip className="h-4 w-4" />
+              )}
+            </button>
             <textarea
               rows={2}
               value={draft}
@@ -456,7 +1064,7 @@ export default function MessagingWorkspace() {
               }}
               placeholder={
                 joinedOperator
-                  ? `Message as ${joinedOperator.fullName}…`
+                  ? `Message in ${activeChannel.name}…`
                   : "Join as an operator to send messages"
               }
               className="min-h-[52px] flex-1 resize-y rounded-xl border border-white/10 bg-[#0b1524] px-4 py-3 text-sm text-white placeholder:text-white/35 outline-none focus:border-sky-400/50 disabled:opacity-50"

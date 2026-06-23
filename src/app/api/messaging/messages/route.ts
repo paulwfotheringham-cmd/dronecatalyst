@@ -36,6 +36,11 @@ export async function POST(request: NextRequest) {
       username?: string;
       content?: string;
       room?: string;
+      messageType?: "text" | "file" | "call" | "system";
+      attachmentName?: string | null;
+      attachmentUrl?: string | null;
+      attachmentMime?: string | null;
+      callLink?: string | null;
     };
 
     if (!body.operatorId || !body.operatorName || !body.username) {
@@ -48,6 +53,11 @@ export async function POST(request: NextRequest) {
       username: body.username,
       content: body.content ?? "",
       room: body.room,
+      messageType: body.messageType,
+      attachmentName: body.attachmentName,
+      attachmentUrl: body.attachmentUrl,
+      attachmentMime: body.attachmentMime,
+      callLink: body.callLink,
     });
 
     return NextResponse.json({ message });
