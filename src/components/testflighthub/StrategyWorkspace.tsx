@@ -23,7 +23,7 @@ async function readApiJson<T>(response: Response): Promise<T> {
 }
 
 const ROW_GRID =
-  "sm:grid-cols-[minmax(0,0.95fr)_minmax(0,1.1fr)_minmax(0,1.15fr)_3.5rem]";
+  "sm:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_3.5rem]";
 
 function readOnlyFieldClassName() {
   return "flex min-h-[2.25rem] items-center rounded-xl border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-[11px] leading-snug text-white/85";
@@ -31,10 +31,6 @@ function readOnlyFieldClassName() {
 
 function matriceFeatureClassName() {
   return "flex min-h-[2.25rem] items-center rounded-xl border border-sky-400/15 bg-sky-500/[0.06] px-2.5 py-1.5 text-[11px] leading-snug text-sky-100/75";
-}
-
-function notesClassName() {
-  return "min-h-[2.25rem] w-full resize-y rounded-xl border border-white/10 bg-[#0b1524] px-2.5 py-1.5 text-[11px] leading-snug text-white outline-none transition-colors focus:border-sky-400/50";
 }
 
 function priorityClassName() {
@@ -105,7 +101,7 @@ export default function StrategyWorkspace() {
       const response = await fetch(`/api/strategy/items/${item.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notes: item.notes, priority: item.priority }),
+        body: JSON.stringify({ priority: item.priority }),
       });
 
       const data = await readApiJson<{ item?: StrategyItem; error?: string }>(response);
@@ -119,7 +115,7 @@ export default function StrategyWorkspace() {
     }
   }
 
-  function patchItem(id: string, patch: Partial<Pick<StrategyItem, "notes" | "priority">>) {
+  function patchItem(id: string, patch: Partial<Pick<StrategyItem, "priority">>) {
     setItems((current) => {
       const next = current.map((item) => (item.id === id ? { ...item, ...patch } : item));
       const updated = next.find((item) => item.id === id);
@@ -146,8 +142,8 @@ export default function StrategyWorkspace() {
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 sm:px-5">
         <p className="text-sm text-white/55">
           Capability matrix across surveying, inspection, and premium media. Each row lists the
-          Matrice 4T hardware or software needed to deliver it. Add notes and set priority (1 =
-          highest) for each line item.
+          Matrice 4T hardware or software needed to deliver it. Set priority (1 = highest) for
+          each line item.
         </p>
       </div>
 
@@ -186,7 +182,6 @@ export default function StrategyWorkspace() {
                 >
                   <span>Capability</span>
                   <span>Matrice 4T</span>
-                  <span>Notes</span>
                   <span>Pri.</span>
                 </div>
 
@@ -200,13 +195,6 @@ export default function StrategyWorkspace() {
                       <div className={matriceFeatureClassName()}>
                         {getMatrice4tFeature(item.category, item.label)}
                       </div>
-                      <textarea
-                        value={item.notes}
-                        rows={2}
-                        placeholder="Add notes…"
-                        onChange={(event) => patchItem(item.id, { notes: event.target.value })}
-                        className={notesClassName()}
-                      />
                       <select
                         value={item.priority ?? ""}
                         onChange={(event) =>
