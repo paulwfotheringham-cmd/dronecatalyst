@@ -4,6 +4,7 @@ export type InternalOperationsView =
   | "home"
   | "clients"
   | "crm"
+  | "financials"
   | "strategy"
   | "whiteboard"
   | "competitors"
@@ -27,6 +28,7 @@ export const internalOperationsViews: InternalOperationsView[] = [
   "home",
   "clients",
   "crm",
+  "financials",
   "strategy",
   "whiteboard",
   "competitors",
@@ -58,6 +60,7 @@ export const internalSurveyNavItems = [
   { label: "Home", icon: "LayoutDashboard", view: "home" as const },
   { label: "Clients", icon: "Building2", view: "clients" as const },
   { label: "CRM", icon: "ContactRound", view: "crm" as const },
+  { label: "Financials", icon: "Wallet", view: "financials" as const },
   { label: "Strategy", icon: "Compass", view: "strategy" as const },
   { label: "Whiteboard", icon: "PenLine", view: "whiteboard" as const },
   { label: "Competitors", icon: "Binoculars", view: "competitors" as const },
@@ -85,6 +88,7 @@ export const internalViewTitles: Record<
   home: { title: "Internal Operations", subtitle: "Drone Catalyst" },
   clients: { title: "Client Directory", subtitle: "Internal Operations" },
   crm: { title: "CRM", subtitle: "Internal Operations" },
+  financials: { title: "Financials", subtitle: "Internal Operations" },
   strategy: { title: "Strategy", subtitle: "Internal Operations" },
   whiteboard: { title: "Whiteboard", subtitle: "Internal Operations" },
   competitors: { title: "Competitors", subtitle: "Internal Operations" },

@@ -24,6 +24,7 @@ import CompetitorsWorkspace from "./CompetitorsWorkspace";
 import CrmWorkspace from "./CrmWorkspace";
 import FileRepositoryReferenceImages from "./FileRepositoryReferenceImages";
 import FileRepositoryWorkspace from "./FileRepositoryWorkspace";
+import FinancialsWorkspace from "./FinancialsWorkspace";
 import FleetWorkspace from "./FleetWorkspace";
 import InfoEmailWorkspace from "./InfoEmailWorkspace";
 import InternalDashboardHome from "./InternalDashboardHome";
@@ -182,6 +183,8 @@ export default function InternalOperationsDashboard() {
           {activeView === "webodm" && <WebODMWorkspace />}
 
           {activeView === "crm" && <CrmWorkspace />}
+
+          {activeView === "financials" && <FinancialsWorkspace />}
 
           {activeView === "strategy" && <StrategyWorkspace />}
 

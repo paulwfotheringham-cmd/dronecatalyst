@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
       { source: "/testflighthub", destination: "/internaldashboard", permanent: true },
       { source: "/testflighthub/:path*", destination: "/internaldashboard", permanent: true },
       { source: "/crm", destination: "/internaldashboard?view=crm", permanent: false },
+      { source: "/financials", destination: "/internaldashboard?view=financials", permanent: false },
       { source: "/messaging", destination: "/internaldashboard?view=messaging", permanent: false },
       { source: "/calendar", destination: "/internaldashboard?view=calendar", permanent: false },
       { source: "/info-email", destination: "/internaldashboard?view=info-email", permanent: false },
