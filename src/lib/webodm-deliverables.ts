@@ -64,4 +64,44 @@ export type WebODMDeliverablesMission = {
   imagesCount: number | null;
   processingTimeMs: number | null;
   createdAt: string | null;
+  captureDate: string | null;
+  gsdMeters: number | null;
+  gsdLabel: string | null;
+  surveyAreaSqM: number | null;
+  surveyAreaLabel: string | null;
+  crsName: string | null;
+  crsEpsg: number | null;
+  pointCount: number | null;
 };
+
+export type RasterTileConfig = {
+  minZoom: number;
+  maxZoom: number;
+  /** [west, south, east, north] */
+  bounds: [number, number, number, number];
+  tileUrlTemplate: string;
+};
+
+/** @deprecated Use RasterTileConfig */
+export type OrthophotoTileConfig = RasterTileConfig;
+
+export type AerialIntelligenceWorkspace = {
+  mission: WebODMDeliverablesMission;
+  orthophoto: RasterTileConfig | null;
+  dsm: RasterTileConfig | null;
+  dsmGeotiffUrl: string | null;
+  modelGlbUrl: string | null;
+  reportPdfUrl: string | null;
+  hasPointCloud: boolean;
+};
+
+export function formatSurveyArea(sqM: number | null | undefined): string | null {
+  if (sqM == null || Number.isNaN(sqM)) return null;
+  if (sqM >= 10_000) return `${(sqM / 10_000).toFixed(2)} ha`;
+  return `${Math.round(sqM).toLocaleString("en-GB")} m²`;
+}
+
+export function formatGsd(meters: number | null | undefined): string | null {
+  if (meters == null || Number.isNaN(meters)) return null;
+  return `${meters.toFixed(2)} m/px`;
+}

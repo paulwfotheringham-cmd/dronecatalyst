@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { BRIGHTON_BEACH_TASK_NAME } from "@/lib/webodm-deliverables";
-import { fetchTaskDeliverables, isWebODMConfigured } from "@/lib/webodm-client";
+import { fetchAerialIntelligenceWorkspace, isWebODMConfigured } from "@/lib/webodm-client";
 import { getPublicWebODMUrl } from "@/lib/webodm-env";
 
 export const dynamic = "force-dynamic";
@@ -16,23 +16,28 @@ export async function GET(request: NextRequest) {
         dashboardUrl: getPublicWebODMUrl(),
         error: "WebODM is not configured.",
         mission: null,
-        deliverables: [],
+        orthophoto: null,
+        dsm: null,
+        dsmGeotiffUrl: null,
+        modelGlbUrl: null,
+        reportPdfUrl: null,
+        hasPointCloud: false,
       },
       { status: 503 },
     );
   }
 
   try {
-    const { mission, deliverables } = await fetchTaskDeliverables(taskName);
+    const workspace = await fetchAerialIntelligenceWorkspace(taskName);
 
     return NextResponse.json({
       configured: true,
       dashboardUrl: getPublicWebODMUrl(),
-      mission,
-      deliverables,
+      ...workspace,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to load deliverables";
+    const message =
+      error instanceof Error ? error.message : "Failed to load aerial intelligence workspace";
 
     return NextResponse.json(
       {
@@ -40,7 +45,12 @@ export async function GET(request: NextRequest) {
         dashboardUrl: getPublicWebODMUrl(),
         error: message,
         mission: null,
-        deliverables: [],
+        orthophoto: null,
+        dsm: null,
+        dsmGeotiffUrl: null,
+        modelGlbUrl: null,
+        reportPdfUrl: null,
+        hasPointCloud: false,
       },
       { status: 502 },
     );

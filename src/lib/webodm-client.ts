@@ -2,6 +2,10 @@ import { getServerWebODMUrl, isWebODMServerConfigured } from "@/lib/webodm-env";
 import {
   AERIAL_INTELLIGENCE_DELIVERABLES,
   formatFileSize,
+  formatGsd,
+  formatSurveyArea,
+  type AerialIntelligenceWorkspace,
+  type RasterTileConfig,
   type WebODMDeliverable,
   type WebODMDeliverablesMission,
 } from "@/lib/webodm-deliverables";
@@ -67,6 +71,16 @@ type RawTask = {
 
 type RawTaskDetail = RawTask & {
   available_assets: string[];
+  extent?: [number, number, number, number];
+  epsg?: number | null;
+  srs?: { name?: string | null } | null;
+  statistics?: {
+    gsd?: number | null;
+    area?: number | null;
+    start_date?: string | null;
+    end_date?: string | null;
+    pointcloud?: { points?: number | null } | null;
+  } | null;
 };
 
 async function getWebODMToken() {
@@ -152,6 +166,121 @@ async function fetchAssetMeta(
   };
 }
 
+export async function proxyWebODM(path: string, init?: RequestInit) {
+  const token = await getWebODMToken();
+  return webodmFetchRaw(path, token, init);
+}
+
+async function fetchRasterTileConfig(
+  projectId: number,
+  taskId: string,
+  token: string,
+  layer: "orthophoto" | "dsm",
+  extent?: [number, number, number, number],
+): Promise<RasterTileConfig | null> {
+  const proxyLayer = layer === "orthophoto" ? "orthophoto" : "dsm";
+
+  try {
+    const tileJson = await webodmFetch<{
+      minzoom?: number;
+      maxzoom?: number;
+      bounds?: [number, number, number, number];
+    }>(`/api/projects/${projectId}/tasks/${taskId}/${layer}/tiles.json`, token);
+
+    const bounds = tileJson.bounds ?? extent;
+    if (!bounds) return null;
+
+    return {
+      minZoom: tileJson.minzoom ?? 14,
+      maxZoom: tileJson.maxzoom ?? 22,
+      bounds,
+      tileUrlTemplate: `/api/webodm/proxy/${proxyLayer}/${projectId}/${taskId}/{z}/{x}/{y}`,
+    };
+  } catch {
+    if (!extent) return null;
+    return {
+      minZoom: 14,
+      maxZoom: 22,
+      bounds: extent,
+      tileUrlTemplate: `/api/webodm/proxy/${proxyLayer}/${projectId}/${taskId}/{z}/{x}/{y}`,
+    };
+  }
+}
+
+function buildMissionIntel(
+  projectId: number,
+  match: RawTask,
+  detail: RawTaskDetail,
+): WebODMDeliverablesMission {
+  const stats = detail.statistics;
+  const gsd = stats?.gsd ?? null;
+
+  return {
+    projectId,
+    taskId: match.id,
+    name: match.name,
+    statusLabel: taskStatusLabel(match.status),
+    imagesCount: match.images_count ?? detail.images_count ?? null,
+    processingTimeMs: match.processing_time ?? null,
+    createdAt: match.created_at ?? null,
+    captureDate: stats?.start_date ?? stats?.end_date ?? null,
+    gsdMeters: gsd,
+    gsdLabel: formatGsd(gsd),
+    surveyAreaSqM: stats?.area ?? null,
+    surveyAreaLabel: formatSurveyArea(stats?.area),
+    crsName: detail.srs?.name ?? null,
+    crsEpsg: detail.epsg ?? null,
+    pointCount: stats?.pointcloud?.points ?? null,
+  };
+}
+
+export async function fetchAerialIntelligenceWorkspace(
+  taskName: string,
+): Promise<AerialIntelligenceWorkspace> {
+  const token = await getWebODMToken();
+  const projects = await webodmFetch<RawProject[]>("/api/projects/", token);
+
+  for (const project of projects) {
+    const tasks = await webodmFetch<RawTask[]>(`/api/projects/${project.id}/tasks/`, token);
+    const match = tasks.find((task) => task.name === taskName);
+    if (!match) continue;
+
+    const detail = await webodmFetch<RawTaskDetail>(
+      `/api/projects/${project.id}/tasks/${match.id}/`,
+      token,
+    );
+
+    const available = new Set(detail.available_assets ?? []);
+    const mission = buildMissionIntel(project.id, match, detail);
+
+    const orthophoto = available.has("orthophoto.tif")
+      ? await fetchRasterTileConfig(project.id, match.id, token, "orthophoto", detail.extent)
+      : null;
+
+    const dsm = available.has("dsm.tif")
+      ? await fetchRasterTileConfig(project.id, match.id, token, "dsm", detail.extent)
+      : null;
+
+    return {
+      mission,
+      orthophoto,
+      dsm,
+      dsmGeotiffUrl: available.has("dsm.tif")
+        ? `/api/webodm/proxy/asset/${project.id}/${match.id}/dsm.tif`
+        : null,
+      modelGlbUrl: available.has("textured_model.glb")
+        ? `/api/webodm/proxy/asset/${project.id}/${match.id}/textured_model.glb`
+        : null,
+      reportPdfUrl: available.has("report.pdf")
+        ? `/api/webodm/proxy/asset/${project.id}/${match.id}/report.pdf`
+        : null,
+      hasPointCloud: available.has("georeferenced_model.laz"),
+    };
+  }
+
+  throw new Error(`No WebODM task found with name "${taskName}".`);
+}
+
 export async function fetchTaskDeliverables(
   taskName: string,
 ): Promise<{ mission: WebODMDeliverablesMission; deliverables: WebODMDeliverable[] }> {
@@ -186,15 +315,7 @@ export async function fetchTaskDeliverables(
     );
 
     return {
-      mission: {
-        projectId: project.id,
-        taskId: match.id,
-        name: match.name,
-        statusLabel: taskStatusLabel(match.status),
-        imagesCount: match.images_count ?? null,
-        processingTimeMs: match.processing_time ?? null,
-        createdAt: match.created_at ?? null,
-      },
+      mission: buildMissionIntel(project.id, match, detail),
       deliverables,
     };
   }
