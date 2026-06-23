@@ -35,14 +35,17 @@ export const NAV_ITEMS = [
 ] as const;
 
 export const PAGE_TABS = [
-  { label: "Overview", active: true },
-  { label: "Progress" },
-  { label: "Earthworks" },
-  { label: "Schedule" },
-  { label: "Risk" },
-  { label: "Reports" },
-  { label: "Maps" },
+  { id: "overview", label: "Overview", active: true },
+  { id: "progress", label: "Progress" },
+  { id: "earthworks", label: "Earthworks" },
+  { id: "schedule", label: "Schedule" },
+  { id: "risk", label: "Risk" },
+  { id: "reports", label: "Reports" },
+  { id: "maps", label: "Maps" },
+  { id: "aerial-intelligence", label: "Aerial intelligence" },
 ] as const;
+
+export type PageTabId = (typeof PAGE_TABS)[number]["id"];
 
 export const PROJECT_BRIEF = {
   title: "PROJECT BRIEF",
