@@ -428,29 +428,40 @@ export default function FileRepositoryWorkspace() {
     }
   }
 
-  async function handleDelete() {
-    if (!selectedId || !selectedKind) return;
-    const current = entries.find(
-      (entry) => entry.item.id === selectedId && entry.kind === selectedKind,
-    );
-    if (!current) return;
+  async function handleDelete(entry?: BrowseEntry) {
+    const target =
+      entry ??
+      (selectedId && selectedKind
+        ? entries.find(
+            (row) => row.item.id === selectedId && row.kind === selectedKind,
+          )
+        : undefined);
 
-    const confirmed = window.confirm(`Delete "${current.item.name}"?`);
+    if (!target) return;
+
+    const confirmed = window.confirm(`Delete "${target.item.name}"?`);
     if (!confirmed) return;
 
     setBusy(true);
     try {
       const endpoint =
-        selectedKind === "folder"
-          ? `/api/files/folders/${selectedId}`
-          : `/api/files/objects/${selectedId}`;
+        target.kind === "folder"
+          ? `/api/files/folders/${target.item.id}`
+          : `/api/files/objects/${target.item.id}`;
 
       const response = await fetch(endpoint, { method: "DELETE" });
-      const data = (await response.json()) as { error?: string };
+      const data = await readApiJson<{ error?: string }>(response);
       if (!response.ok) throw new Error(data.error ?? "Failed to delete item");
 
-      setSelectedId(null);
-      setSelectedKind(null);
+      if (target.kind === "folder" && target.item.id === folderId) {
+        setFolderId(target.item.parentId);
+      }
+
+      if (selectedId === target.item.id && selectedKind === target.kind) {
+        setSelectedId(null);
+        setSelectedKind(null);
+      }
+
       await refreshAll();
     } catch (actionError) {
       setError(actionError instanceof Error ? actionError.message : "Failed to delete item");
@@ -497,8 +508,8 @@ export default function FileRepositoryWorkspace() {
   function openEntry(entry: BrowseEntry) {
     if (entry.kind === "folder") {
       setFolderId(entry.item.id);
-      setSelectedId(entry.item.id);
-      setSelectedKind("folder");
+      setSelectedId(null);
+      setSelectedKind(null);
       setSearchInput("");
       setQuery("");
       return;
@@ -730,6 +741,7 @@ export default function FileRepositoryWorkspace() {
                   <th className="px-3 py-3">Category</th>
                   <th className="px-3 py-3">Size</th>
                   <th className="px-3 py-3">Modified</th>
+                  <th className="px-3 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -805,6 +817,21 @@ export default function FileRepositoryWorkspace() {
                       </td>
                       <td className="px-3 py-3 font-mono text-white/60">
                         {formatFileDate(entry.item.updatedAt)}
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void handleDelete(entry);
+                          }}
+                          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-red-400/20 px-2.5 text-xs text-red-300 transition-colors hover:bg-red-500/10 disabled:opacity-50"
+                          aria-label={`Delete ${entry.item.name}`}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   );

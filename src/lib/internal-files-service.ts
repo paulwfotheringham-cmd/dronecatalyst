@@ -271,7 +271,14 @@ async function deleteFolderRecursive(folderId: string) {
   if (files && files.length > 0) {
     const paths = files.map((file) => file.storage_path as string);
     const { error: storageError } = await supabase.storage.from(INTERNAL_FILES_BUCKET).remove(paths);
-    if (storageError) throw new Error(storageError.message);
+    if (storageError) {
+      const message = storageError.message.toLowerCase();
+      const missingObject =
+        message.includes("not found") ||
+        message.includes("does not exist") ||
+        message.includes("object not found");
+      if (!missingObject) throw new Error(storageError.message);
+    }
   }
 
   const { error: deleteFilesError } = await supabase.from("file_objects").delete().eq("folder_id", folderId);
@@ -435,7 +442,15 @@ export async function deleteFile(id: string) {
     .from(INTERNAL_FILES_BUCKET)
     .remove([(data as DbFile).storage_path]);
 
-  if (storageError) throw new Error(storageError.message);
+  if (storageError) {
+    // Still remove the database row if the storage object is already gone.
+    const message = storageError.message.toLowerCase();
+    const missingObject =
+      message.includes("not found") ||
+      message.includes("does not exist") ||
+      message.includes("object not found");
+    if (!missingObject) throw new Error(storageError.message);
+  }
 
   const { error: deleteError } = await supabase.from("file_objects").delete().eq("id", id);
   if (deleteError) throw new Error(deleteError.message);
