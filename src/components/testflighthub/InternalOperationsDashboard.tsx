@@ -122,8 +122,8 @@ export default function InternalOperationsDashboard() {
       <div
         className={
           activeView === "home"
-            ? "relative px-4 py-3 sm:px-5 lg:px-6 lg:py-4"
-            : "relative px-4 py-3 sm:px-6 lg:px-8 lg:py-4"
+            ? "relative px-3 py-3 sm:px-5 lg:px-6 lg:py-4"
+            : "relative px-3 py-3 sm:px-6 lg:px-8 lg:py-4"
         }
       >
         <div
@@ -136,12 +136,7 @@ export default function InternalOperationsDashboard() {
         />
 
         <div className="relative space-y-6">
-          {activeView === "home" && (
-            <InternalDashboardHome
-              onNavigate={handleViewChange}
-              onViewMockups={() => handleViewChange("design-mockups")}
-            />
-          )}
+          {activeView === "home" && <InternalDashboardHome />}
 
           {activeView === "design-mockups" && (
             <InternalDesignMockups onBack={() => handleViewChange("home")} />

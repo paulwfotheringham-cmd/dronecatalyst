@@ -1,193 +1,243 @@
 "use client";
 
 import {
-  internalSurveyNavSections,
-  type InternalOperationsView,
-} from "@/lib/internal-operations-data";
-import { getHomeModule, homeKpis } from "@/lib/internal-home-modules";
+  actionRequiredItems,
+  missionStatusClass,
+  priorityDotClass,
+  progressBar,
+  projectsInProgress,
+  thisWeekSchedule,
+  upcomingMissions,
+  type ActionItem,
+} from "@/lib/internal-operations-command-data";
 import { cn } from "@/lib/utils";
-import {
-  Binoculars,
-  Building2,
-  CalendarDays,
-  ChevronRight,
-  Compass,
-  ContactRound,
-  Film,
-  FlaskConical,
-  FolderKanban,
-  FolderOpen,
-  History,
-  Layers,
-  Mail,
-  MessageSquare,
-  Package,
-  PenLine,
-  Plane,
-  Radio,
-  Sparkles,
-  Users,
-  Wallet,
-} from "lucide-react";
 
-const iconMap = {
-  Building2,
-  ContactRound,
-  Wallet,
-  FolderKanban,
-  History,
-  Package,
-  Plane,
-  FolderOpen,
-  CalendarDays,
-  Mail,
-  MessageSquare,
-  Compass,
-  Binoculars,
-  PenLine,
-  Film,
-  FlaskConical,
-  Layers,
-  Radio,
-  Users,
-} as const;
-
-type InternalDashboardHomeProps = {
-  onNavigate: (view: InternalOperationsView) => void;
-  onViewMockups?: () => void;
-};
-
-function ModuleCard({
-  label,
-  description,
-  accent,
-  iconKey,
-  onClick,
-  featured = false,
+function SectionPanel({
+  title,
+  children,
+  className,
 }: {
-  label: string;
-  description: string;
-  accent: string;
-  iconKey: string;
-  onClick: () => void;
-  featured?: boolean;
+  title: string;
+  children: React.ReactNode;
+  className?: string;
 }) {
-  const Icon = iconMap[iconKey as keyof typeof iconMap] ?? Compass;
-
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <section
       className={cn(
-        "group relative flex w-full min-w-0 items-center gap-3 overflow-hidden rounded-xl border bg-gradient-to-br from-white/[0.04] to-transparent p-3 text-left shadow-[0_8px_32px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:shadow-[0_16px_40px_rgba(0,0,0,0.45)] sm:gap-3.5 sm:rounded-2xl sm:p-3.5",
-        accent,
-        featured && "sm:col-span-2 lg:col-span-1",
+        "rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-white/[0.015] shadow-[0_20px_60px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-xl",
+        className,
       )}
     >
-      <div
-        className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/[0.03] blur-2xl transition-opacity group-hover:opacity-100"
-        aria-hidden
-      />
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-black/20 text-sky-300 transition-colors group-hover:border-white/20 group-hover:bg-black/30 sm:h-10 sm:w-10">
-        <Icon className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
+      <div className="border-b border-white/[0.06] px-5 py-4 sm:px-6">
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
+          {title}
+        </h3>
       </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <h3 className="truncate text-sm font-semibold text-white sm:text-[15px]">{label}</h3>
-          <ChevronRight className="h-3.5 w-3.5 shrink-0 text-white/25 transition-all group-hover:translate-x-0.5 group-hover:text-white/60" />
-        </div>
-        <p className="mt-0.5 line-clamp-1 text-xs text-white/50 sm:text-[13px]">{description}</p>
-      </div>
-    </button>
+      <div className="px-5 py-4 sm:px-6 sm:py-5">{children}</div>
+    </section>
   );
 }
 
-export default function InternalDashboardHome({
-  onNavigate,
-  onViewMockups,
-}: InternalDashboardHomeProps) {
-  const sections = internalSurveyNavSections.filter((section) => section.label !== null);
-
+function ActionRow({ item }: { item: ActionItem }) {
   return (
-    <section aria-label="Internal operations home" className="min-w-0 space-y-5 pb-6 sm:space-y-6">
-      <header className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/90 via-[#0b1220] to-[#060a12] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] sm:p-5 lg:p-6">
-        <div
-          className="pointer-events-none absolute inset-0 opacity-80"
-          aria-hidden
-          style={{
-            background:
-              "radial-gradient(ellipse 70% 80% at 0% 0%, rgba(56, 189, 248, 0.14), transparent 55%), radial-gradient(ellipse 50% 60% at 100% 0%, rgba(99, 102, 241, 0.12), transparent 50%)",
-          }}
+    <tr className="border-b border-white/[0.05] last:border-0">
+      <td className="w-10 py-3.5 pr-3 align-middle">
+        <span
+          className={cn("inline-block h-2 w-2 rounded-full", priorityDotClass(item.priority))}
+          aria-label={`${item.priority} priority`}
         />
-        <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="min-w-0 space-y-2">
-            <div className="inline-flex items-center gap-2 rounded-full border border-sky-400/20 bg-sky-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-300/90">
-              <Sparkles className="h-3 w-3" />
-              Command center
-            </div>
-            <h2 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
-              Operations at a glance
-            </h2>
-            <p className="max-w-2xl text-sm leading-relaxed text-white/55 sm:text-[15px]">
-              Live projects, revenue, and field activity — grouped the same way as your sidebar.
-            </p>
+      </td>
+      <td className="py-3.5 pr-4 text-sm text-white/85">{item.task}</td>
+      <td className="hidden py-3.5 pr-4 text-sm text-white/50 sm:table-cell">{item.assignedTo}</td>
+      <td className="py-3.5 text-right text-sm text-white/45 sm:text-left">{item.due}</td>
+    </tr>
+  );
+}
+
+export default function InternalDashboardHome() {
+  return (
+    <section aria-label="Internal operations command centre" className="min-w-0 pb-10">
+      <div className="mx-auto max-w-6xl space-y-10 sm:space-y-12">
+        <header className="space-y-2 pt-1">
+          <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+            Internal Operations
+          </h2>
+          <p className="text-base text-white/50 sm:text-[17px]">
+            Everything that needs attention this week.
+          </p>
+        </header>
+
+        <SectionPanel title="Action required">
+          <div className="hidden overflow-x-auto sm:block">
+            <table className="w-full border-collapse text-left">
+              <thead>
+                <tr className="border-b border-white/[0.06] text-[10px] font-medium uppercase tracking-[0.14em] text-white/35">
+                  <th className="pb-3 pr-3 font-medium" scope="col">
+                    <span className="sr-only">Priority</span>
+                  </th>
+                  <th className="pb-3 pr-4 font-medium" scope="col">
+                    Task
+                  </th>
+                  <th className="hidden pb-3 pr-4 font-medium sm:table-cell" scope="col">
+                    Assigned to
+                  </th>
+                  <th className="pb-3 font-medium" scope="col">
+                    Due
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {actionRequiredItems.map((item) => (
+                  <ActionRow key={item.id} item={item} />
+                ))}
+              </tbody>
+            </table>
           </div>
-          {onViewMockups ? (
-            <button
-              type="button"
-              onClick={onViewMockups}
-              className="shrink-0 self-start rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-medium text-white/70 transition-colors hover:border-white/20 hover:bg-white/[0.08] hover:text-white lg:self-auto"
-            >
-              Compare 3 design concepts
-            </button>
-          ) : null}
+          <div className="mt-3 space-y-3 sm:hidden">
+            {actionRequiredItems.map((item) => (
+              <div
+                key={`${item.id}-mobile`}
+                className="flex gap-3 border-b border-white/[0.05] pb-3 last:border-0 last:pb-0"
+              >
+                <span
+                  className={cn("mt-1.5 h-2 w-2 shrink-0 rounded-full", priorityDotClass(item.priority))}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-white/85">{item.task}</p>
+                  <p className="mt-1 text-xs text-white/40">
+                    {item.assignedTo} · {item.due}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </SectionPanel>
+
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,13fr)_minmax(0,7fr)] lg:gap-10">
+          <SectionPanel title="This week">
+            <div className="space-y-6">
+              {thisWeekSchedule.map((day) => (
+                <div key={day.day}>
+                  <p className="text-sm font-medium text-white/70">{day.day}</p>
+                  <ul className="mt-2.5 space-y-2">
+                    {day.entries.map((entry, index) => (
+                      <li
+                        key={`${day.day}-${index}`}
+                        className="flex gap-3 text-sm leading-relaxed text-white/55"
+                      >
+                        {entry.time ? (
+                          <span className="w-12 shrink-0 tabular-nums text-white/35">{entry.time}</span>
+                        ) : (
+                          <span className="w-12 shrink-0" aria-hidden />
+                        )}
+                        <span className="text-white/75">{entry.label}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </SectionPanel>
+
+          <SectionPanel title="Upcoming missions">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[18rem] border-collapse text-left">
+                <thead>
+                  <tr className="border-b border-white/[0.06] text-[10px] font-medium uppercase tracking-[0.14em] text-white/35">
+                    <th className="pb-3 pr-3 font-medium" scope="col">
+                      Mission
+                    </th>
+                    <th className="hidden pb-3 pr-3 font-medium sm:table-cell" scope="col">
+                      Client
+                    </th>
+                    <th className="pb-3 pr-3 font-medium" scope="col">
+                      Date
+                    </th>
+                    <th className="hidden pb-3 pr-3 font-medium md:table-cell" scope="col">
+                      Pilot
+                    </th>
+                    <th className="pb-3 font-medium" scope="col">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {upcomingMissions.map((mission) => (
+                    <tr key={mission.id} className="border-b border-white/[0.05] last:border-0">
+                      <td className="py-3 pr-3 align-top">
+                        <p className="text-sm font-medium text-white/80">{mission.name}</p>
+                        <p className="mt-0.5 text-xs text-white/40 sm:hidden">{mission.client}</p>
+                      </td>
+                      <td className="hidden py-3 pr-3 text-sm text-white/50 sm:table-cell">
+                        {mission.client}
+                      </td>
+                      <td className="py-3 pr-3 text-sm text-white/45">{mission.date}</td>
+                      <td className="hidden py-3 pr-3 text-sm text-white/50 md:table-cell">
+                        {mission.pilot}
+                      </td>
+                      <td className="py-3 align-top">
+                        <span
+                          className={cn(
+                            "inline-flex rounded-md border px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.08em]",
+                            missionStatusClass(mission.status),
+                          )}
+                        >
+                          {mission.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </SectionPanel>
         </div>
 
-        <div className="relative mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
-          {homeKpis.map((kpi) => (
-            <div
-              key={kpi.label}
-              className="rounded-xl border border-white/[0.08] bg-black/25 px-3 py-2.5 backdrop-blur-sm sm:px-3.5 sm:py-3"
-            >
-              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/40 sm:text-[11px]">
-                {kpi.label}
-              </p>
-              <p className="mt-1 text-lg font-semibold tabular-nums text-white sm:text-xl">{kpi.value}</p>
-              <p className="mt-0.5 line-clamp-1 text-[11px] text-white/45 sm:text-xs">{kpi.hint}</p>
-            </div>
-          ))}
-        </div>
-      </header>
-
-      <div className="space-y-5 sm:space-y-6">
-        {sections.map((section) => (
-          <div key={section.label} className="space-y-2.5 sm:space-y-3">
-            <div className="flex items-center gap-3">
-              <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-sky-400/90">
-                {section.label}
-              </h3>
-              <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
-            </div>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-2.5 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-              {section.items.map((item) => {
-                const module = getHomeModule(item);
-                if (!module) return null;
-
-                return (
-                  <ModuleCard
-                    key={item.view}
-                    label={item.label}
-                    description={module.description}
-                    accent={module.accent}
-                    iconKey={module.icon}
-                    onClick={() => onNavigate(item.view)}
-                    featured={item.view === "projects"}
-                  />
-                );
-              })}
-            </div>
+        <SectionPanel title="Projects in progress">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[32rem] border-collapse text-left">
+              <thead>
+                <tr className="border-b border-white/[0.06] text-[10px] font-medium uppercase tracking-[0.14em] text-white/35">
+                  <th className="pb-3 pr-4 font-medium" scope="col">
+                    Project
+                  </th>
+                  <th className="hidden pb-3 pr-4 font-medium sm:table-cell" scope="col">
+                    Client
+                  </th>
+                  <th className="pb-3 pr-4 font-medium" scope="col">
+                    Progress
+                  </th>
+                  <th className="pb-3 pr-4 font-medium" scope="col">
+                    Status
+                  </th>
+                  <th className="pb-3 font-medium" scope="col">
+                    Last update
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {projectsInProgress.map((project) => (
+                  <tr key={project.id} className="border-b border-white/[0.05] last:border-0">
+                    <td className="py-3.5 pr-4 text-sm font-medium text-white/80">{project.project}</td>
+                    <td className="hidden py-3.5 pr-4 text-sm text-white/50 sm:table-cell">
+                      {project.client}
+                    </td>
+                    <td className="py-3.5 pr-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-[11px] tracking-tight text-white/35">
+                          {progressBar(project.progress)}
+                        </span>
+                        <span className="text-xs tabular-nums text-white/45">{project.progress}%</span>
+                      </div>
+                    </td>
+                    <td className="py-3.5 pr-4 text-sm text-white/55">{project.status}</td>
+                    <td className="py-3.5 text-sm text-white/40">{project.lastUpdate}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        ))}
+        </SectionPanel>
       </div>
     </section>
   );
