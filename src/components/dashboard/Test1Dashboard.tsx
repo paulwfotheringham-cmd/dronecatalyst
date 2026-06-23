@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import AerialIntelligenceSection from "@/components/dashboard/AerialIntelligenceSection";
 import AISummaryCard from "@/components/dashboard/AISummaryCard";
 import ActivitiesList from "@/components/dashboard/ActivitiesList";
 import AnalyticsSection from "@/components/dashboard/AnalyticsSection";
@@ -79,9 +80,7 @@ export default function Test1Dashboard() {
 
           {activeTab === "overview" ? <OverviewContent /> : null}
 
-          {activeTab === "aerial-intelligence" ? (
-            <div className="min-h-[min(50vh,28rem)]" aria-label="Aerial intelligence" />
-          ) : null}
+          {activeTab === "aerial-intelligence" ? <AerialIntelligenceSection /> : null}
 
           <DashboardFooter />
         </div>
