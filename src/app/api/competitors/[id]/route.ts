@@ -20,6 +20,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       companyName?: string;
       website?: string;
       services?: string;
+      serviceCategories?: string;
+      droneTechnology?: string;
       lastRevenue?: string;
       notes?: string;
     };

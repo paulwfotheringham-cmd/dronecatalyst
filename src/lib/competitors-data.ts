@@ -6,6 +6,8 @@ export type Competitor = {
   companyName: string;
   website: string;
   services: string;
+  serviceCategories: string;
+  droneTechnology: string;
   lastRevenue: string;
   notes: string;
   sortOrder: number;
@@ -18,9 +20,9 @@ export const COMPETITOR_REGIONS: {
   title: string;
   subtitle: string;
 }[] = [
-  { id: "uk", title: "UK", subtitle: "Oxford & national market" },
-  { id: "spain", title: "Spain", subtitle: "Barcelona & Iberia" },
-  { id: "portugal", title: "Portugal", subtitle: "Porto & national market" },
+  { id: "uk", title: "UK", subtitle: "" },
+  { id: "spain", title: "Spain", subtitle: "" },
+  { id: "portugal", title: "Portugal", subtitle: "" },
 ];
 
 type DbCompetitor = {
@@ -29,6 +31,8 @@ type DbCompetitor = {
   company_name: string;
   website: string | null;
   services: string | null;
+  service_categories: string | null;
+  drone_technology: string | null;
   last_revenue: string | null;
   notes: string | null;
   sort_order: number;
@@ -43,6 +47,8 @@ export function mapCompetitor(row: DbCompetitor): Competitor {
     companyName: row.company_name,
     website: row.website ?? "",
     services: row.services ?? "",
+    serviceCategories: row.service_categories ?? "",
+    droneTechnology: row.drone_technology ?? "",
     lastRevenue: row.last_revenue ?? "",
     notes: row.notes ?? "",
     sortOrder: row.sort_order,
@@ -57,6 +63,8 @@ export function createBlankCompetitorInput(region: CompetitorRegion) {
     companyName: "New Company",
     website: "",
     services: "",
+    serviceCategories: "",
+    droneTechnology: "",
     lastRevenue: "",
     notes: "",
   };

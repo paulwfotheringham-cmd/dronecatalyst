@@ -7,6 +7,15 @@ import {
   type Competitor,
   type CompetitorRegion,
 } from "@/lib/competitors-data";
+import {
+  inferServiceCategoriesFromText,
+  parseServiceCategories,
+  serializeServiceCategories,
+  SERVICE_CATEGORY_LABELS,
+  SERVICE_CATEGORY_ORDER,
+  sortCompetitorsByRevenue,
+  type ServiceCategory,
+} from "@/lib/competitors-utils";
 import { cn } from "@/lib/utils";
 import {
   Binoculars,
@@ -31,8 +40,10 @@ async function readApiJson<T>(response: Response): Promise<T> {
 
 type CompetitorDraft = Pick<
   Competitor,
-  "companyName" | "website" | "services" | "lastRevenue" | "notes"
->;
+  "companyName" | "website" | "services" | "droneTechnology" | "lastRevenue" | "notes"
+> & {
+  serviceCategories: ServiceCategory[];
+};
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -56,8 +67,27 @@ function formatWebsiteHref(website: string) {
   return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
 }
 
+function serviceBadgeClass(category: ServiceCategory) {
+  switch (category) {
+    case "surveying":
+      return "border-emerald-400/30 bg-emerald-500/10 text-emerald-200";
+    case "inspection":
+      return "border-sky-400/30 bg-sky-500/10 text-sky-200";
+    case "media":
+      return "border-violet-400/30 bg-violet-500/10 text-violet-200";
+    default:
+      return "border-amber-400/30 bg-amber-500/10 text-amber-200";
+  }
+}
+
+function resolveServiceCategories(competitor: Competitor) {
+  const parsed = parseServiceCategories(competitor.serviceCategories);
+  if (parsed.length > 0) return parsed;
+  return inferServiceCategoriesFromText(competitor.services);
+}
+
 const TABLE_GRID =
-  "grid grid-cols-[minmax(140px,1.1fr)_minmax(140px,1fr)_minmax(180px,1.4fr)_minmax(120px,0.9fr)_5.5rem] gap-3";
+  "grid grid-cols-[minmax(120px,1fr)_minmax(130px,0.95fr)_minmax(150px,1.1fr)_minmax(150px,1.1fr)_minmax(100px,0.85fr)_5.5rem] gap-3";
 
 export default function CompetitorsWorkspace() {
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
@@ -76,9 +106,9 @@ export default function CompetitorsWorkspace() {
 
   const regionCompetitors = useMemo(
     () =>
-      competitors
-        .filter((competitor) => competitor.region === selectedRegion)
-        .sort((a, b) => a.sortOrder - b.sortOrder || a.companyName.localeCompare(b.companyName)),
+      sortCompetitorsByRevenue(
+        competitors.filter((competitor) => competitor.region === selectedRegion),
+      ),
     [competitors, selectedRegion],
   );
 
@@ -114,6 +144,8 @@ export default function CompetitorsWorkspace() {
       companyName: competitor.companyName,
       website: competitor.website,
       services: competitor.services,
+      droneTechnology: competitor.droneTechnology,
+      serviceCategories: resolveServiceCategories(competitor),
       lastRevenue: competitor.lastRevenue,
       notes: competitor.notes,
     });
@@ -126,6 +158,19 @@ export default function CompetitorsWorkspace() {
 
   function patchDraft(patch: Partial<CompetitorDraft>) {
     setDraft((current) => (current ? { ...current, ...patch } : current));
+  }
+
+  function toggleDraftCategory(category: ServiceCategory) {
+    setDraft((current) => {
+      if (!current) return current;
+      const selected = new Set(current.serviceCategories);
+      if (selected.has(category)) selected.delete(category);
+      else selected.add(category);
+      return {
+        ...current,
+        serviceCategories: SERVICE_CATEGORY_ORDER.filter((item) => selected.has(item)),
+      };
+    });
   }
 
   async function saveEdit(competitorId: string) {
@@ -142,6 +187,8 @@ export default function CompetitorsWorkspace() {
           companyName: draft.companyName,
           website: draft.website,
           services: draft.services,
+          serviceCategories: serializeServiceCategories(draft.serviceCategories),
+          droneTechnology: draft.droneTechnology,
           lastRevenue: draft.lastRevenue,
           notes: draft.notes,
         }),
@@ -215,8 +262,8 @@ export default function CompetitorsWorkspace() {
             <div>
               <h2 className="text-lg font-semibold text-white">Competitors</h2>
               <p className="mt-1 max-w-2xl text-sm leading-relaxed text-white/50">
-                Select UK, Spain, or Portugal to view rivals in columns. Click Edit on any row to
-                update name, website, services, and revenue.
+                Select UK, Spain, or Portugal. Rows are ranked by revenue (highest first). Click a
+                website to open it, or Edit to update any row.
               </p>
             </div>
           </div>
@@ -259,10 +306,12 @@ export default function CompetitorsWorkspace() {
         <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3 sm:px-5">
           <div>
             <h3 className="text-sm font-semibold text-white sm:text-[15px]">{regionMeta.title}</h3>
-            <p className="mt-0.5 text-xs text-white/45">{regionMeta.subtitle}</p>
+            {regionMeta.subtitle ? (
+              <p className="mt-0.5 text-xs text-white/45">{regionMeta.subtitle}</p>
+            ) : null}
           </div>
           <p className="text-xs text-white/45">
-            {loading ? "Loading…" : `${regionCompetitors.length} listed`}
+            {loading ? "Loading…" : `${regionCompetitors.length} listed · ranked by revenue`}
           </p>
         </div>
 
@@ -277,7 +326,7 @@ export default function CompetitorsWorkspace() {
           </p>
         ) : (
           <div className="overflow-x-auto">
-            <div className="min-w-[920px]">
+            <div className="min-w-[1080px]">
               <div
                 className={cn(
                   TABLE_GRID,
@@ -287,6 +336,7 @@ export default function CompetitorsWorkspace() {
                 <span>Name</span>
                 <span>Website</span>
                 <span>Services</span>
+                <span>Drone technology</span>
                 <span>Revenue</span>
                 <span className="text-right">Edit</span>
               </div>
@@ -296,6 +346,9 @@ export default function CompetitorsWorkspace() {
                   const isEditing = editingId === competitor.id;
                   const href = formatWebsiteHref(isEditing ? draft?.website ?? "" : competitor.website);
                   const row = isEditing && draft ? draft : competitor;
+                  const categories = isEditing && draft
+                    ? draft.serviceCategories
+                    : resolveServiceCategories(competitor);
 
                   return (
                     <div key={competitor.id} className="px-4 py-3 sm:px-5">
@@ -322,37 +375,73 @@ export default function CompetitorsWorkspace() {
                               placeholder="example.com"
                               className={cellInputClassName()}
                             />
+                          ) : href ? (
+                            <a
+                              href={href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 text-sm text-sky-300 underline decoration-sky-400/40 underline-offset-2 transition-colors hover:text-sky-200"
+                            >
+                              <span className="truncate">{competitor.website.trim()}</span>
+                              <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                            </a>
                           ) : (
-                            <div className="flex items-center gap-1.5">
-                              <p className="truncate text-sm text-white/70">
-                                {competitor.website.trim() || "—"}
-                              </p>
-                              {href && (
-                                <a
-                                  href={href}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="shrink-0 rounded-md p-1 text-white/40 transition-colors hover:text-sky-300"
-                                  aria-label={`Open ${competitor.companyName} website`}
-                                >
-                                  <ExternalLink className="h-3.5 w-3.5" />
-                                </a>
-                              )}
-                            </div>
+                            <p className="text-sm text-white/45">—</p>
                           )}
                         </div>
 
                         <div>
                           {isEditing ? (
-                            <textarea
-                              value={row.services}
-                              rows={2}
-                              onChange={(event) => patchDraft({ services: event.target.value })}
-                              className={cn(cellInputClassName(), "min-h-[3.25rem] resize-y")}
+                            <div className="flex flex-wrap gap-1.5">
+                              {SERVICE_CATEGORY_ORDER.map((category) => {
+                                const selected = draft?.serviceCategories.includes(category) ?? false;
+                                return (
+                                  <button
+                                    key={category}
+                                    type="button"
+                                    onClick={() => toggleDraftCategory(category)}
+                                    className={cn(
+                                      "rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] transition-colors",
+                                      selected
+                                        ? serviceBadgeClass(category)
+                                        : "border-white/10 bg-white/[0.03] text-white/40 hover:border-white/20",
+                                    )}
+                                  >
+                                    {SERVICE_CATEGORY_LABELS[category]}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          ) : categories.length > 0 ? (
+                            <div className="flex flex-wrap gap-1.5">
+                              {categories.map((category) => (
+                                <span
+                                  key={category}
+                                  className={cn(
+                                    "inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.1em]",
+                                    serviceBadgeClass(category),
+                                  )}
+                                >
+                                  {SERVICE_CATEGORY_LABELS[category]}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-white/45">Other</p>
+                          )}
+                        </div>
+
+                        <div>
+                          {isEditing ? (
+                            <input
+                              value={draft?.droneTechnology ?? ""}
+                              onChange={(event) => patchDraft({ droneTechnology: event.target.value })}
+                              placeholder="e.g. DJI Matrice 350 RTK"
+                              className={cellInputClassName()}
                             />
                           ) : (
                             <p className="text-sm leading-relaxed text-white/65">
-                              {competitor.services.trim() || "—"}
+                              {competitor.droneTechnology.trim() || "—"}
                             </p>
                           )}
                         </div>
@@ -366,7 +455,7 @@ export default function CompetitorsWorkspace() {
                               className={cellInputClassName()}
                             />
                           ) : (
-                            <p className="text-sm text-white/70">
+                            <p className="text-sm font-medium text-white/80">
                               {competitor.lastRevenue.trim() || "—"}
                             </p>
                           )}
@@ -422,15 +511,27 @@ export default function CompetitorsWorkspace() {
                       </div>
 
                       {isEditing && draft && (
-                        <div className="mt-3 border-t border-white/[0.06] pt-3">
-                          <FieldLabel>Notes</FieldLabel>
-                          <textarea
-                            value={draft.notes}
-                            rows={2}
-                            onChange={(event) => patchDraft({ notes: event.target.value })}
-                            placeholder="Intel, pricing, strengths, weaknesses…"
-                            className={cn(cellInputClassName(), "mt-1.5 min-h-[3.25rem] resize-y")}
-                          />
+                        <div className="mt-3 space-y-3 border-t border-white/[0.06] pt-3">
+                          <div>
+                            <FieldLabel>Service detail</FieldLabel>
+                            <textarea
+                              value={draft.services}
+                              rows={2}
+                              onChange={(event) => patchDraft({ services: event.target.value })}
+                              placeholder="Optional detail on surveying, inspection, or media scope…"
+                              className={cn(cellInputClassName(), "mt-1.5 min-h-[3.25rem] resize-y")}
+                            />
+                          </div>
+                          <div>
+                            <FieldLabel>Notes</FieldLabel>
+                            <textarea
+                              value={draft.notes}
+                              rows={2}
+                              onChange={(event) => patchDraft({ notes: event.target.value })}
+                              placeholder="Intel, pricing, strengths, weaknesses…"
+                              className={cn(cellInputClassName(), "mt-1.5 min-h-[3.25rem] resize-y")}
+                            />
+                          </div>
                         </div>
                       )}
                     </div>

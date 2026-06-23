@@ -47,6 +47,8 @@ export async function createCompetitor(
       company_name: (input.companyName ?? blank.companyName).trim() || "New Company",
       website: input.website?.trim() || null,
       services: input.services?.trim() || null,
+      service_categories: input.serviceCategories?.trim() || null,
+      drone_technology: input.droneTechnology?.trim() || null,
       last_revenue: input.lastRevenue?.trim() || null,
       notes: input.notes?.trim() || null,
     })
@@ -63,6 +65,8 @@ export async function updateCompetitor(
     companyName: string;
     website: string;
     services: string;
+    serviceCategories: string;
+    droneTechnology: string;
     lastRevenue: string;
     notes: string;
   }>,
@@ -75,6 +79,12 @@ export async function updateCompetitor(
   if (patch.companyName !== undefined) payload.company_name = patch.companyName.trim() || "New Company";
   if (patch.website !== undefined) payload.website = patch.website.trim() || null;
   if (patch.services !== undefined) payload.services = patch.services.trim() || null;
+  if (patch.serviceCategories !== undefined) {
+    payload.service_categories = patch.serviceCategories.trim() || null;
+  }
+  if (patch.droneTechnology !== undefined) {
+    payload.drone_technology = patch.droneTechnology.trim() || null;
+  }
   if (patch.lastRevenue !== undefined) payload.last_revenue = patch.lastRevenue.trim() || null;
   if (patch.notes !== undefined) payload.notes = patch.notes.trim() || null;
 
