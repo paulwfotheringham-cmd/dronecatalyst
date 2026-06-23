@@ -10,7 +10,7 @@ export type InternalOperationsView =
   | "assets"
   | "fleet"
   | "testing"
-  | "live-projects"
+  | "projects"
   | "recent-missions"
   | "webodm"
   | "messaging"
@@ -33,7 +33,7 @@ export const internalOperationsViews: InternalOperationsView[] = [
   "assets",
   "fleet",
   "testing",
-  "live-projects",
+  "projects",
   "recent-missions",
   "webodm",
   "messaging",
@@ -49,6 +49,11 @@ export function isInternalOperationsView(value: string | null): value is Interna
   return internalOperationsViews.includes(value as InternalOperationsView);
 }
 
+export function normalizeInternalOperationsView(value: string | null): InternalOperationsView {
+  if (value === "live-projects") return "projects";
+  return isInternalOperationsView(value) ? value : "home";
+}
+
 export const internalSurveyNavItems = [
   { label: "Home", icon: "LayoutDashboard", view: "home" as const },
   { label: "Clients", icon: "Building2", view: "clients" as const },
@@ -58,7 +63,7 @@ export const internalSurveyNavItems = [
   { label: "Competitors", icon: "Binoculars", view: "competitors" as const },
   { label: "Assets", icon: "Package", view: "assets" as const },
   { label: "Fleet", icon: "Plane", view: "fleet" as const },
-  { label: "Live Projects", icon: "FolderKanban", view: "live-projects" as const },
+  { label: "Projects", icon: "FolderKanban", view: "projects" as const },
   { label: "Recent Missions", icon: "History", view: "recent-missions" as const },
   { label: "Live Telemetry", icon: "Radio", view: "telemetry" as const },
   { label: "WebODM", icon: "Layers", view: "webodm" as const },
@@ -86,7 +91,7 @@ export const internalViewTitles: Record<
   assets: { title: "Asset Registry", subtitle: "Internal Operations" },
   fleet: { title: "Fleet", subtitle: "Internal Operations" },
   testing: { title: "Flight Simulator Testing", subtitle: "Internal Operations" },
-  "live-projects": { title: "Live Projects", subtitle: "Internal Operations" },
+  projects: { title: "Projects", subtitle: "Internal Operations" },
   "recent-missions": { title: "Recent Missions", subtitle: "Internal Operations" },
   webodm: { title: "WebODM Processing", subtitle: "Internal Operations" },
   messaging: { title: "Messaging", subtitle: "Internal Operations" },
@@ -109,11 +114,11 @@ export const internalHomeTileRows = [
       accent: "from-sky-500/20 to-blue-600/10 border-sky-400/30",
     },
     {
-      id: "live-projects",
-      view: "live-projects" as const,
-      icon: "live-projects" as const,
-      title: "Live Projects",
-      description: "Active operations, progress, and airframes.",
+      id: "projects",
+      view: "projects" as const,
+      icon: "projects" as const,
+      title: "Projects",
+      description: "Live and upcoming client mobilisations.",
       accent: "from-amber-500/20 to-orange-600/10 border-amber-400/30",
     },
     {

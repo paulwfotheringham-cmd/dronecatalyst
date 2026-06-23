@@ -11,10 +11,10 @@ import {
   createInitialClients,
   type ManagedClient,
 } from "@/lib/client-management-data";
-import { createInitialMissions, type ManagedMission } from "@/lib/mission-management-data";
 import {
   INTERNAL_OPERATIONS_BASE_PATH,
   isInternalOperationsView,
+  normalizeInternalOperationsView,
   type InternalOperationsView,
 } from "@/lib/internal-operations-data";
 import AssetManagementWorkspace from "./AssetManagementWorkspace";
@@ -27,7 +27,7 @@ import FileRepositoryWorkspace from "./FileRepositoryWorkspace";
 import FleetWorkspace from "./FleetWorkspace";
 import InfoEmailWorkspace from "./InfoEmailWorkspace";
 import InternalDashboardHome from "./InternalDashboardHome";
-import LiveProjectsPanel from "./LiveProjectsPanel";
+import ProjectsWorkspace from "./ProjectsWorkspace";
 import MediaExampleWorkspace from "./MediaExampleWorkspace";
 import MessagingWorkspace from "./MessagingWorkspace";
 import RecentMissionsPanel from "./RecentMissionsPanel";
@@ -41,8 +41,7 @@ import { createInitialUsers, type ManagedUser } from "@/lib/user-management-data
 import { useSurveyOperationsSimulator } from "./SurveyOperationsSimulatorProvider";
 
 function readInitialView(searchParams: ReturnType<typeof useSearchParams>): InternalOperationsView {
-  const viewParam = searchParams.get("view");
-  return isInternalOperationsView(viewParam) ? viewParam : "home";
+  return normalizeInternalOperationsView(searchParams.get("view"));
 }
 
 export default function InternalOperationsDashboard() {
@@ -52,7 +51,6 @@ export default function InternalOperationsDashboard() {
   );
   const { liveTelemetry, isRunning, setSandboxMountTarget, setExcludedProfileIds } =
     useSurveyOperationsSimulator();
-  const [missions] = useState<ManagedMission[]>(() => createInitialMissions());
   const [assetRegistry] = useState(() => createInitialAssetRegistry());
   const [assets, setAssets] = useState<ManagedAsset[]>(() => assetRegistry.assets);
   const [assetCategories, setAssetCategories] = useState<string[]>(() => assetRegistry.categories);
@@ -66,6 +64,11 @@ export default function InternalOperationsDashboard() {
 
   useEffect(() => {
     const viewParam = searchParams.get("view");
+    const normalized = normalizeInternalOperationsView(viewParam);
+    if (viewParam && normalized !== viewParam) {
+      setActiveView(normalized);
+      return;
+    }
     if (isInternalOperationsView(viewParam)) {
       setActiveView(viewParam);
     } else if (!viewParam) {
@@ -172,7 +175,7 @@ export default function InternalOperationsDashboard() {
 
           {activeView === "testing" && <div ref={testingSandboxHostRef} className="space-y-6" />}
 
-          {activeView === "live-projects" && <LiveProjectsPanel missions={missions} />}
+          {activeView === "projects" && <ProjectsWorkspace clients={clients} />}
 
           {activeView === "recent-missions" && <RecentMissionsPanel />}
 

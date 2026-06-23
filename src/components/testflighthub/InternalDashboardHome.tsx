@@ -26,7 +26,7 @@ const tileIcons = {
   crm: ContactRound,
   assets: Package,
   testing: FlaskConical,
-  "live-projects": FolderKanban,
+  projects: FolderKanban,
   "recent-missions": History,
   messaging: MessageSquare,
   files: FolderOpen,
