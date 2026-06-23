@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, Fragment } from "react";
 
 import {
   COMPETITOR_REGIONS,
@@ -86,8 +86,18 @@ function resolveServiceCategories(competitor: Competitor) {
   return inferServiceCategoriesFromText(competitor.services);
 }
 
-const TABLE_GRID =
-  "grid gap-3 max-lg:grid-cols-1 lg:grid-cols-[minmax(120px,1fr)_minmax(130px,0.95fr)_minmax(150px,1.1fr)_minmax(150px,1.1fr)_minmax(100px,0.85fr)_5.5rem]";
+function formatWebsiteDisplay(website: string) {
+  const trimmed = website.trim();
+  if (!trimmed) return "";
+  try {
+    const url = new URL(formatWebsiteHref(trimmed) ?? trimmed);
+    return url.hostname.replace(/^www\./i, "");
+  } catch {
+    return trimmed.replace(/^https?:\/\//i, "").replace(/\/$/, "");
+  }
+}
+
+const TABLE_MIN_WIDTH = "min-w-[72rem]";
 
 export default function CompetitorsWorkspace() {
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
@@ -325,22 +335,39 @@ export default function CompetitorsWorkspace() {
             No competitors listed for {regionMeta.title} yet. Click Add to create one.
           </p>
         ) : (
-          <div className="min-w-0">
-              <div
-                className={cn(
-                  TABLE_GRID,
-                  "hidden border-b border-white/10 px-4 py-2.5 text-[10px] font-medium uppercase tracking-[0.12em] text-white/40 sm:px-5 lg:grid",
-                )}
-              >
-                <span>Name</span>
-                <span>Website</span>
-                <span>Services</span>
-                <span>Drone technology</span>
-                <span>Revenue</span>
-                <span className="text-right">Edit</span>
-              </div>
-
-              <div className="divide-y divide-white/[0.06]">
+          <div className="overflow-x-auto">
+            <table className={cn("w-full table-fixed border-collapse text-left", TABLE_MIN_WIDTH)}>
+              <colgroup>
+                <col className="w-[13%]" />
+                <col className="w-[20%]" />
+                <col className="w-[17%]" />
+                <col className="w-[26%]" />
+                <col className="w-[14%]" />
+                <col className="w-[10%]" />
+              </colgroup>
+              <thead>
+                <tr className="border-b border-white/10 text-[10px] font-medium uppercase tracking-[0.12em] text-white/40">
+                  <th className="px-4 py-2.5 font-medium sm:px-5" scope="col">
+                    Name
+                  </th>
+                  <th className="px-4 py-2.5 font-medium sm:px-5" scope="col">
+                    Website
+                  </th>
+                  <th className="px-4 py-2.5 font-medium sm:px-5" scope="col">
+                    Services
+                  </th>
+                  <th className="px-4 py-2.5 font-medium sm:px-5" scope="col">
+                    Drone technology
+                  </th>
+                  <th className="px-4 py-2.5 font-medium sm:px-5" scope="col">
+                    Revenue
+                  </th>
+                  <th className="px-4 py-2.5 text-right font-medium sm:px-5" scope="col">
+                    Edit
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/[0.06]">
                 {regionCompetitors.map((competitor) => {
                   const isEditing = editingId === competitor.id;
                   const href = formatWebsiteHref(isEditing ? draft?.website ?? "" : competitor.website);
@@ -350,116 +377,120 @@ export default function CompetitorsWorkspace() {
                     : resolveServiceCategories(competitor);
 
                   return (
-                    <div key={competitor.id} className="px-4 py-3 sm:px-5">
-                      <div className={cn(TABLE_GRID, "items-start")}>
-                        <div>
-                          {isEditing ? (
-                            <input
-                              value={row.companyName}
-                              onChange={(event) => patchDraft({ companyName: event.target.value })}
-                              className={cellInputClassName()}
-                            />
-                          ) : (
-                            <p className="text-sm font-semibold leading-snug text-white">
-                              {competitor.companyName}
-                            </p>
-                          )}
-                        </div>
+                    <Fragment key={competitor.id}>
+                      <tr className="align-top">
+                      <td className="px-4 py-3 sm:px-5">
+                        {isEditing ? (
+                          <input
+                            value={row.companyName}
+                            onChange={(event) => patchDraft({ companyName: event.target.value })}
+                            className={cellInputClassName()}
+                          />
+                        ) : (
+                          <p className="text-sm font-semibold leading-snug text-white">
+                            {competitor.companyName}
+                          </p>
+                        )}
+                      </td>
 
-                        <div>
-                          {isEditing ? (
-                            <input
-                              value={row.website}
-                              onChange={(event) => patchDraft({ website: event.target.value })}
-                              placeholder="example.com"
-                              className={cellInputClassName()}
-                            />
-                          ) : href ? (
-                            <a
-                              href={href}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 text-sm text-sky-300 underline decoration-sky-400/40 underline-offset-2 transition-colors hover:text-sky-200"
-                            >
-                              <span className="truncate">{competitor.website.trim()}</span>
-                              <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-                            </a>
-                          ) : (
-                            <p className="text-sm text-white/45">—</p>
-                          )}
-                        </div>
+                      <td className="px-4 py-3 sm:px-5">
+                        {isEditing ? (
+                          <input
+                            value={row.website}
+                            onChange={(event) => patchDraft({ website: event.target.value })}
+                            placeholder="example.com"
+                            className={cellInputClassName()}
+                          />
+                        ) : href ? (
+                          <a
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title={competitor.website.trim()}
+                            className="group inline-flex max-w-full items-start gap-1.5 text-sm text-sky-300 underline decoration-sky-400/40 underline-offset-2 transition-colors hover:text-sky-200"
+                          >
+                            <span className="min-w-0 break-all leading-snug">
+                              {formatWebsiteDisplay(competitor.website)}
+                            </span>
+                            <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-70 group-hover:opacity-100" />
+                          </a>
+                        ) : (
+                          <p className="text-sm text-white/45">—</p>
+                        )}
+                      </td>
 
-                        <div>
-                          {isEditing ? (
-                            <div className="flex flex-wrap gap-1.5">
-                              {SERVICE_CATEGORY_ORDER.map((category) => {
-                                const selected = draft?.serviceCategories.includes(category) ?? false;
-                                return (
-                                  <button
-                                    key={category}
-                                    type="button"
-                                    onClick={() => toggleDraftCategory(category)}
-                                    className={cn(
-                                      "rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] transition-colors",
-                                      selected
-                                        ? serviceBadgeClass(category)
-                                        : "border-white/10 bg-white/[0.03] text-white/40 hover:border-white/20",
-                                    )}
-                                  >
-                                    {SERVICE_CATEGORY_LABELS[category]}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          ) : categories.length > 0 ? (
-                            <div className="flex flex-wrap gap-1.5">
-                              {categories.map((category) => (
-                                <span
+                      <td className="px-4 py-3 sm:px-5">
+                        {isEditing ? (
+                          <div className="flex flex-wrap gap-1.5">
+                            {SERVICE_CATEGORY_ORDER.map((category) => {
+                              const selected = draft?.serviceCategories.includes(category) ?? false;
+                              return (
+                                <button
                                   key={category}
+                                  type="button"
+                                  onClick={() => toggleDraftCategory(category)}
                                   className={cn(
-                                    "inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.1em]",
-                                    serviceBadgeClass(category),
+                                    "rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] transition-colors",
+                                    selected
+                                      ? serviceBadgeClass(category)
+                                      : "border-white/10 bg-white/[0.03] text-white/40 hover:border-white/20",
                                   )}
                                 >
                                   {SERVICE_CATEGORY_LABELS[category]}
-                                </span>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="text-sm text-white/45">Other</p>
-                          )}
-                        </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ) : categories.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {categories.map((category) => (
+                              <span
+                                key={category}
+                                className={cn(
+                                  "inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em]",
+                                  serviceBadgeClass(category),
+                                )}
+                              >
+                                {SERVICE_CATEGORY_LABELS[category]}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-white/45">Other</p>
+                        )}
+                      </td>
 
-                        <div>
-                          {isEditing ? (
-                            <input
-                              value={draft?.droneTechnology ?? ""}
-                              onChange={(event) => patchDraft({ droneTechnology: event.target.value })}
-                              placeholder="e.g. DJI Matrice 350 RTK"
-                              className={cellInputClassName()}
-                            />
-                          ) : (
-                            <p className="text-sm leading-relaxed text-white/65">
-                              {competitor.droneTechnology.trim() || "—"}
-                            </p>
-                          )}
-                        </div>
+                      <td className="px-4 py-3 sm:px-5">
+                        {isEditing ? (
+                          <input
+                            value={draft?.droneTechnology ?? ""}
+                            onChange={(event) => patchDraft({ droneTechnology: event.target.value })}
+                            placeholder="e.g. DJI Matrice 350 RTK"
+                            className={cellInputClassName()}
+                          />
+                        ) : (
+                          <p className="text-sm leading-snug text-white/65">
+                            {competitor.droneTechnology.trim() || "—"}
+                          </p>
+                        )}
+                      </td>
 
-                        <div>
-                          {isEditing ? (
-                            <input
-                              value={row.lastRevenue}
-                              onChange={(event) => patchDraft({ lastRevenue: event.target.value })}
-                              placeholder="e.g. £2.4M (2024)"
-                              className={cellInputClassName()}
-                            />
-                          ) : (
-                            <p className="text-sm font-medium text-white/80">
-                              {competitor.lastRevenue.trim() || "—"}
-                            </p>
-                          )}
-                        </div>
+                      <td className="px-4 py-3 sm:px-5">
+                        {isEditing ? (
+                          <input
+                            value={row.lastRevenue}
+                            onChange={(event) => patchDraft({ lastRevenue: event.target.value })}
+                            placeholder="e.g. £2.4M (2024)"
+                            className={cellInputClassName()}
+                          />
+                        ) : (
+                          <p className="text-sm font-medium leading-snug text-white/80">
+                            {competitor.lastRevenue.trim() || "—"}
+                          </p>
+                        )}
+                      </td>
 
+                      <td className="px-4 py-3 sm:px-5">
                         <div className="flex justify-end gap-1">
                           {isEditing ? (
                             <>
@@ -507,36 +538,42 @@ export default function CompetitorsWorkspace() {
                             </>
                           )}
                         </div>
-                      </div>
+                      </td>
+                    </tr>
 
-                      {isEditing && draft && (
-                        <div className="mt-3 space-y-3 border-t border-white/[0.06] pt-3">
-                          <div>
-                            <FieldLabel>Service detail</FieldLabel>
-                            <textarea
-                              value={draft.services}
-                              rows={2}
-                              onChange={(event) => patchDraft({ services: event.target.value })}
-                              placeholder="Optional detail on surveying, inspection, or media scope…"
-                              className={cn(cellInputClassName(), "mt-1.5 min-h-[3.25rem] resize-y")}
-                            />
-                          </div>
-                          <div>
-                            <FieldLabel>Notes</FieldLabel>
-                            <textarea
-                              value={draft.notes}
-                              rows={2}
-                              onChange={(event) => patchDraft({ notes: event.target.value })}
-                              placeholder="Intel, pricing, strengths, weaknesses…"
-                              className={cn(cellInputClassName(), "mt-1.5 min-h-[3.25rem] resize-y")}
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                      {isEditing && draft ? (
+                        <tr key={`${competitor.id}-edit`} className="border-b border-white/[0.06]">
+                          <td className="px-4 pb-3 pt-0 sm:px-5" colSpan={6}>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <div>
+                                <FieldLabel>Service detail</FieldLabel>
+                                <textarea
+                                  value={draft.services}
+                                  rows={2}
+                                  onChange={(event) => patchDraft({ services: event.target.value })}
+                                  placeholder="Optional detail on surveying, inspection, or media scope…"
+                                  className={cn(cellInputClassName(), "mt-1.5 min-h-[3.25rem] resize-y")}
+                                />
+                              </div>
+                              <div>
+                                <FieldLabel>Notes</FieldLabel>
+                                <textarea
+                                  value={draft.notes}
+                                  rows={2}
+                                  onChange={(event) => patchDraft({ notes: event.target.value })}
+                                  placeholder="Intel, pricing, strengths, weaknesses…"
+                                  className={cn(cellInputClassName(), "mt-1.5 min-h-[3.25rem] resize-y")}
+                                />
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : null}
+                    </Fragment>
                   );
                 })}
-              </div>
+              </tbody>
+            </table>
           </div>
         )}
       </div>
