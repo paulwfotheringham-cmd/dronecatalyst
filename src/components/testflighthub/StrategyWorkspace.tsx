@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   STRATEGY_COLUMNS,
   STRATEGY_PRIORITY_OPTIONS,
+  getMatrice4tFeature,
   type StrategyCategory,
   type StrategyItem,
 } from "@/lib/strategy-data";
@@ -21,12 +22,19 @@ async function readApiJson<T>(response: Response): Promise<T> {
   }
 }
 
+const ROW_GRID =
+  "sm:grid-cols-[minmax(0,0.95fr)_minmax(0,1.1fr)_minmax(0,1.15fr)_3.5rem]";
+
 function readOnlyFieldClassName() {
-  return "flex min-h-[2.5rem] items-center rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-[13px] leading-snug text-white/85";
+  return "flex min-h-[2.25rem] items-center rounded-xl border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-[11px] leading-snug text-white/85";
+}
+
+function matriceFeatureClassName() {
+  return "flex min-h-[2.25rem] items-center rounded-xl border border-sky-400/15 bg-sky-500/[0.06] px-2.5 py-1.5 text-[11px] leading-snug text-sky-100/75";
 }
 
 function notesClassName() {
-  return "min-h-[2.5rem] w-full resize-y rounded-xl border border-white/10 bg-[#0b1524] px-3 py-2 text-[13px] leading-snug text-white outline-none transition-colors focus:border-sky-400/50";
+  return "min-h-[2.25rem] w-full resize-y rounded-xl border border-white/10 bg-[#0b1524] px-2.5 py-1.5 text-[11px] leading-snug text-white outline-none transition-colors focus:border-sky-400/50";
 }
 
 function priorityClassName() {
@@ -137,8 +145,9 @@ export default function StrategyWorkspace() {
     <section className="space-y-4">
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 sm:px-5">
         <p className="text-sm text-white/55">
-          Capability matrix across surveying, inspection, and premium media. Add notes and set
-          priority (1 = highest) for each line item.
+          Capability matrix across surveying, inspection, and premium media. Each row lists the
+          Matrice 4T hardware or software needed to deliver it. Add notes and set priority (1 =
+          highest) for each line item.
         </p>
       </div>
 
@@ -169,19 +178,28 @@ export default function StrategyWorkspace() {
                   </h2>
                 </div>
 
-                <div className="hidden grid-cols-[minmax(0,1.15fr)_minmax(0,1.35fr)_4.75rem] gap-2 border-b border-white/10 px-4 py-2 text-[10px] font-medium uppercase tracking-[0.12em] text-white/40 sm:grid sm:px-5">
+                <div
+                  className={cn(
+                    "hidden gap-2 border-b border-white/10 px-4 py-2 text-[9px] font-medium uppercase tracking-[0.12em] text-white/40 sm:grid sm:px-5",
+                    ROW_GRID,
+                  )}
+                >
                   <span>Capability</span>
+                  <span>Matrice 4T</span>
                   <span>Notes</span>
-                  <span>Priority</span>
+                  <span>Pri.</span>
                 </div>
 
                 <div className="divide-y divide-white/[0.06]">
                   {columnItems.map((item) => (
                     <div
                       key={item.id}
-                      className="grid gap-2 px-4 py-2.5 sm:grid-cols-[minmax(0,1.15fr)_minmax(0,1.35fr)_4.75rem] sm:items-start sm:px-5"
+                      className={cn("grid gap-2 px-4 py-2.5 sm:items-start sm:px-5", ROW_GRID)}
                     >
                       <div className={readOnlyFieldClassName()}>{item.label}</div>
+                      <div className={matriceFeatureClassName()}>
+                        {getMatrice4tFeature(item.category, item.label)}
+                      </div>
                       <textarea
                         value={item.notes}
                         rows={2}

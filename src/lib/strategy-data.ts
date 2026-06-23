@@ -12,6 +12,52 @@ export type StrategyItem = {
 
 export const STRATEGY_PRIORITY_OPTIONS = [1, 2, 3, 4, 5] as const;
 
+/** Matrice 4T hardware / software required to deliver each capability (reference data). */
+export const STRATEGY_MATRICE_4T_FEATURES: Record<StrategyCategory, Record<string, string>> = {
+  surveying: {
+    "Stockpile & volume Analytics":
+      "Onboard mapping camera, D-RTK 3 base station, WebODM volumetrics",
+    "Construction & volume Surveying":
+      "Onboard mapping camera, D-RTK 3 RTK positioning, WebODM",
+    "Site measurements": "Onboard mapping camera, D-RTK 3, DJI Terra measurements",
+    "Earthworks monitoring": "Onboard mapping camera, grid missions, WebODM change detection",
+    "Construction progress intelligence":
+      "Onboard mapping camera, FlightHub 2 missions, WebODM timeline",
+    "Point clouds": "Onboard mapping camera, WebODM photogrammetry / DJI Terra",
+    Orthomosaics: "Onboard mapping camera, WebODM orthophoto processing",
+    "DSM/DTM models": "Onboard mapping camera, WebODM DSM/DTM export",
+    Volumetrics: "Onboard mapping camera, D-RTK 3, WebODM cut/fill analysis",
+    "Progress comparison": "Onboard mapping camera, WebODM temporal comparison",
+  },
+  inspection: {
+    "Building & roof inspections": "Telephoto zoom camera, omnidirectional obstacle sensing",
+    "Solar inspections (thermal)": "Thermal camera, telephoto zoom camera",
+    "Industrial inspections": "Telephoto zoom camera, FlightHub 2 waypoint missions",
+    Warehouses: "Telephoto zoom camera, indoor obstacle sensing",
+    "Logistics parks": "Mapping camera + telephoto zoom, corridor missions",
+    "Rail inspections": "Telephoto zoom camera, linear corridor flight paths",
+    "Road inspections": "Mapping camera, telephoto zoom for defect detail",
+    "Pipeline inspections": "Telephoto zoom camera, corridor mapping missions",
+    "Utility inspections": "Telephoto zoom camera, thermal camera",
+    "Asset condition reporting": "Telephoto zoom camera, FlightHub 2 media capture",
+  },
+  media: {
+    "Real estate": "Onboard wide camera, 4K stabilised video",
+    Hospitality: "Onboard wide camera, gimbal-stabilised cinematic video",
+    Tourism: "Onboard wide camera, intelligent flight modes",
+    "Construction marketing": "Onboard wide + tele cameras, 4K HDR video",
+    Marinas: "Onboard wide camera, waypoint missions over water",
+    Ports: "Wide camera + telephoto zoom for vessel detail",
+    "Yacht marketing": "Onboard wide camera, low-altitude cinematic passes",
+    "Corporate content": "Onboard wide camera, smooth gimbal flight modes",
+    "Event coverage": "Onboard wide camera, 4K live view / recording",
+  },
+};
+
+export function getMatrice4tFeature(category: StrategyCategory, label: string): string {
+  return STRATEGY_MATRICE_4T_FEATURES[category][label] ?? "—";
+}
+
 export const STRATEGY_COLUMNS: {
   id: StrategyCategory;
   title: string;
