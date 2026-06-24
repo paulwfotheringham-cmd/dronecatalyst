@@ -57,10 +57,10 @@ export default function HomeHero() {
             </div>
           </div>
 
-          {/* Right column — drone scan upper; horizontal dashboard lower */}
-          <div className="relative min-h-[320px] sm:min-h-[480px] lg:min-h-[600px]">
-            <div className="relative z-10 flex justify-center translate-y-2 sm:absolute sm:bottom-0 sm:right-0 sm:left-0 sm:translate-y-10 lg:translate-y-16 xl:translate-y-20">
-              <div className="hero-mockup-float w-full max-w-[680px] sm:max-w-[720px]">
+          {/* Right column — enterprise platform mockup */}
+          <div className="relative min-h-[340px] sm:min-h-[520px] lg:min-h-[640px]">
+            <div className="relative z-10 flex translate-y-2 justify-center sm:absolute sm:bottom-0 sm:left-auto sm:right-[-6%] sm:translate-x-[10%] sm:translate-y-10 lg:right-[-4%] lg:translate-x-[14%] lg:translate-y-16 xl:translate-x-[18%] xl:translate-y-20">
+              <div className="hero-mockup-float w-full max-w-[760px] sm:max-w-[820px] lg:max-w-[880px]">
                 <GeospatialDashboard />
               </div>
             </div>
