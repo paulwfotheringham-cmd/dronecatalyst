@@ -75,7 +75,7 @@ const SIDEBAR = ["Dashboard", "Projects", "Maps", "Reports", "Analytics", "Inspe
 
 export default function GeospatialDashboard() {
   return (
-    <div className="hero-mockup-3d relative w-[360px] sm:w-[400px] lg:w-[430px]">
+    <div className="hero-mockup-3d relative w-[450px] sm:w-[500px] lg:w-[538px]">
       <div className="overflow-hidden rounded-[14px] border border-white/[0.12] bg-[#0b1118]/92 shadow-[0_28px_70px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.1)] backdrop-blur-xl">
         {/* App chrome */}
         <div className="flex items-center justify-between border-b border-white/[0.08] bg-[#101622]/95 px-3 py-2">

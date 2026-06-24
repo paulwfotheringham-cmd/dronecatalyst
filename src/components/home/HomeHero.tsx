@@ -58,9 +58,9 @@ export default function HomeHero() {
           </div>
 
           {/* Right column — compact 3D platform preview */}
-          <div className="relative min-h-0 lg:min-h-[200px]">
-            <div className="relative z-10 flex justify-end pt-2 sm:absolute sm:bottom-8 sm:right-0 sm:pt-0 lg:bottom-12 lg:right-2 xl:bottom-16 xl:right-4">
-              <div className="hero-mockup-float">
+          <div className="relative min-h-0 lg:min-h-[280px]">
+            <div className="relative z-10 flex justify-end pt-2 sm:absolute sm:-bottom-6 sm:right-0 sm:translate-y-14 sm:pt-0 lg:-bottom-10 lg:translate-y-20 xl:-bottom-12 xl:right-2 xl:translate-y-24">
+              <div className="hero-mockup-float origin-bottom-right">
                 <GeospatialDashboard />
               </div>
             </div>
