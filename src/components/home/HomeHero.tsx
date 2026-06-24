@@ -27,7 +27,7 @@ export default function HomeHero() {
           </h1>
 
           <p className="mt-5 text-lg font-semibold tracking-tight text-[#3b82f6] sm:text-xl">
-            Data. Insight. Visibility.
+            Data. <span className="text-white">Insight.</span> Visibility.
           </p>
 
           <p className="mt-5 text-[15px] leading-[1.65] text-white/88 sm:text-[17px]">
