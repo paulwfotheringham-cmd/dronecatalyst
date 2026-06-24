@@ -18,7 +18,7 @@ export default function HomeHero() {
 
       <div className="relative z-10 mx-auto max-w-[1400px] px-5 pb-20 pt-24 sm:px-8 sm:pb-24 sm:pt-[104px] lg:px-10 lg:pb-28 lg:pt-[120px]">
         <div className="relative max-w-[560px]">
-          <h1 className="text-4xl font-bold leading-[0.95] tracking-[-0.03em] text-white sm:text-[3.4rem] lg:text-[4rem] xl:text-[4.5rem]">
+          <h1 className="text-[1.575rem] font-bold leading-[0.95] tracking-[-0.03em] text-white sm:text-[2.38rem] lg:text-[2.8rem] xl:text-[3.15rem]">
             FROM DRONE
             <br />
             TO INTELLIGENCE
