@@ -26,13 +26,6 @@ export default function HomeHero() {
             INTELLIGENCE
           </h1>
 
-          <p className="mt-6 text-[15px] leading-[1.65] text-white/88 sm:text-[17px]">
-            Professional drone operations across Australia.
-          </p>
-          <p className="mt-2 text-[15px] leading-[1.65] text-white/88 sm:text-[17px]">
-            Turning aerial data into decisions you can act on.
-          </p>
-
           <p className="mt-5 text-lg font-semibold tracking-tight text-[#3b82f6] sm:text-xl">
             Data. Insight. Visibility.
           </p>
