@@ -1,7 +1,6 @@
 import HomeHero from "@/components/home/HomeHero";
 import HomeOfferPlatform from "@/components/home/HomeOfferPlatform";
 import WhoWeWorkWith from "@/components/home/WhoWeWorkWith";
-import Workflow from "@/components/home/Workflow";
 
 export default function HomePage() {
   return (
@@ -9,7 +8,6 @@ export default function HomePage() {
       <HomeHero />
       <HomeOfferPlatform />
       <WhoWeWorkWith />
-      <Workflow />
     </>
   );
 }
