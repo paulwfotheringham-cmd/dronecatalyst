@@ -360,3 +360,190 @@ body {
     radial-gradient(circle at 55% 78%, rgba(56, 189, 248, 0.7) 1.5px, transparent 1.5px);
   animation: pointShimmer 2s ease-in-out infinite;
 }
+
+.mission-replay-video {
+  filter: saturate(1.05) contrast(1.08) brightness(0.92);
+}
+
+.mission-replay-scene-takeoff {
+  transform: scale(1.04);
+  filter: saturate(1.1) contrast(1.12) brightness(0.88);
+}
+
+.mission-replay-scene-grid {
+  filter: saturate(0.95) contrast(1.15) brightness(0.9) hue-rotate(-4deg);
+}
+
+.mission-replay-scene-capture {
+  filter: saturate(1.2) contrast(1.2) brightness(1);
+}
+
+.mission-replay-scene-upload,
+.mission-replay-scene-processing {
+  filter: saturate(0.7) contrast(1.1) brightness(0.75) hue-rotate(180deg);
+}
+
+.mission-replay-scene-ortho {
+  filter: saturate(1.25) contrast(1.05) brightness(1.05);
+}
+
+.mission-replay-scene-model3d {
+  filter: saturate(0.85) contrast(1.2) brightness(0.82) hue-rotate(205deg);
+}
+
+.mission-replay-scene-elevation {
+  filter: saturate(1.35) contrast(1.1) brightness(0.95) hue-rotate(90deg);
+}
+
+.mission-replay-scene-measure {
+  filter: saturate(1.1) contrast(1.18) brightness(0.9);
+}
+
+.mission-replay-scene-complete {
+  filter: saturate(1.05) contrast(1.05) brightness(0.95);
+}
+
+.mission-replay-scene-overlay {
+  transition: opacity 0.6s ease, background 0.6s ease;
+}
+
+.mission-replay-scene-overlay[data-scene="grid"] {
+  background-image:
+    linear-gradient(rgba(96, 165, 250, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(96, 165, 250, 0.12) 1px, transparent 1px);
+  background-size: 48px 48px;
+  animation: missionReplayGridDrift 8s linear infinite;
+}
+
+.mission-replay-scene-overlay[data-scene="capture"]::after {
+  content: "";
+  position: absolute;
+  inset: 18%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+  animation: missionReplayShutter 1.2s ease-in-out infinite;
+}
+
+.mission-replay-scene-overlay[data-scene="upload"] {
+  background: linear-gradient(180deg, transparent 55%, rgba(37, 99, 235, 0.22) 55%);
+}
+
+.mission-replay-scene-overlay[data-scene="upload"]::before {
+  content: "";
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: 16%;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.mission-replay-scene-overlay[data-scene="upload"]::after {
+  content: "";
+  position: absolute;
+  left: 12%;
+  bottom: 16%;
+  height: 6px;
+  width: 68%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2563eb, #38bdf8);
+  animation: missionReplayUpload 2.4s ease-in-out infinite;
+}
+
+.mission-replay-scene-overlay[data-scene="processing"] {
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.03) 0px,
+    rgba(255, 255, 255, 0.03) 1px,
+    transparent 1px,
+    transparent 6px
+  );
+  animation: missionReplayScan 1.8s linear infinite;
+}
+
+.mission-replay-scene-overlay[data-scene="ortho"] {
+  background: linear-gradient(
+    135deg,
+    rgba(34, 197, 94, 0.12) 0%,
+    rgba(37, 99, 235, 0.08) 50%,
+    rgba(15, 23, 42, 0.2) 100%
+  );
+}
+
+.mission-replay-scene-overlay[data-scene="model3d"] {
+  background-image:
+    linear-gradient(rgba(56, 189, 248, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.08) 1px, transparent 1px);
+  background-size: 32px 32px;
+  transform: perspective(800px) rotateX(18deg);
+  transform-origin: center bottom;
+}
+
+.mission-replay-scene-overlay[data-scene="elevation"] {
+  background: linear-gradient(
+    to top,
+    rgba(37, 99, 235, 0.35) 0%,
+    rgba(34, 197, 94, 0.25) 35%,
+    rgba(234, 179, 8, 0.25) 65%,
+    rgba(239, 68, 68, 0.3) 100%
+  );
+  mix-blend-mode: soft-light;
+}
+
+.mission-replay-scene-overlay[data-scene="measure"]::before,
+.mission-replay-scene-overlay[data-scene="measure"]::after {
+  content: "";
+  position: absolute;
+  border: 1px dashed rgba(250, 204, 21, 0.75);
+  border-radius: 8px;
+}
+
+.mission-replay-scene-overlay[data-scene="measure"]::before {
+  inset: 22% 48% 38% 18%;
+  box-shadow: inset 0 0 0 999px rgba(239, 68, 68, 0.12);
+}
+
+.mission-replay-scene-overlay[data-scene="measure"]::after {
+  inset: 38% 18% 22% 48%;
+  box-shadow: inset 0 0 0 999px rgba(34, 197, 94, 0.12);
+}
+
+@keyframes missionReplayGridDrift {
+  from {
+    background-position: 0 0, 0 0;
+  }
+  to {
+    background-position: 48px 48px, 48px 48px;
+  }
+}
+
+@keyframes missionReplayShutter {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes missionReplayUpload {
+  0% {
+    width: 18%;
+  }
+  100% {
+    width: 88%;
+  }
+}
+
+@keyframes missionReplayScan {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 0 24px;
+  }
+}

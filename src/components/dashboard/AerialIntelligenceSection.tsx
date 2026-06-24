@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import DsmElevationViewer from "@/components/dashboard/aerial-intelligence/DsmElevationViewer";
 import MissionIntelBar from "@/components/dashboard/aerial-intelligence/MissionIntelBar";
+import MissionReplayPlayer from "@/components/dashboard/aerial-intelligence/MissionReplayPlayer";
 import ModelViewer3D from "@/components/dashboard/aerial-intelligence/ModelViewer3D";
 import OrthomosaicViewer from "@/components/dashboard/aerial-intelligence/OrthomosaicViewer";
 import PointCloudComingSoon from "@/components/dashboard/aerial-intelligence/PointCloudComingSoon";
@@ -65,11 +66,13 @@ export default function AerialIntelligenceSection() {
 
   return (
     <section className="space-y-6" aria-label="Aerial intelligence workspace">
+      <MissionReplayPlayer />
+
       {loading ? (
         <div className="rounded-2xl border border-white/[0.07] bg-[#0D1B2A]/80 px-4 py-8 shadow-[0_20px_48px_rgba(0,0,0,0.28)] sm:px-6">
           <div className="flex items-center gap-2 text-sm text-white/50">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Loading aerial intelligence workspace…
+            Loading live survey viewers from WebODM…
           </div>
         </div>
       ) : response?.error ? (
@@ -92,13 +95,13 @@ export default function AerialIntelligenceSection() {
               />
             ) : null}
 
-            <div className="grid gap-5 xl:grid-cols-2">
-              {response?.modelGlbUrl ? <ModelViewer3D modelUrl={response.modelGlbUrl} /> : null}
-              {response?.reportPdfUrl ? (
-                <ProcessingReportViewer reportPdfUrl={response.reportPdfUrl} mission={mission} />
-              ) : null}
-            </div>
+            {response?.modelGlbUrl ? <ModelViewer3D modelUrl={response.modelGlbUrl} /> : null}
+          </div>
 
+          <div className="grid gap-5 xl:grid-cols-2">
+            {response?.reportPdfUrl ? (
+              <ProcessingReportViewer reportPdfUrl={response.reportPdfUrl} mission={mission} />
+            ) : null}
             {response?.hasPointCloud ? (
               <PointCloudComingSoon pointCount={mission.pointCount} />
             ) : null}
