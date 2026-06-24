@@ -1,5 +1,5 @@
 import HomeHero from "@/components/home/HomeHero";
-import WhatWeOffer from "@/components/home/WhatWeOffer";
+import HomeOfferPlatform from "@/components/home/HomeOfferPlatform";
 import WhoWeWorkWith from "@/components/home/WhoWeWorkWith";
 import Workflow from "@/components/home/Workflow";
 
@@ -7,8 +7,8 @@ export default function HomePage() {
   return (
     <>
       <HomeHero />
+      <HomeOfferPlatform />
       <WhoWeWorkWith />
-      <WhatWeOffer />
       <Workflow />
     </>
   );

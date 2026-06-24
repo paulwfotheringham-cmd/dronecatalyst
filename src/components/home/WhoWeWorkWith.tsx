@@ -1,5 +1,4 @@
 import Image from "next/image";
-import GeospatialDashboard from "./GeospatialDashboard";
 
 const CONSTRUCTION_BG = "/images/construction-bg.jpg";
 
@@ -93,7 +92,7 @@ function IndustryIcon({ type }: { type: (typeof INDUSTRIES)[number]["icon"] }) {
 
 export default function WhoWeWorkWith() {
   return (
-    <section className="relative overflow-hidden bg-[#050816] py-16 sm:py-20 lg:py-24">
+    <section className="relative overflow-hidden pb-[72px] pt-16 sm:pt-20">
       <div className="absolute inset-0" aria-hidden>
         <Image
           src={CONSTRUCTION_BG}
@@ -105,32 +104,35 @@ export default function WhoWeWorkWith() {
         <div className="absolute inset-0 bg-[#050816]/84" />
       </div>
 
-      <div className="relative mx-auto max-w-[1400px] px-5 sm:px-8 lg:px-10">
-        <div className="grid items-start gap-12 lg:grid-cols-2 lg:gap-10 xl:gap-14">
-          {/* Left — industries */}
-          <div>
-            <div className="flex items-center gap-4 sm:gap-5">
-              <span className="h-px w-10 bg-[#3b82f6] sm:w-16" aria-hidden />
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#3b82f6]">
-                WHO WE WORK WITH
-              </p>
-            </div>
+      <div className="relative mx-auto max-w-[1280px] px-8">
+        <div className="flex items-center justify-center gap-5">
+          <span className="h-px w-[120px] bg-[#3b82f6] sm:w-[180px]" aria-hidden />
+          <p className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.22em] text-[#3b82f6]">
+            WHO WE WORK WITH
+          </p>
+          <span className="h-px w-[120px] bg-[#3b82f6] sm:w-[180px]" aria-hidden />
+        </div>
 
-            <div className="mt-10 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3">
-              {INDUSTRIES.map((item) => (
-                <div key={item.label} className="flex flex-col items-center text-center">
-                  <IndustryIcon type={item.icon} />
-                  <p className="mt-3 text-[12px] font-normal leading-[1.35] text-white/90">
-                    {item.label}
-                  </p>
-                </div>
-              ))}
-            </div>
+        <div className="mt-[52px]">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-[40px] sm:grid-cols-3 lg:grid-cols-5">
+            {INDUSTRIES.slice(0, 5).map((item) => (
+              <div key={item.label} className="flex flex-col items-center text-center">
+                <IndustryIcon type={item.icon} />
+                <p className="mt-[14px] text-[12px] font-normal leading-[1.35] text-white/90">
+                  {item.label}
+                </p>
+              </div>
+            ))}
           </div>
-
-          {/* Right — platform preview */}
-          <div className="flex justify-center lg:justify-end">
-            <GeospatialDashboard />
+          <div className="mt-[40px] grid grid-cols-2 gap-x-4 gap-y-[40px] sm:grid-cols-3 lg:grid-cols-6">
+            {INDUSTRIES.slice(5).map((item) => (
+              <div key={item.label} className="flex flex-col items-center text-center">
+                <IndustryIcon type={item.icon} />
+                <p className="mt-[14px] text-[12px] font-normal leading-[1.35] text-white/90">
+                  {item.label}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </div>

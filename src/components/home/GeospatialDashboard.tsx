@@ -1,5 +1,6 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 const SITE_IMAGE = "/images/westport-site.jpg";
 
@@ -71,9 +72,13 @@ function VolumeSparkline() {
 
 const SIDEBAR = ["Dashboard", "Projects", "Maps", "Reports", "Analytics", "Inspections"];
 
-export default function GeospatialDashboard() {
+type GeospatialDashboardProps = {
+  className?: string;
+};
+
+export default function GeospatialDashboard({ className }: GeospatialDashboardProps) {
   return (
-    <div className="relative w-[383px] sm:w-[425px] lg:w-[457px]">
+    <div className={cn("relative w-[383px] sm:w-[425px] lg:w-[457px]", className)}>
       <div className="overflow-hidden rounded-[14px] border border-white/20 bg-[#0b1118] shadow-[0_20px_50px_rgba(0,0,0,0.45)]">
         {/* App chrome */}
         <div className="flex items-center justify-between border-b border-white/10 bg-[#101622] px-3 py-2">
