@@ -73,7 +73,7 @@ const SIDEBAR = ["Dashboard", "Projects", "Maps", "Reports", "Analytics", "Inspe
 
 export default function GeospatialDashboard() {
   return (
-    <div className="relative w-[450px] sm:w-[500px] lg:w-[538px]">
+    <div className="relative w-[383px] sm:w-[425px] lg:w-[457px]">
       <div className="overflow-hidden rounded-[14px] border border-white/20 bg-[#0b1118] shadow-[0_20px_50px_rgba(0,0,0,0.45)]">
         {/* App chrome */}
         <div className="flex items-center justify-between border-b border-white/10 bg-[#101622] px-3 py-2">
@@ -82,13 +82,6 @@ export default function GeospatialDashboard() {
             <span className="hidden rounded-md border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[8px] text-white/55 sm:inline">
               Project Alpha ▾
             </span>
-          </div>
-          <div className="flex items-center gap-2 text-white/35">
-            {["⌕", "◉", "◯"].map((icon) => (
-              <span key={icon} className="flex h-5 w-5 items-center justify-center rounded-md border border-white/10 text-[9px]">
-                {icon}
-              </span>
-            ))}
           </div>
         </div>
 

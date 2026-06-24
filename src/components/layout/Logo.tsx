@@ -30,15 +30,6 @@ export default function Logo({
           Drone
           <span className={onDark ? "text-[#60a5fa]" : "text-[#2563eb]"}>Catalyst</span>
         </span>
-        <span
-          className={cn(
-            "mt-1 font-medium uppercase tracking-[0.22em]",
-            onDark ? "text-white/40" : "text-[#64748b]",
-          )}
-          style={{ fontSize: Math.max(8, Math.round(wordmarkSize * 0.34)) }}
-        >
-          Aerial Intelligence
-        </span>
       </span>
     </span>
   );
