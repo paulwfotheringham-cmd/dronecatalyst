@@ -1,23 +1,14 @@
-import Image from "next/image";
 import Link from "next/link";
 import GeospatialDashboard from "./GeospatialDashboard";
-
-const HERO_IMAGE = "/images/hero/drone-quarry-scan.webp";
+import HeroVideoBackground from "./HeroVideoBackground";
 
 export default function HomeHero() {
   return (
     <section className="relative overflow-x-hidden bg-[#020617]">
-      {/* Composed hero — drone, static scan beam, quarry baked in */}
-      <div className="pointer-events-none absolute inset-0" aria-hidden>
-        <Image
-          src={HERO_IMAGE}
-          alt=""
-          fill
-          priority
-          className="object-cover object-[48%_24%]"
-          sizes="100vw"
-        />
-      </div>
+      <HeroVideoBackground />
+
+      {/* Dark overlay for legibility over video */}
+      <div className="pointer-events-none absolute inset-0 z-[1] bg-black/50" aria-hidden />
 
       {/* Gradient — heavy left only, quarry stays clear on right */}
       <div
