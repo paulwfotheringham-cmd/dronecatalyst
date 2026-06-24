@@ -5,9 +5,7 @@ const SITE_IMAGE = "/images/westport-site.jpg";
 
 function Shell({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <div
-      className={`rounded-lg border border-white/[0.08] bg-[#151b26]/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ${className}`}
-    >
+    <div className={`rounded-lg border border-white/[0.14] bg-[#151b26] ${className}`}>
       {children}
     </div>
   );
@@ -75,10 +73,10 @@ const SIDEBAR = ["Dashboard", "Projects", "Maps", "Reports", "Analytics", "Inspe
 
 export default function GeospatialDashboard() {
   return (
-    <div className="hero-mockup-3d relative w-[450px] sm:w-[500px] lg:w-[538px]">
-      <div className="overflow-hidden rounded-[14px] border border-white/[0.12] bg-[#0b1118]/92 shadow-[0_28px_70px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.1)] backdrop-blur-xl">
+    <div className="relative w-[450px] sm:w-[500px] lg:w-[538px]">
+      <div className="overflow-hidden rounded-[14px] border border-white/20 bg-[#0b1118] shadow-[0_20px_50px_rgba(0,0,0,0.45)]">
         {/* App chrome */}
-        <div className="flex items-center justify-between border-b border-white/[0.08] bg-[#101622]/95 px-3 py-2">
+        <div className="flex items-center justify-between border-b border-white/10 bg-[#101622] px-3 py-2">
           <div className="flex min-w-0 items-center gap-2">
             <span className="text-[10px] font-semibold tracking-[-0.02em] text-white">dronecatalyst</span>
             <span className="hidden rounded-md border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[8px] text-white/55 sm:inline">
@@ -96,7 +94,7 @@ export default function GeospatialDashboard() {
 
         <div className="flex">
           {/* Sidebar */}
-          <aside className="hidden w-[58px] shrink-0 border-r border-white/[0.08] bg-[#0d121c]/95 py-2 sm:block">
+          <aside className="hidden w-[58px] shrink-0 border-r border-white/10 bg-[#0d121c] py-2 sm:block">
             {SIDEBAR.map((item, index) => (
               <div key={item} className="mb-1 px-1.5 text-center">
                 <NavIcon active={index === 0} />
@@ -109,7 +107,7 @@ export default function GeospatialDashboard() {
 
           {/* Main workspace */}
           <main className="min-w-0 flex-1 p-2.5">
-            <h2 className="text-[11px] font-semibold text-white">Dashboard</h2>
+            <h2 className="text-[12px] font-semibold text-white">Dashboard</h2>
 
             <div className="mt-2 grid grid-cols-4 gap-1.5">
               {[
@@ -121,41 +119,41 @@ export default function GeospatialDashboard() {
                 <Shell key={kpi.label} className="px-1.5 py-1.5">
                   <div className="flex items-center gap-1">
                     <span className={`h-1.5 w-1.5 rounded-full ${kpi.dot}`} />
-                    <p className="text-[7px] text-white/45">{kpi.label}</p>
+                    <p className="text-[8px] text-white/60">{kpi.label}</p>
                   </div>
-                  <p className="mt-0.5 text-[11px] font-semibold text-white">{kpi.value}</p>
+                  <p className="mt-0.5 text-[12px] font-semibold text-white">{kpi.value}</p>
                 </Shell>
               ))}
             </div>
 
             <div className="mt-1.5 grid grid-cols-3 gap-1.5">
               <Shell className="col-span-1 p-1.5">
-                <p className="text-[7px] font-medium text-white/45">Progress Overview</p>
+                <p className="text-[8px] font-medium text-white/60">Progress Overview</p>
                 <ProgressChart />
               </Shell>
 
               <Shell className="relative col-span-1 overflow-hidden p-0">
                 <div className="relative h-[78px]">
-                  <Image src={SITE_IMAGE} alt="" fill className="object-cover" sizes="140px" />
-                  <div className="absolute inset-0 bg-[#020617]/20" />
-                  <div className="absolute left-1 top-1 rounded bg-black/55 px-1 py-0.5 text-[6px] text-white/80">
+                  <Image src={SITE_IMAGE} alt="" fill className="object-cover" sizes="180px" />
+                  <div className="absolute inset-0 bg-[#020617]/10" />
+                  <div className="absolute left-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-[7px] font-medium text-white">
                     Site Overview
                   </div>
                 </div>
               </Shell>
 
               <Shell className="col-span-1 p-1.5">
-                <p className="text-[7px] font-medium text-white/45">Volume Change</p>
-                <p className="mt-0.5 text-[11px] font-semibold text-white">+12,540 m³</p>
-                <p className="text-[6px] text-white/40">vs last survey</p>
+                <p className="text-[8px] font-medium text-white/60">Volume Change</p>
+                <p className="mt-0.5 text-[12px] font-semibold text-white">+12,540 m³</p>
+                <p className="text-[7px] text-white/55">vs last survey</p>
                 <VolumeSparkline />
               </Shell>
             </div>
 
             <div className="mt-1.5 grid grid-cols-3 gap-1.5">
               <Shell className="p-1.5">
-                <p className="text-[7px] font-medium text-white/45">Recent Reports</p>
-                <ul className="mt-1 space-y-1 text-[6px] text-white/65">
+                <p className="text-[8px] font-medium text-white/60">Recent Reports</p>
+                <ul className="mt-1 space-y-1 text-[7px] text-white/80">
                   <li>Site Progress · Jul 2026</li>
                   <li>Stockpile Analysis</li>
                   <li>Roof Inspection · Bldg A</li>
@@ -163,17 +161,17 @@ export default function GeospatialDashboard() {
               </Shell>
 
               <Shell className="p-1.5">
-                <p className="text-[7px] font-medium text-white/45">Active Issues</p>
-                <ul className="mt-1 space-y-1 text-[6px]">
-                  <li className="flex items-center justify-between gap-1 text-white/65">
+                <p className="text-[8px] font-medium text-white/60">Active Issues</p>
+                <ul className="mt-1 space-y-1 text-[7px]">
+                  <li className="flex items-center justify-between gap-1 text-white/80">
                     <span className="truncate">Roof membrane</span>
                     <span className="rounded bg-orange-500/20 px-1 text-orange-200">High</span>
                   </li>
-                  <li className="flex items-center justify-between gap-1 text-white/65">
+                  <li className="flex items-center justify-between gap-1 text-white/80">
                     <span className="truncate">Drainage blocked</span>
                     <span className="rounded bg-amber-500/20 px-1 text-amber-200">Med</span>
                   </li>
-                  <li className="flex items-center justify-between gap-1 text-white/65">
+                  <li className="flex items-center justify-between gap-1 text-white/80">
                     <span className="truncate">Crack detected</span>
                     <span className="rounded bg-emerald-500/20 px-1 text-emerald-200">Low</span>
                   </li>
@@ -181,19 +179,14 @@ export default function GeospatialDashboard() {
               </Shell>
 
               <Shell className="flex flex-col items-center justify-center p-1.5 text-center">
-                <p className="text-[7px] font-medium text-white/45">Weather</p>
-                <p className="mt-1 text-[14px] font-semibold text-white">24°C</p>
-                <p className="text-[6px] text-white/45">Partly cloudy</p>
+                <p className="text-[8px] font-medium text-white/60">Weather</p>
+                <p className="mt-1 text-[15px] font-semibold text-white">24°C</p>
+                <p className="text-[7px] text-white/55">Partly cloudy</p>
               </Shell>
             </div>
           </main>
         </div>
       </div>
-
-      <div
-        className="pointer-events-none absolute -bottom-4 left-[10%] right-[10%] h-4 rounded-[100%] bg-black/35 blur-lg"
-        aria-hidden
-      />
     </div>
   );
 }
