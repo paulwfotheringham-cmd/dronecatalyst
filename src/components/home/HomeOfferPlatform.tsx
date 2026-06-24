@@ -81,20 +81,21 @@ export default function HomeOfferPlatform() {
         <div className="absolute inset-0 bg-[#050816]/84" />
       </div>
 
-      <div className="relative mx-auto max-w-[1400px] px-5 sm:px-8 lg:px-10">
-        <div className="flex items-center gap-4 sm:gap-5">
-          <span className="h-px w-10 bg-[#3b82f6] sm:w-16" aria-hidden />
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#3b82f6]">
+      <div className="relative mx-auto max-w-[1600px] px-5 sm:px-8 lg:px-10">
+        <div className="flex items-center gap-4 sm:gap-6">
+          <span className="h-px w-12 bg-[#3b82f6] sm:w-20" aria-hidden />
+          <p className="text-[22px] font-semibold uppercase tracking-[0.18em] text-[#3b82f6]">
             What We Can Offer
           </p>
+          <span className="h-px w-12 bg-[#3b82f6] sm:w-20" aria-hidden />
         </div>
 
-        <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-white/65">
+        <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-white/65">
           End-to-end aerial intelligence and media solutions.
         </p>
 
-        <div className="mt-8 grid items-stretch gap-8 lg:grid-cols-2 lg:gap-10 xl:gap-14">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-3">
+        <div className="mt-10 grid items-stretch gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:gap-12 xl:gap-16">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-3 sm:gap-6 lg:gap-8">
             {OFFERS.map((item, i) => (
               <div
                 key={item.title}
@@ -141,7 +142,7 @@ export default function HomeOfferPlatform() {
           </div>
 
           <div className="flex items-stretch justify-center lg:justify-end">
-            <GeospatialDashboard className="w-full max-w-[536px] sm:max-w-[595px] lg:max-w-[640px]" />
+            <GeospatialDashboard className="w-full max-w-[620px] sm:max-w-[700px] lg:max-w-[820px] xl:max-w-[920px]" />
           </div>
         </div>
       </div>

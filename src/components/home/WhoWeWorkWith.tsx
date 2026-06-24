@@ -1,7 +1,3 @@
-import Image from "next/image";
-
-const CONSTRUCTION_BG = "/images/construction-bg.jpg";
-
 const INDUSTRIES = [
   { label: "Construction Companies", icon: "building" },
   { label: "Infrastructure Developers", icon: "bridge" },
@@ -17,7 +13,7 @@ const INDUSTRIES = [
 ] as const;
 
 function IndustryIcon({ type }: { type: (typeof INDUSTRIES)[number]["icon"] }) {
-  const cls = "h-[36px] w-[36px] stroke-white";
+  const cls = "h-[48px] w-[48px] stroke-white sm:h-[52px] sm:w-[52px]";
   switch (type) {
     case "building":
       return (
@@ -92,43 +88,32 @@ function IndustryIcon({ type }: { type: (typeof INDUSTRIES)[number]["icon"] }) {
 
 export default function WhoWeWorkWith() {
   return (
-    <section className="relative overflow-hidden pb-[72px] pt-16 sm:pt-20">
-      <div className="absolute inset-0" aria-hidden>
-        <Image
-          src={CONSTRUCTION_BG}
-          alt=""
-          fill
-          className="object-cover object-center grayscale"
-          sizes="100vw"
-        />
-        <div className="absolute inset-0 bg-[#050816]/84" />
-      </div>
-
-      <div className="relative mx-auto max-w-[1280px] px-8">
-        <div className="flex items-center justify-center gap-5">
-          <span className="h-px w-[120px] bg-[#3b82f6] sm:w-[180px]" aria-hidden />
-          <p className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.22em] text-[#3b82f6]">
-            WHO WE WORK WITH
+    <section className="bg-[#030712] py-20 sm:py-24 lg:py-28">
+      <div className="mx-auto max-w-[1400px] px-5 sm:px-8 lg:px-10">
+        <div className="flex items-center justify-center gap-5 sm:gap-6">
+          <span className="h-px w-[80px] bg-[#3b82f6] sm:w-[140px]" aria-hidden />
+          <p className="whitespace-nowrap text-[22px] font-semibold uppercase tracking-[0.18em] text-[#3b82f6]">
+            Who We Work With
           </p>
-          <span className="h-px w-[120px] bg-[#3b82f6] sm:w-[180px]" aria-hidden />
+          <span className="h-px w-[80px] bg-[#3b82f6] sm:w-[140px]" aria-hidden />
         </div>
 
-        <div className="mt-[52px]">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-[40px] sm:grid-cols-3 lg:grid-cols-5">
+        <div className="mt-14 sm:mt-16">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-12 sm:grid-cols-3 lg:grid-cols-5 lg:gap-x-8 lg:gap-y-14">
             {INDUSTRIES.slice(0, 5).map((item) => (
               <div key={item.label} className="flex flex-col items-center text-center">
                 <IndustryIcon type={item.icon} />
-                <p className="mt-[14px] text-[12px] font-normal leading-[1.35] text-white/90">
+                <p className="mt-5 text-[14px] font-normal leading-[1.4] text-white/90 sm:text-[15px]">
                   {item.label}
                 </p>
               </div>
             ))}
           </div>
-          <div className="mt-[40px] grid grid-cols-2 gap-x-4 gap-y-[40px] sm:grid-cols-3 lg:grid-cols-6">
+          <div className="mt-12 grid grid-cols-2 gap-x-6 gap-y-12 sm:grid-cols-3 lg:mt-14 lg:grid-cols-6 lg:gap-x-8 lg:gap-y-14">
             {INDUSTRIES.slice(5).map((item) => (
               <div key={item.label} className="flex flex-col items-center text-center">
                 <IndustryIcon type={item.icon} />
-                <p className="mt-[14px] text-[12px] font-normal leading-[1.35] text-white/90">
+                <p className="mt-5 text-[14px] font-normal leading-[1.4] text-white/90 sm:text-[15px]">
                   {item.label}
                 </p>
               </div>
