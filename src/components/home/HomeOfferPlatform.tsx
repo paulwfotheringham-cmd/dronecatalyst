@@ -81,7 +81,7 @@ export default function HomeOfferPlatform() {
         <div className="absolute inset-0 bg-[#050816]/84" />
       </div>
 
-      <div className="relative mx-auto max-w-[1600px] px-5 sm:px-8 lg:px-10">
+      <div className="relative mx-auto max-w-[1760px] px-5 sm:px-8 lg:px-10">
         <div className="flex items-center gap-4 sm:gap-6">
           <span className="h-px w-12 bg-[#3b82f6] sm:w-20" aria-hidden />
           <p className="text-[22px] font-semibold uppercase tracking-[0.18em] text-[#3b82f6]">
@@ -94,12 +94,12 @@ export default function HomeOfferPlatform() {
           End-to-end aerial intelligence and media solutions.
         </p>
 
-        <div className="mt-10 grid items-stretch gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:gap-12 xl:gap-16">
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-3 sm:gap-6 lg:gap-8">
+        <div className="mt-10 grid items-stretch gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:gap-10 xl:gap-14">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-3 sm:gap-5 lg:gap-6">
             {OFFERS.map((item, i) => (
               <div
                 key={item.title}
-                className="flex h-full flex-col rounded-xl border border-white/10 bg-white/[0.04] px-4 py-5 backdrop-blur-sm"
+                className="flex h-full min-w-0 flex-col rounded-xl border border-white/10 bg-white/[0.04] px-5 py-5 backdrop-blur-sm sm:px-6 sm:py-6"
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#2563eb]">
                   <ServiceIcon index={i} />
@@ -141,8 +141,8 @@ export default function HomeOfferPlatform() {
             ))}
           </div>
 
-          <div className="flex items-stretch justify-center lg:justify-end">
-            <GeospatialDashboard className="w-full max-w-[620px] sm:max-w-[700px] lg:max-w-[820px] xl:max-w-[920px]" />
+          <div className="flex items-start justify-center overflow-visible lg:justify-end">
+            <GeospatialDashboard className="w-full max-w-[760px] sm:max-w-[880px] lg:max-w-[1020px] xl:max-w-[1140px] 2xl:max-w-[1240px]" />
           </div>
         </div>
       </div>
