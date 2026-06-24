@@ -82,67 +82,66 @@ export default function HomeOfferPlatform() {
       </div>
 
       <div className="relative mx-auto max-w-[1400px] px-5 sm:px-8 lg:px-10">
-        <div className="grid items-start gap-12 lg:grid-cols-2 lg:gap-10 xl:gap-14">
-          <div>
-            <div className="flex items-center gap-4 sm:gap-5">
-              <span className="h-px w-10 bg-[#3b82f6] sm:w-16" aria-hidden />
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#3b82f6]">
-                What We Can Offer
-              </p>
-            </div>
+        <div className="flex items-center gap-4 sm:gap-5">
+          <span className="h-px w-10 bg-[#3b82f6] sm:w-16" aria-hidden />
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#3b82f6]">
+            What We Can Offer
+          </p>
+        </div>
 
-            <p className="mt-4 max-w-md text-[15px] leading-relaxed text-white/65">
-              End-to-end aerial intelligence and media solutions.
-            </p>
+        <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-white/65">
+          End-to-end aerial intelligence and media solutions.
+        </p>
 
-            <div className="mt-8 space-y-5">
-              {OFFERS.map((item, i) => (
-                <div
-                  key={item.title}
-                  className="rounded-xl border border-white/10 bg-white/[0.04] px-5 py-5 backdrop-blur-sm"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#2563eb]">
-                      <ServiceIcon index={i} />
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="text-[15px] font-bold leading-snug text-white">{item.title}</h3>
-                      <Link href={item.href} className="mt-1 inline-block text-[12px] font-semibold text-[#60a5fa]">
-                        {item.tagline}
-                      </Link>
-                      <ul className="mt-3 space-y-1.5">
-                        {item.bullets.map((bullet) => (
-                          <li
-                            key={bullet}
-                            className="flex items-start gap-2 text-[12px] leading-snug text-white/70"
-                          >
-                            <svg
-                              viewBox="0 0 16 16"
-                              fill="none"
-                              className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#60a5fa]"
-                              aria-hidden
-                            >
-                              <path
-                                d="M3 8.5l3 3 7-7"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                            {bullet}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
+        <div className="mt-8 grid items-stretch gap-8 lg:grid-cols-2 lg:gap-10 xl:gap-14">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-3">
+            {OFFERS.map((item, i) => (
+              <div
+                key={item.title}
+                className="flex h-full flex-col rounded-xl border border-white/10 bg-white/[0.04] px-4 py-5 backdrop-blur-sm"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#2563eb]">
+                  <ServiceIcon index={i} />
                 </div>
-              ))}
-            </div>
+                <h3 className="mt-4 text-[13px] font-bold leading-snug text-white sm:text-[14px]">
+                  {item.title}
+                </h3>
+                <Link
+                  href={item.href}
+                  className="mt-2 inline-block text-[11px] font-semibold leading-snug text-[#60a5fa] sm:text-[12px]"
+                >
+                  {item.tagline}
+                </Link>
+                <ul className="mt-4 flex-1 space-y-2">
+                  {item.bullets.map((bullet) => (
+                    <li
+                      key={bullet}
+                      className="flex items-start gap-2 text-[11px] leading-snug text-white/70 sm:text-[12px]"
+                    >
+                      <svg
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#60a5fa]"
+                        aria-hidden
+                      >
+                        <path
+                          d="M3 8.5l3 3 7-7"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      {bullet}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
 
-          <div className="flex justify-center lg:justify-end">
-            <GeospatialDashboard className="w-[536px] sm:w-[595px] lg:w-[640px]" />
+          <div className="flex items-stretch justify-center lg:justify-end">
+            <GeospatialDashboard className="w-full max-w-[536px] sm:max-w-[595px] lg:max-w-[640px]" />
           </div>
         </div>
       </div>
