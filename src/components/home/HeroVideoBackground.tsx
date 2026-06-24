@@ -5,6 +5,10 @@ import { useEffect, useRef, useState } from "react";
 
 const HERO_VIDEO = "/videos/drone.mp4";
 const HERO_IMAGE = "/images/hero/drone-quarry-scan.webp";
+const HERO_OBJECT_POSITION = "73% 24%";
+const PLAYBACK_RATE = 0.8;
+const LOOP_LEAD_IN_SECONDS = 0.05;
+const LOOP_TRIM_SECONDS = 0.12;
 
 export default function HeroVideoBackground() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -27,10 +31,30 @@ export default function HeroVideoBackground() {
     const container = containerRef.current;
     if (!video || !container) return;
 
+    const primePlayback = () => {
+      video.playbackRate = PLAYBACK_RATE;
+      void video.play().catch(() => {});
+    };
+
+    const handleLoadedMetadata = () => {
+      video.playbackRate = PLAYBACK_RATE;
+    };
+
+    const handleTimeUpdate = () => {
+      if (!video.duration || Number.isNaN(video.duration)) return;
+
+      if (video.currentTime >= video.duration - LOOP_TRIM_SECONDS) {
+        video.currentTime = LOOP_LEAD_IN_SECONDS;
+      }
+    };
+
+    video.addEventListener("loadedmetadata", handleLoadedMetadata);
+    video.addEventListener("timeupdate", handleTimeUpdate);
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          void video.play().catch(() => {});
+          primePlayback();
         } else {
           video.pause();
         }
@@ -39,7 +63,13 @@ export default function HeroVideoBackground() {
     );
 
     observer.observe(container);
-    return () => observer.disconnect();
+    primePlayback();
+
+    return () => {
+      video.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      video.removeEventListener("timeupdate", handleTimeUpdate);
+      observer.disconnect();
+    };
   }, [prefersReducedMotion]);
 
   return (
@@ -50,17 +80,17 @@ export default function HeroVideoBackground() {
           alt=""
           fill
           priority
-          className="object-cover object-[48%_24%]"
+          className="object-cover"
+          style={{ objectPosition: HERO_OBJECT_POSITION }}
           sizes="100vw"
         />
       ) : (
         <video
           ref={videoRef}
           className="absolute inset-0 h-full w-full object-cover"
-          style={{ width: "100%", height: "100%" }}
+          style={{ width: "100%", height: "100%", objectPosition: HERO_OBJECT_POSITION }}
           autoPlay
           muted
-          loop
           playsInline
           preload="auto"
           aria-hidden

@@ -547,3 +547,24 @@ body {
     background-position: 0 24px;
   }
 }
+
+@keyframes heroMockupFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.hero-mockup-float {
+  animation: heroMockupFloat 8s ease-in-out infinite;
+  filter: drop-shadow(0 28px 56px rgba(0, 0, 0, 0.42)) drop-shadow(0 8px 20px rgba(0, 0, 0, 0.28));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-mockup-float {
+    animation: none;
+  }
+}

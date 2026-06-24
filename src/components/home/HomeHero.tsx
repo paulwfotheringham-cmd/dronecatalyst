@@ -7,16 +7,13 @@ export default function HomeHero() {
     <section className="relative overflow-x-hidden bg-[#020617]">
       <HeroVideoBackground />
 
-      {/* Dark overlay for legibility over video */}
-      <div className="pointer-events-none absolute inset-0 z-[1] bg-black/50" aria-hidden />
-
-      {/* Gradient — heavy left only, quarry stays clear on right */}
+      {/* Legibility gradient — heavier left, lighter right so video stays visible behind mockup */}
       <div
-        className="pointer-events-none absolute inset-0 z-[3]"
+        className="pointer-events-none absolute inset-0 z-[1]"
         aria-hidden
         style={{
           background:
-            "linear-gradient(to right, rgba(2, 6, 18, 0.92) 0%, rgba(3, 7, 20, 0.88) 28%, rgba(5, 8, 22, 0.45) 42%, rgba(5, 8, 22, 0.04) 52%, transparent 58%)",
+            "linear-gradient(to right, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.45) 50%, rgba(0, 0, 0, 0.2) 100%)",
         }}
       />
 
@@ -63,7 +60,9 @@ export default function HomeHero() {
           {/* Right column — drone scan upper; horizontal dashboard lower */}
           <div className="relative min-h-[320px] sm:min-h-[480px] lg:min-h-[600px]">
             <div className="relative z-10 flex justify-center translate-y-2 sm:absolute sm:bottom-0 sm:right-0 sm:left-0 sm:translate-y-10 lg:translate-y-16 xl:translate-y-20">
-              <GeospatialDashboard />
+              <div className="hero-mockup-float w-full max-w-[680px] sm:max-w-[720px]">
+                <GeospatialDashboard />
+              </div>
             </div>
           </div>
         </div>
