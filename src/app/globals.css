@@ -563,8 +563,17 @@ body {
   filter: drop-shadow(0 32px 64px rgba(0, 0, 0, 0.38)) drop-shadow(0 12px 28px rgba(15, 23, 42, 0.28));
 }
 
+.hero-mockup-3d {
+  transform: perspective(900px) rotateY(-10deg) rotateX(6deg);
+  transform-style: preserve-3d;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero-mockup-float {
     animation: none;
+  }
+
+  .hero-mockup-3d {
+    transform: none;
   }
 }

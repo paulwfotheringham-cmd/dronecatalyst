@@ -91,6 +91,7 @@ export default function HeroVideoBackground() {
           style={{ width: "100%", height: "100%", objectPosition: HERO_OBJECT_POSITION }}
           autoPlay
           muted
+          loop
           playsInline
           preload="auto"
           aria-hidden

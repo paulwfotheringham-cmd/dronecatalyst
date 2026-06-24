@@ -7,13 +7,13 @@ export default function HomeHero() {
     <section className="relative overflow-x-hidden bg-[#020617]">
       <HeroVideoBackground />
 
-      {/* Legibility gradient — heavier left, lighter right so video stays visible behind mockup */}
+      {/* Legibility gradient — lighter on the right so video stays visible */}
       <div
         className="pointer-events-none absolute inset-0 z-[1]"
         aria-hidden
         style={{
           background:
-            "linear-gradient(to right, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.45) 50%, rgba(0, 0, 0, 0.2) 100%)",
+            "linear-gradient(to right, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.38) 42%, rgba(0, 0, 0, 0.12) 68%, transparent 82%)",
         }}
       />
 
@@ -57,10 +57,10 @@ export default function HomeHero() {
             </div>
           </div>
 
-          {/* Right column — enterprise platform mockup */}
-          <div className="relative min-h-[340px] sm:min-h-[520px] lg:min-h-[640px]">
-            <div className="relative z-10 flex translate-y-2 justify-center sm:absolute sm:bottom-0 sm:left-auto sm:right-[-6%] sm:translate-x-[10%] sm:translate-y-10 lg:right-[-4%] lg:translate-x-[14%] lg:translate-y-16 xl:translate-x-[18%] xl:translate-y-20">
-              <div className="hero-mockup-float w-full max-w-[760px] sm:max-w-[820px] lg:max-w-[880px]">
+          {/* Right column — compact 3D platform preview */}
+          <div className="relative min-h-0 lg:min-h-[200px]">
+            <div className="relative z-10 flex justify-end pt-2 sm:absolute sm:bottom-8 sm:right-0 sm:pt-0 lg:bottom-12 lg:right-2 xl:bottom-16 xl:right-4">
+              <div className="hero-mockup-float">
                 <GeospatialDashboard />
               </div>
             </div>
