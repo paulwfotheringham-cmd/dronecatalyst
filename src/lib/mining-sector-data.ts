@@ -19,13 +19,44 @@ export type MiningCountryMeta = {
   label: string;
   mapCenter: [number, number];
   mapZoom: number;
+  /** Active open-pit, underground, and large quarry sites suited to drone survey/inspection. */
+  sizeableMineSites: number;
+  siteBreakdown: string;
 };
 
 export const MINING_COUNTRIES: readonly MiningCountryMeta[] = [
-  { id: "spain", label: "Spain", mapCenter: [40.2, -3.5], mapZoom: 6 },
-  { id: "uk", label: "UK", mapCenter: [54.5, -2.5], mapZoom: 6 },
-  { id: "portugal", label: "Portugal", mapCenter: [39.5, -8.0], mapZoom: 7 },
-  { id: "kenya", label: "Kenya", mapCenter: [0.2, 37.5], mapZoom: 6 },
+  {
+    id: "spain",
+    label: "Spain",
+    mapCenter: [40.2, -3.5],
+    mapZoom: 6,
+    sizeableMineSites: 42,
+    siteBreakdown: "14 metal · 9 aggregates · 19 mixed industrial",
+  },
+  {
+    id: "uk",
+    label: "UK",
+    mapCenter: [54.5, -2.5],
+    mapZoom: 6,
+    sizeableMineSites: 56,
+    siteBreakdown: "3 metal/industrial · 38 quarry · 15 cement/kaolin",
+  },
+  {
+    id: "portugal",
+    label: "Portugal",
+    mapCenter: [39.5, -8.0],
+    mapZoom: 7,
+    sizeableMineSites: 24,
+    siteBreakdown: "8 metal · 6 tungsten/tin · 10 quarry/cement",
+  },
+  {
+    id: "kenya",
+    label: "Kenya",
+    mapCenter: [0.2, 37.5],
+    mapZoom: 6,
+    sizeableMineSites: 19,
+    siteBreakdown: "6 mineral sands/soda · 7 gold · 6 quarry/cement",
+  },
 ] as const;
 
 const SPAIN_OPERATORS: MineOperator[] = [

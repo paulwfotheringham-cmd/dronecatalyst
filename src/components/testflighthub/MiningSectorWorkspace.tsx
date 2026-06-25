@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
-import { MapPin, Pickaxe } from "lucide-react";
+import { MapPin, Mountain, Pickaxe } from "lucide-react";
 
 import {
   formatEmployeeCount,
@@ -69,11 +69,55 @@ export default function MiningSectorWorkspace() {
             >
               {MINING_COUNTRIES.map((country) => (
                 <option key={country.id} value={country.id}>
-                  {country.label}
+                  {country.label} · {country.sizeableMineSites} sites
                 </option>
               ))}
             </select>
           </div>
+        </div>
+
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {MINING_COUNTRIES.map((country) => {
+            const selected = country.id === selectedCountry;
+            return (
+              <button
+                key={country.id}
+                type="button"
+                onClick={() => setSelectedCountry(country.id)}
+                className={cn(
+                  "rounded-xl border p-4 text-left transition-colors",
+                  selected
+                    ? "border-amber-400/40 bg-amber-500/10"
+                    : "border-white/10 bg-[#0b1524]/60 hover:border-white/20 hover:bg-[#0b1524]",
+                )}
+              >
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/45">
+                  {country.label}
+                </p>
+                <p className="mt-2 flex items-baseline gap-2">
+                  <span className="text-2xl font-semibold text-white">
+                    {country.sizeableMineSites}
+                  </span>
+                  <span className="text-sm text-white/55">sizeable sites</span>
+                </p>
+                <p className="mt-2 text-xs leading-snug text-white/50">{country.siteBreakdown}</p>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-start gap-3 rounded-xl border border-white/10 bg-[#0b1524]/50 px-4 py-3">
+          <Mountain className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+          <p className="text-sm text-white/60">
+            <span className="font-semibold text-white/80">{countryMeta.label}</span> has an
+            estimated{" "}
+            <span className="font-semibold text-amber-300">
+              {countryMeta.sizeableMineSites} sizeable mine sites
+            </span>{" "}
+            that may need drone surveying, stockpile measurement, haul-road mapping, or inspection
+            services — open-pit metal mines, large underground operations, and major quarry/cement
+            complexes above ~500 kt/yr or 50+ staff.
+          </p>
         </div>
       </section>
 
@@ -103,7 +147,11 @@ export default function MiningSectorWorkspace() {
         <h3 className="text-base font-semibold text-white">
           Top 10 Operators · {countryMeta.label}
         </h3>
-        <p className="mt-1 text-sm text-white/55">Ranked by estimated annual revenue (USD).</p>
+        <p className="mt-1 text-sm text-white/55">
+          Ranked by estimated annual revenue (USD) ·{" "}
+          {countryMeta.sizeableMineSites} sizeable sites in {countryMeta.label} may need drone
+          services beyond these top operators.
+        </p>
 
         <div className="mt-4 overflow-x-auto">
           <table className="min-w-[72rem] w-full border-collapse text-left text-sm">
