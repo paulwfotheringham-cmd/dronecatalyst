@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import GeospatialDashboard from "./GeospatialDashboard";
+import SectionHoverInfo from "./SectionHoverInfo";
 
 const CONSTRUCTION_BG = "/images/construction-bg.jpg";
 
@@ -10,6 +11,9 @@ const OFFERS = [
     title: "Surveying & Geospatial Intelligence",
     tagline: "Measure. Map. Monitor.",
     href: "/surveying",
+    hoverTitle: "Surveying & Geospatial Intelligence",
+    hoverInfo:
+      "High-accuracy aerial capture for stockpile volumetrics, site mapping and construction progress. Deliverables include orthomosaics, DSMs, cut/fill analysis and survey-grade reporting.",
     bullets: [
       "Stockpile & Volume Analytics",
       "Construction Surveying",
@@ -21,6 +25,9 @@ const OFFERS = [
     title: "Inspection & Asset Intelligence",
     tagline: "Inspect. Assess. Report.",
     href: "/inspection",
+    hoverTitle: "Inspection & Asset Intelligence",
+    hoverInfo:
+      "Visual and thermal inspections for buildings, roofs, energy assets and industrial infrastructure. Structured findings, severity tagging and client-ready inspection reports.",
     bullets: [
       "Building & Roof Inspections",
       "Energy Asset Inspections",
@@ -32,6 +39,9 @@ const OFFERS = [
     title: "Premium Media & Broadcast",
     tagline: "Capture. Create. Communicate.",
     href: "/commercial-imaging",
+    hoverTitle: "Premium Media & Broadcast",
+    hoverInfo:
+      "Cinematic aerial production for brands, sports, maritime and live events. Professional crews, broadcast-ready capture and post-production support.",
     bullets: [
       "Commercial & Brand Productions",
       "Sports & Live Events",
@@ -68,14 +78,28 @@ function ServiceIcon({ index }: { index: number }) {
   );
 }
 
-function SectionTitle({ children }: { children: ReactNode }) {
+function SectionTitle({
+  children,
+  centered = false,
+}: {
+  children: ReactNode;
+  centered?: boolean;
+}) {
   return (
-    <div className="flex items-center gap-4 sm:gap-6">
-      <span className="h-px w-12 bg-[#3b82f6] sm:w-20" aria-hidden />
+    <div
+      className={`flex items-center gap-4 sm:gap-6 ${centered ? "justify-center" : ""}`}
+    >
+      <span
+        className={`h-px bg-[#3b82f6] ${centered ? "w-[80px] sm:w-[140px]" : "w-12 sm:w-20"}`}
+        aria-hidden
+      />
       <p className="text-[22px] font-semibold uppercase tracking-[0.18em] text-[#3b82f6]">
         {children}
       </p>
-      <span className="h-px w-12 bg-[#3b82f6] sm:w-20" aria-hidden />
+      <span
+        className={`h-px bg-[#3b82f6] ${centered ? "w-[80px] sm:w-[140px]" : "w-12 sm:w-20"}`}
+        aria-hidden
+      />
     </div>
   );
 }
@@ -97,12 +121,15 @@ export default function HomeOfferPlatform() {
       <div className="relative mx-auto max-w-[1760px] px-5 sm:px-8 lg:px-10">
         <SectionTitle>What We Can Offer</SectionTitle>
 
-        <div className="mt-10 grid w-full grid-cols-1 gap-5 sm:grid-cols-3 sm:gap-4 lg:gap-6">
+        <div className="mt-10 grid w-full grid-cols-1 gap-5 overflow-visible sm:grid-cols-3 sm:gap-4 lg:gap-6">
           {OFFERS.map((item, i) => (
-            <div
+            <SectionHoverInfo
               key={item.title}
-              className="flex min-h-[360px] min-w-0 flex-col rounded-xl bg-white px-6 py-7 shadow-[0_4px_24px_rgba(11,45,99,0.12)] sm:min-h-[380px] sm:px-7 sm:py-8"
+              title={item.hoverTitle}
+              description={item.hoverInfo}
+              variant="light"
             >
+              <div className="flex min-h-[360px] min-w-0 flex-col rounded-xl bg-white px-6 py-7 shadow-[0_4px_24px_rgba(11,45,99,0.12)] transition-shadow hover:shadow-[0_8px_32px_rgba(11,45,99,0.18)] sm:min-h-[380px] sm:px-7 sm:py-8">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#2563eb] sm:h-16 sm:w-16">
                 <ServiceIcon index={i} />
               </div>
@@ -139,15 +166,16 @@ export default function HomeOfferPlatform() {
                   </li>
                 ))}
               </ul>
-            </div>
+              </div>
+            </SectionHoverInfo>
           ))}
         </div>
 
         <div id="platform" className="mt-16 sm:mt-20 lg:mt-24">
-          <SectionTitle>Intelligence Platform</SectionTitle>
+          <SectionTitle centered>Intelligence Platform</SectionTitle>
 
-          <div className="mt-10 flex w-full justify-center">
-            <GeospatialDashboard className="w-full max-w-[640px] sm:max-w-[760px] lg:max-w-[900px] xl:max-w-[1000px] 2xl:max-w-[1100px]" />
+          <div className="mt-10 w-full">
+            <GeospatialDashboard className="w-full" />
           </div>
         </div>
       </div>
