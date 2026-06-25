@@ -117,7 +117,7 @@ export default function HomeOfferPlatform() {
               key={item.title}
               className="mx-auto flex w-full max-w-[375px] min-h-[360px] flex-col rounded-xl bg-white px-5 py-6 shadow-[0_4px_24px_rgba(11,45,99,0.12)] sm:min-h-[380px] sm:px-6 sm:py-7"
             >
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#2563eb] sm:h-14 sm:w-14">
+              <div className="mx-auto flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#2563eb] sm:h-14 sm:w-14">
                 <ServiceIcon index={i} />
               </div>
               <h3 className="mt-4 text-[17px] font-bold leading-snug text-[#1a2b4a] sm:text-[18px]">
