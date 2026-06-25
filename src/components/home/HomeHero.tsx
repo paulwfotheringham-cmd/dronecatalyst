@@ -21,10 +21,10 @@ export default function HomeHero() {
           <h1 className="text-[1.575rem] font-bold leading-[0.95] tracking-[-0.03em] text-white sm:text-[2.38rem] lg:text-[2.8rem] xl:text-[3.15rem]">
             <span className="mb-3 block sm:mb-4">FROM DRONE</span>
             <span className="mb-3 block sm:mb-4">TO</span>
-            <span className="block">INTELLIGENCE</span>
+            <span className="mb-5 block sm:mb-7">INTELLIGENCE</span>
           </h1>
 
-          <p className="mt-5 text-lg font-semibold tracking-tight text-[#3b82f6] sm:text-xl">
+          <p className="mt-2 text-lg font-semibold tracking-tight text-[#3b82f6] sm:mt-3 sm:text-xl">
             Data. <span className="text-white">Insight.</span> Visibility.
           </p>
 

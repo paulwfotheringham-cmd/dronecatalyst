@@ -93,10 +93,12 @@ export default function Navbar() {
             <div className="flex items-center justify-end gap-3">
               <Link
                 href="/contact"
-                className={`hidden h-[36px] items-center rounded-md px-[16px] text-[14px] font-semibold lg:inline-flex ${
-                  isDarkNav
-                    ? "bg-white text-[#0b2d63]"
-                    : "border border-[#cfe0ff] bg-[#EEF5FF] text-[#0b2d63]"
+                className={`hidden items-center rounded-lg font-semibold lg:inline-flex ${
+                  pathname === "/"
+                    ? "h-11 px-7 text-[15px] bg-white/90 text-[#0b2d63] shadow-[0_2px_12px_rgba(255,255,255,0.15)] backdrop-blur-sm transition-colors hover:bg-white"
+                    : isDarkNav
+                      ? "h-[36px] rounded-md px-[16px] text-[14px] bg-white text-[#0b2d63]"
+                      : "h-[36px] rounded-md border border-[#cfe0ff] bg-[#EEF5FF] px-[16px] text-[14px] text-[#0b2d63]"
                 }`}
               >
                 Contact Us

@@ -43,6 +43,9 @@ export default function Footer() {
                   Contact Us
                 </Link>
               </li>
+              <li>
+                <span className="text-[13px] text-[#1a2b4a]/65">Terms and Conditions</span>
+              </li>
             </ul>
           </div>
 
