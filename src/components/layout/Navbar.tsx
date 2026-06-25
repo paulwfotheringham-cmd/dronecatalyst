@@ -7,15 +7,15 @@ import Logo from "./Logo";
 import MobileMenu from "./MobileMenu";
 
 const NAV = [
-  { href: "#services", label: "Services", chevron: true },
-  { href: "#platform", label: "Platform", chevron: false },
+  { href: "/#services", label: "Services", chevron: true },
+  { href: "/#platform", label: "Platform", chevron: false },
   { href: "/about", label: "About Us", chevron: false },
 ] as const;
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
-  const isHome = pathname === "/";
+  const isDarkNav = pathname === "/" || pathname === "/contact";
   const isDashboard =
     pathname?.startsWith("/test1") ||
     pathname?.startsWith("/testflighthub") ||
@@ -34,7 +34,7 @@ export default function Navbar() {
     <>
       <header
         className={
-          isHome
+          isDarkNav
             ? "absolute inset-x-0 top-0 z-40 bg-transparent"
             : "sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-xl"
         }
@@ -43,7 +43,7 @@ export default function Navbar() {
           <div className="flex w-full items-center justify-between lg:contents">
             {/* Logo */}
             <div className="flex items-center justify-start">
-              <Logo height={60} onDark={isHome} />
+              <Logo height={60} onDark={isDarkNav} />
             </div>
 
             {/* Centered navigation */}
@@ -56,7 +56,7 @@ export default function Navbar() {
                   key={link.href}
                   href={link.href}
                   className={`inline-flex items-center gap-1 whitespace-nowrap text-[14px] font-medium ${
-                    isHome ? "text-white/90" : "text-muted hover:text-foreground"
+                    isDarkNav ? "text-white/90" : "text-muted hover:text-foreground"
                   }`}
                 >
                   {link.label}
@@ -82,7 +82,7 @@ export default function Navbar() {
               <Link
                 href="/contact"
                 className={`hidden h-[36px] items-center rounded-md px-[16px] text-[14px] font-semibold lg:inline-flex ${
-                  isHome
+                  isDarkNav
                     ? "bg-white text-[#0b2d63]"
                     : "border border-[#cfe0ff] bg-[#EEF5FF] text-[#0b2d63]"
                 }`}
@@ -101,7 +101,7 @@ export default function Navbar() {
                 aria-expanded={menuOpen}
                 onClick={() => setMenuOpen(true)}
                 className={`flex h-10 w-10 items-center justify-center rounded-lg border lg:hidden ${
-                  isHome
+                  isDarkNav
                     ? "border-white/25 text-white"
                     : "border-border text-muted"
                 }`}

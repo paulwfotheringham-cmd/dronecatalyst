@@ -9,8 +9,8 @@ type MobileMenuProps = {
 };
 
 const NAV = [
-  { href: "#services", label: "Services" },
-  { href: "#platform", label: "Platform" },
+  { href: "/#services", label: "Services" },
+  { href: "/#platform", label: "Platform" },
   { href: "/about", label: "About Us" },
 ] as const;
 
