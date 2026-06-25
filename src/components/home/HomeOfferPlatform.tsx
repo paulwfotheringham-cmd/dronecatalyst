@@ -42,7 +42,7 @@ const OFFERS = [
 ] as const;
 
 function ServiceIcon({ index }: { index: number }) {
-  const cls = "h-[26px] w-[26px] stroke-white sm:h-[28px] sm:w-[28px]";
+  const cls = "h-[30px] w-[30px] stroke-white sm:h-[32px] sm:w-[32px]";
   if (index === 0) {
     return (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={cls}>
@@ -120,12 +120,12 @@ export default function HomeOfferPlatform() {
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#2563eb] sm:h-14 sm:w-14">
                 <ServiceIcon index={i} />
               </div>
-              <h3 className="mt-4 text-[15px] font-bold leading-snug text-[#1a2b4a] sm:text-[16px]">
+              <h3 className="mt-4 text-[17px] font-bold leading-snug text-[#1a2b4a] sm:text-[18px]">
                 {item.title}
               </h3>
               <Link
                 href={item.href}
-                className="mt-2.5 inline-block text-[13px] font-semibold leading-snug text-[#2563eb] sm:text-[14px]"
+                className="mt-2.5 inline-block text-[15px] font-semibold leading-snug text-[#2563eb] sm:text-[16px]"
               >
                 {item.tagline}
               </Link>
@@ -133,12 +133,12 @@ export default function HomeOfferPlatform() {
                 {item.bullets.map((bullet) => (
                   <li
                     key={bullet}
-                    className="flex items-start gap-2 text-[13px] leading-snug text-[#1a2b4a]/75 sm:text-[14px]"
+                    className="flex items-start gap-2 text-[15px] leading-snug text-[#1a2b4a]/75 sm:text-[16px]"
                   >
                     <svg
                       viewBox="0 0 16 16"
                       fill="none"
-                      className="mt-0.5 h-4 w-4 shrink-0 text-[#2563eb]"
+                      className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#2563eb]"
                       aria-hidden
                     >
                       <path
