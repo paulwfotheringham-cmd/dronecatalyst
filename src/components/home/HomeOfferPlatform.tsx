@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import GeospatialDashboard from "./GeospatialDashboard";
 
 const CONSTRUCTION_BG = "/images/construction-bg.jpg";
@@ -41,7 +42,7 @@ const OFFERS = [
 ] as const;
 
 function ServiceIcon({ index }: { index: number }) {
-  const cls = "h-[22px] w-[22px] stroke-white";
+  const cls = "h-[26px] w-[26px] stroke-white sm:h-[28px] sm:w-[28px]";
   if (index === 0) {
     return (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={cls}>
@@ -67,6 +68,18 @@ function ServiceIcon({ index }: { index: number }) {
   );
 }
 
+function SectionTitle({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex items-center gap-4 sm:gap-6">
+      <span className="h-px w-12 bg-[#3b82f6] sm:w-20" aria-hidden />
+      <p className="text-[22px] font-semibold uppercase tracking-[0.18em] text-[#3b82f6]">
+        {children}
+      </p>
+      <span className="h-px w-12 bg-[#3b82f6] sm:w-20" aria-hidden />
+    </div>
+  );
+}
+
 export default function HomeOfferPlatform() {
   return (
     <section id="services" className="relative overflow-x-hidden bg-[#050816] py-16 sm:py-20 lg:py-24">
@@ -82,67 +95,59 @@ export default function HomeOfferPlatform() {
       </div>
 
       <div className="relative mx-auto max-w-[1760px] px-5 sm:px-8 lg:px-10">
-        <div className="flex items-center gap-4 sm:gap-6">
-          <span className="h-px w-12 bg-[#3b82f6] sm:w-20" aria-hidden />
-          <p className="text-[22px] font-semibold uppercase tracking-[0.18em] text-[#3b82f6]">
-            What We Can Offer
-          </p>
-          <span className="h-px w-12 bg-[#3b82f6] sm:w-20" aria-hidden />
+        <SectionTitle>What We Can Offer</SectionTitle>
+
+        <div className="mt-10 grid w-full grid-cols-1 gap-5 sm:grid-cols-3 sm:gap-4 lg:gap-6">
+          {OFFERS.map((item, i) => (
+            <div
+              key={item.title}
+              className="flex min-h-[360px] min-w-0 flex-col rounded-xl bg-white px-6 py-7 shadow-[0_4px_24px_rgba(11,45,99,0.12)] sm:min-h-[380px] sm:px-7 sm:py-8"
+            >
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#2563eb] sm:h-16 sm:w-16">
+                <ServiceIcon index={i} />
+              </div>
+              <h3 className="mt-5 text-[17px] font-bold leading-snug text-[#1a2b4a] sm:text-[18px] lg:text-[19px]">
+                {item.title}
+              </h3>
+              <Link
+                href={item.href}
+                className="mt-3 inline-block text-[14px] font-semibold leading-snug text-[#2563eb] sm:text-[15px]"
+              >
+                {item.tagline}
+              </Link>
+              <ul className="mt-5 flex-1 space-y-3">
+                {item.bullets.map((bullet) => (
+                  <li
+                    key={bullet}
+                    className="flex items-start gap-2.5 text-[14px] leading-snug text-[#1a2b4a]/75 sm:text-[15px] lg:text-[16px]"
+                  >
+                    <svg
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      className="mt-0.5 h-4 w-4 shrink-0 text-[#2563eb]"
+                      aria-hidden
+                    >
+                      <path
+                        d="M3 8.5l3 3 7-7"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    {bullet}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
-        <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-white/65">
-          End-to-end aerial intelligence and media solutions.
-        </p>
+        <div id="platform" className="mt-16 sm:mt-20 lg:mt-24">
+          <SectionTitle>Intelligence Platform</SectionTitle>
 
-        <div className="mt-10 grid items-stretch gap-10 lg:grid-cols-2 lg:gap-8 xl:gap-12">
-          <div className="grid min-w-0 grid-cols-1 gap-5 sm:grid-cols-3 sm:gap-4 lg:gap-5">
-            {OFFERS.map((item, i) => (
-              <div
-                key={item.title}
-                className="flex min-h-[320px] min-w-0 flex-col rounded-xl bg-white px-5 py-6 shadow-[0_4px_24px_rgba(11,45,99,0.12)] sm:min-h-[340px] sm:px-5 sm:py-7"
-              >
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#2563eb] sm:h-12 sm:w-12">
-                  <ServiceIcon index={i} />
-                </div>
-                <h3 className="mt-4 text-[13px] font-bold leading-snug text-[#1a2b4a] sm:text-[14px]">
-                  {item.title}
-                </h3>
-                <Link
-                  href={item.href}
-                  className="mt-2 inline-block text-[11px] font-semibold leading-snug text-[#2563eb] sm:text-[12px]"
-                >
-                  {item.tagline}
-                </Link>
-                <ul className="mt-4 flex-1 space-y-2.5">
-                  {item.bullets.map((bullet) => (
-                    <li
-                      key={bullet}
-                      className="flex items-start gap-2 text-[11px] leading-snug text-[#1a2b4a]/75 sm:text-[12px]"
-                    >
-                      <svg
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#2563eb]"
-                        aria-hidden
-                      >
-                        <path
-                          d="M3 8.5l3 3 7-7"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                      {bullet}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex min-w-0 items-stretch justify-center lg:justify-end">
-            <GeospatialDashboard className="w-full max-w-[520px] sm:max-w-[580px] lg:max-w-none lg:w-full xl:max-w-[640px] 2xl:max-w-[720px]" />
+          <div className="mt-10 flex w-full justify-center">
+            <GeospatialDashboard className="w-full max-w-[640px] sm:max-w-[760px] lg:max-w-[900px] xl:max-w-[1000px] 2xl:max-w-[1100px]" />
           </div>
         </div>
       </div>
