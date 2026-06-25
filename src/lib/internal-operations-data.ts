@@ -22,7 +22,7 @@ export type InternalOperationsView =
   | "telemetry"
   | "media-example"
   | "design-mockups"
-  | "sector-mining";
+  | "sector";
 
 export const INTERNAL_OPERATIONS_BASE_PATH: SurveyOperationsBasePath = "/internaldashboard";
 
@@ -48,7 +48,7 @@ export const internalOperationsViews: InternalOperationsView[] = [
   "telemetry",
   "media-example",
   "design-mockups",
-  "sector-mining",
+  "sector",
 ];
 
 export function isInternalOperationsView(value: string | null): value is InternalOperationsView {
@@ -57,6 +57,7 @@ export function isInternalOperationsView(value: string | null): value is Interna
 
 export function normalizeInternalOperationsView(value: string | null): InternalOperationsView {
   if (value === "live-projects") return "projects";
+  if (value === "sector-mining") return "sector";
   return isInternalOperationsView(value) ? value : "home";
 }
 
@@ -119,13 +120,7 @@ export const internalSurveyNavSections: readonly InternalNavSection[] = [
   },
   {
     label: "Sector",
-    items: [
-      {
-        label: "Sector",
-        icon: "Pickaxe",
-        children: [{ label: "Mining", view: "sector-mining" as const }],
-      },
-    ],
+    items: [{ label: "Sector", icon: "Pickaxe", view: "sector" as const }],
   },
   {
     label: "Tools",
@@ -167,7 +162,7 @@ export const internalViewTitles: Record<
   telemetry: { title: "Live Telemetry", subtitle: "Internal Operations" },
   "media-example": { title: "Media Example", subtitle: "Internal Operations" },
   "design-mockups": { title: "Design Concepts", subtitle: "Internal Operations" },
-  "sector-mining": { title: "Mining Sector", subtitle: "Sector Intelligence" },
+  sector: { title: "Sector Intelligence", subtitle: "Internal Operations" },
 };
 
 export const internalHomeTileRows = [
