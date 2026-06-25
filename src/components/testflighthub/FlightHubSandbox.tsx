@@ -418,12 +418,17 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
 
         {telemetry && (
           <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-8">
-            <h2 className="text-lg font-semibold text-white">Flight Path Map</h2>
+            <div>
+              <h2 className="text-lg font-semibold text-white">Flight Path Map</h2>
+              <p className="mt-1 text-sm text-white/55">
+                Satellite imagery with terrain relief overlay — live path, orbit plan, and survey home.
+              </p>
+            </div>
 
             <div
               className={`mt-4 grid gap-4 ${isRunning ? "lg:grid-cols-[minmax(0,1fr)_240px] lg:items-stretch" : ""}`}
             >
-              <div className="relative min-h-[320px]">
+              <div className="relative min-h-[min(52vh,480px)]">
                 {takeoffToken > 0 && (
                   <DroneTakeoffOverlay key={takeoffToken} onComplete={handleTakeoffComplete} />
                 )}
@@ -437,7 +442,8 @@ const FlightHubSandbox = forwardRef<FlightHubSandboxHandle, FlightHubSandboxProp
                     activeProfile.startPosition.longitude,
                   ]}
                   followCenter={followMapCenter}
-                  terrainStyle={mapTerrainStyle}
+                  satelliteTerrainOverlay
+                  mapHeightClassName="h-[min(52vh,480px)]"
                 />
               </div>
 

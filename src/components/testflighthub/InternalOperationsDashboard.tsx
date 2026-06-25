@@ -29,6 +29,7 @@ import FleetWorkspace from "./FleetWorkspace";
 import InfoEmailWorkspace from "./InfoEmailWorkspace";
 import InternalDashboardHome from "./InternalDashboardHome";
 import InternalDesignMockups from "./InternalDesignMockups";
+import MiningSectorWorkspace from "./MiningSectorWorkspace";
 import ProjectsWorkspace from "./ProjectsWorkspace";
 import MediaExampleWorkspace from "./MediaExampleWorkspace";
 import MessagingWorkspace from "./MessagingWorkspace";
@@ -192,6 +193,8 @@ export default function InternalOperationsDashboard() {
           {activeView === "whiteboard" && <WhiteboardWorkspace />}
 
           {activeView === "competitors" && <CompetitorsWorkspace />}
+
+          {activeView === "sector-mining" && <MiningSectorWorkspace />}
 
           {activeView === "messaging" && <MessagingWorkspace />}
 

@@ -97,7 +97,7 @@ function formatWebsiteDisplay(website: string) {
   }
 }
 
-const TABLE_MIN_WIDTH = "min-w-[72rem]";
+const TABLE_MIN_WIDTH = "min-w-[88rem]";
 
 export default function CompetitorsWorkspace() {
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
@@ -338,12 +338,13 @@ export default function CompetitorsWorkspace() {
           <div className="overflow-x-auto">
             <table className={cn("w-full table-fixed border-collapse text-left", TABLE_MIN_WIDTH)}>
               <colgroup>
-                <col className="w-[13%]" />
-                <col className="w-[20%]" />
-                <col className="w-[17%]" />
-                <col className="w-[26%]" />
+                <col className="w-[12%]" />
+                <col className="w-[16%]" />
                 <col className="w-[14%]" />
-                <col className="w-[10%]" />
+                <col className="w-[20%]" />
+                <col className="w-[12%]" />
+                <col className="w-[18%]" />
+                <col className="w-[8%]" />
               </colgroup>
               <thead>
                 <tr className="border-b border-white/10 text-[10px] font-medium uppercase tracking-[0.12em] text-white/40">
@@ -361,6 +362,9 @@ export default function CompetitorsWorkspace() {
                   </th>
                   <th className="px-4 py-2.5 font-medium sm:px-5" scope="col">
                     Revenue
+                  </th>
+                  <th className="px-4 py-2.5 font-medium sm:px-5" scope="col">
+                    Notes
                   </th>
                   <th className="px-4 py-2.5 text-right font-medium sm:px-5" scope="col">
                     Edit
@@ -491,6 +495,27 @@ export default function CompetitorsWorkspace() {
                       </td>
 
                       <td className="px-4 py-3 sm:px-5">
+                        {isEditing ? (
+                          <textarea
+                            value={draft?.notes ?? ""}
+                            rows={3}
+                            onChange={(event) => patchDraft({ notes: event.target.value })}
+                            placeholder="Intel, pricing, strengths, weaknesses…"
+                            className={cn(cellInputClassName(), "min-h-[4.5rem] resize-y")}
+                          />
+                        ) : (
+                          <p
+                            className={cn(
+                              "text-sm leading-snug text-white/65",
+                              competitor.notes.trim() ? "whitespace-pre-wrap" : "text-white/45",
+                            )}
+                          >
+                            {competitor.notes.trim() || "—"}
+                          </p>
+                        )}
+                      </td>
+
+                      <td className="px-4 py-3 sm:px-5">
                         <div className="flex justify-end gap-1">
                           {isEditing ? (
                             <>
@@ -543,28 +568,16 @@ export default function CompetitorsWorkspace() {
 
                       {isEditing && draft ? (
                         <tr key={`${competitor.id}-edit`} className="border-b border-white/[0.06]">
-                          <td className="px-4 pb-3 pt-0 sm:px-5" colSpan={6}>
-                            <div className="grid gap-3 sm:grid-cols-2">
-                              <div>
-                                <FieldLabel>Service detail</FieldLabel>
-                                <textarea
-                                  value={draft.services}
-                                  rows={2}
-                                  onChange={(event) => patchDraft({ services: event.target.value })}
-                                  placeholder="Optional detail on surveying, inspection, or media scope…"
-                                  className={cn(cellInputClassName(), "mt-1.5 min-h-[3.25rem] resize-y")}
-                                />
-                              </div>
-                              <div>
-                                <FieldLabel>Notes</FieldLabel>
-                                <textarea
-                                  value={draft.notes}
-                                  rows={2}
-                                  onChange={(event) => patchDraft({ notes: event.target.value })}
-                                  placeholder="Intel, pricing, strengths, weaknesses…"
-                                  className={cn(cellInputClassName(), "mt-1.5 min-h-[3.25rem] resize-y")}
-                                />
-                              </div>
+                          <td className="px-4 pb-3 pt-0 sm:px-5" colSpan={7}>
+                            <div>
+                              <FieldLabel>Service detail</FieldLabel>
+                              <textarea
+                                value={draft.services}
+                                rows={2}
+                                onChange={(event) => patchDraft({ services: event.target.value })}
+                                placeholder="Optional detail on surveying, inspection, or media scope…"
+                                className={cn(cellInputClassName(), "mt-1.5 min-h-[3.25rem] resize-y")}
+                              />
                             </div>
                           </td>
                         </tr>

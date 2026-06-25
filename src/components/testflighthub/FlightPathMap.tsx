@@ -161,6 +161,9 @@ export type FlightPathMapProps = {
   startPosition?: LatLng;
   followCenter?: boolean;
   terrainStyle?: MapTerrainStyle;
+  /** Esri satellite base with OpenTopoMap relief texture overlay. */
+  satelliteTerrainOverlay?: boolean;
+  mapHeightClassName?: string;
 };
 
 export default function FlightPathMap({
@@ -171,11 +174,17 @@ export default function FlightPathMap({
   startPosition,
   followCenter = false,
   terrainStyle = "satellite",
+  satelliteTerrainOverlay = false,
+  mapHeightClassName = "h-[320px]",
 }: FlightPathMapProps) {
   const pathStartPosition = path[0] ?? startPosition ?? position;
   const trackingZoom = followCenter ? ORBIT_MAP_ZOOM : 18;
-  const shellClassName =
-    terrainStyle === "urban" ? "flight-path-map-shell flight-path-map-shell--urban" : "flight-path-map-shell";
+  const useSatelliteTexture = satelliteTerrainOverlay || terrainStyle === "satellite";
+  const shellClassName = useSatelliteTexture
+    ? "flight-path-map-shell flight-path-map-shell--satellite-texture"
+    : terrainStyle === "urban"
+      ? "flight-path-map-shell flight-path-map-shell--urban"
+      : "flight-path-map-shell";
 
   return (
     <div className={`${shellClassName} relative overflow-hidden rounded-xl border border-white/10`}>
@@ -183,10 +192,13 @@ export default function FlightPathMap({
         center={position}
         zoom={trackingZoom}
         scrollWheelZoom={false}
-        className="h-[320px] w-full"
-        style={{ background: terrainStyle === "urban" ? "#eef2f7" : "#3d4f3a" }}
+        className={`${mapHeightClassName} w-full`}
+        style={{ background: useSatelliteTexture ? "#2f3d2c" : terrainStyle === "urban" ? "#eef2f7" : "#3d4f3a" }}
       >
-        <MapTileLayers style={terrainStyle} />
+        <MapTileLayers
+          style={satelliteTerrainOverlay ? "satellite" : terrainStyle}
+          flightPathMode={satelliteTerrainOverlay}
+        />
         <MapViewSync
           position={position}
           path={path}

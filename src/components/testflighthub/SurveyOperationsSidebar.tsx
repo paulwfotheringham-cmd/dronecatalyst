@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -7,7 +8,9 @@ import Logo from "@/components/layout/Logo";
 import {
   getInternalNavHref,
   internalSurveyNavSections,
+  isInternalNavChildActive,
   isInternalNavItemActive,
+  type InternalNavChildItem,
   type InternalNavItem,
   type InternalOperationsView,
 } from "@/lib/internal-operations-data";
@@ -36,9 +39,12 @@ import {
   MapPin,
   MessageSquare,
   CalendarDays,
+  ChevronDown,
+  ChevronRight,
   Mail,
   Package,
   PenLine,
+  Pickaxe,
   Plane,
   Radio,
   ScrollText,
@@ -71,7 +77,16 @@ const iconMap = {
   Users,
   Film,
   PenLine,
+  Pickaxe,
 } as const;
+
+const childNavItemClass = (active: boolean) =>
+  cn(
+    "flex w-full items-center rounded-lg py-1 pl-8 pr-2.5 text-left text-[11px] leading-tight transition-colors lg:py-[0.3rem] lg:text-[10.5px]",
+    active
+      ? "bg-[#0D1B2A] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
+      : "text-white/45 hover:bg-[#0D1B2A]/60 hover:text-white/75",
+  );
 
 const navItemClass = (active: boolean, compact = false) =>
   cn(
@@ -105,6 +120,25 @@ export default function SurveyOperationsSidebar({
   basePath = "/testflighthub",
 }: SurveyOperationsSidebarProps) {
   const pathname = usePathname() ?? "";
+  const resolvedActiveView = (activeView as InternalOperationsView | undefined) ?? "home";
+  const [expandedParents, setExpandedParents] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const autoExpanded: Record<string, boolean> = {};
+    internalSurveyNavSections.forEach((section) => {
+      section.items.forEach((item) => {
+        if (
+          item.children?.some((child) => isInternalNavChildActive(child, resolvedActiveView))
+        ) {
+          autoExpanded[item.label] = true;
+        }
+      });
+    });
+    if (Object.keys(autoExpanded).length > 0) {
+      setExpandedParents((current) => ({ ...current, ...autoExpanded }));
+    }
+  }, [resolvedActiveView]);
+
   const inAppNavigation =
     isSurveyOperationsDashboardPath(pathname, basePath) && onViewChange != null;
   const logoHref = mode === "internal" ? "/internaldashboard" : basePath;
@@ -157,12 +191,75 @@ export default function SurveyOperationsSidebar({
     );
   }
 
-  function renderInternalNavItemBlock(item: InternalNavItem) {
-    const active = isInternalNavItemActive(
-      pathname,
-      item,
-      (activeView as InternalOperationsView | undefined) ?? "home",
+  function renderInternalChildItem(child: InternalNavChildItem) {
+    const active = isInternalNavChildActive(child, resolvedActiveView);
+    const navHref = getInternalNavHref(child.view);
+
+    if (inAppNavigation) {
+      return (
+        <button
+          key={child.label}
+          type="button"
+          aria-current={active ? "page" : undefined}
+          onClick={() => {
+            (onViewChange as (view: InternalOperationsView) => void)(child.view);
+            onClose?.();
+          }}
+          className={childNavItemClass(active)}
+        >
+          <span className="truncate">{child.label}</span>
+        </button>
+      );
+    }
+
+    return (
+      <Link
+        key={child.label}
+        href={navHref}
+        aria-current={active ? "page" : undefined}
+        onClick={onClose}
+        className={childNavItemClass(active)}
+      >
+        <span className="truncate">{child.label}</span>
+      </Link>
     );
+  }
+
+  function renderInternalNavItemBlock(item: InternalNavItem) {
+    const active = isInternalNavItemActive(pathname, item, resolvedActiveView);
+    const hasChildren = (item.children?.length ?? 0) > 0;
+    const expanded = expandedParents[item.label] ?? active;
+
+    if (hasChildren) {
+      const Icon = iconMap[item.icon as keyof typeof iconMap];
+      const Chevron = expanded ? ChevronDown : ChevronRight;
+
+      return (
+        <div key={item.label}>
+          <button
+            type="button"
+            aria-expanded={expanded}
+            onClick={() =>
+              setExpandedParents((current) => ({
+                ...current,
+                [item.label]: !expanded,
+              }))
+            }
+            className={navItemClass(active, true)}
+          >
+            <Icon className="h-3.5 w-3.5 shrink-0 lg:h-[15px] lg:w-[15px]" />
+            <span className="flex-1 truncate text-left">{item.label}</span>
+            <Chevron className="h-3.5 w-3.5 shrink-0 text-white/35" />
+          </button>
+          {expanded ? (
+            <div className="mt-0.5 space-y-0.5">
+              {item.children?.map((child) => renderInternalChildItem(child))}
+            </div>
+          ) : null}
+        </div>
+      );
+    }
+
     const navHref = getInternalNavHref(item.view as InternalOperationsView);
 
     if (inAppNavigation) {

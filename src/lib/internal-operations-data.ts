@@ -21,7 +21,8 @@ export type InternalOperationsView =
   | "users"
   | "telemetry"
   | "media-example"
-  | "design-mockups";
+  | "design-mockups"
+  | "sector-mining";
 
 export const INTERNAL_OPERATIONS_BASE_PATH: SurveyOperationsBasePath = "/internaldashboard";
 
@@ -47,6 +48,7 @@ export const internalOperationsViews: InternalOperationsView[] = [
   "telemetry",
   "media-example",
   "design-mockups",
+  "sector-mining",
 ];
 
 export function isInternalOperationsView(value: string | null): value is InternalOperationsView {
@@ -58,10 +60,16 @@ export function normalizeInternalOperationsView(value: string | null): InternalO
   return isInternalOperationsView(value) ? value : "home";
 }
 
+export type InternalNavChildItem = {
+  readonly label: string;
+  readonly view: InternalOperationsView;
+};
+
 export type InternalNavItem = {
   readonly label: string;
   readonly icon: string;
-  readonly view: InternalOperationsView;
+  readonly view?: InternalOperationsView;
+  readonly children?: readonly InternalNavChildItem[];
 };
 
 export type InternalNavSection = {
@@ -110,6 +118,16 @@ export const internalSurveyNavSections: readonly InternalNavSection[] = [
     ],
   },
   {
+    label: "Sector",
+    items: [
+      {
+        label: "Sector",
+        icon: "Pickaxe",
+        children: [{ label: "Mining", view: "sector-mining" as const }],
+      },
+    ],
+  },
+  {
     label: "Tools",
     items: [
       { label: "Testing", icon: "FlaskConical", view: "testing" as const },
@@ -149,6 +167,7 @@ export const internalViewTitles: Record<
   telemetry: { title: "Live Telemetry", subtitle: "Internal Operations" },
   "media-example": { title: "Media Example", subtitle: "Internal Operations" },
   "design-mockups": { title: "Design Concepts", subtitle: "Internal Operations" },
+  "sector-mining": { title: "Mining Sector", subtitle: "Sector Intelligence" },
 };
 
 export const internalHomeTileRows = [
@@ -268,6 +287,13 @@ export function getInternalNavHref(view: InternalOperationsView | null) {
   return `${INTERNAL_OPERATIONS_BASE_PATH}?view=${view}`;
 }
 
+export function isInternalNavChildActive(
+  item: InternalNavChildItem,
+  activeView: InternalOperationsView = "home",
+) {
+  return item.view === activeView;
+}
+
 export function isInternalNavItemActive(
   pathname: string,
   item: InternalNavItem,
@@ -277,5 +303,9 @@ export function isInternalNavItemActive(
     return false;
   }
 
-  return item.view === activeView;
+  if (item.view) {
+    return item.view === activeView;
+  }
+
+  return item.children?.some((child) => child.view === activeView) ?? false;
 }

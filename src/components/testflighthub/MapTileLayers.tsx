@@ -17,13 +17,33 @@ type MapTileLayersProps = {
   showAttribution?: boolean;
   /** Photorealistic stack tuned for the FPV live video feed. */
   videoMode?: boolean;
+  /** Satellite imagery with relief texture for the flight path map. */
+  flightPathMode?: boolean;
 };
 
 export default function MapTileLayers({
   style,
   showAttribution = true,
   videoMode = false,
+  flightPathMode = false,
 }: MapTileLayersProps) {
+  if (flightPathMode) {
+    return (
+      <>
+        <TileLayer
+          attribution={showAttribution ? SATELLITE_MAP_ATTRIBUTION : undefined}
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+          maxZoom={20}
+        />
+        <TileLayer
+          url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
+          maxZoom={17}
+          opacity={0.5}
+        />
+      </>
+    );
+  }
+
   if (videoMode) {
     return (
       <>

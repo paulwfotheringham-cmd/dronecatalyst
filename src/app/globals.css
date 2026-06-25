@@ -327,6 +327,10 @@ body {
   filter: saturate(1.06) contrast(1.08) brightness(1.02);
 }
 
+.flight-path-map-shell--satellite-texture .leaflet-container {
+  filter: saturate(1.12) contrast(1.1) brightness(0.97);
+}
+
 .aerial-intel-map-shell {
   isolation: isolate;
 }
