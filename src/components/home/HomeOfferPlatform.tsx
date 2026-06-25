@@ -121,7 +121,7 @@ export default function HomeOfferPlatform() {
       <div className="relative mx-auto max-w-[1760px] px-5 sm:px-8 lg:px-10">
         <SectionTitle>What We Can Offer</SectionTitle>
 
-        <div className="mt-10 grid w-full grid-cols-1 gap-5 overflow-visible sm:grid-cols-3 sm:gap-4 lg:gap-6">
+        <div className="mx-auto mt-10 grid w-full max-w-[920px] grid-cols-1 gap-5 overflow-visible sm:grid-cols-3 sm:gap-5 lg:max-w-[980px] lg:gap-6">
           {OFFERS.map((item, i) => (
             <SectionHoverInfo
               key={item.title}
@@ -129,24 +129,24 @@ export default function HomeOfferPlatform() {
               description={item.hoverInfo}
               variant="light"
             >
-              <div className="flex min-h-[360px] min-w-0 flex-col rounded-xl bg-white px-6 py-7 shadow-[0_4px_24px_rgba(11,45,99,0.12)] transition-shadow hover:shadow-[0_8px_32px_rgba(11,45,99,0.18)] sm:min-h-[380px] sm:px-7 sm:py-8">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#2563eb] sm:h-16 sm:w-16">
+              <div className="mx-auto flex w-full max-w-[300px] min-h-[360px] flex-col rounded-xl bg-white px-5 py-6 shadow-[0_4px_24px_rgba(11,45,99,0.12)] transition-shadow hover:shadow-[0_8px_32px_rgba(11,45,99,0.18)] sm:min-h-[380px] sm:px-6 sm:py-7">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#2563eb] sm:h-14 sm:w-14">
                 <ServiceIcon index={i} />
               </div>
-              <h3 className="mt-5 text-[17px] font-bold leading-snug text-[#1a2b4a] sm:text-[18px] lg:text-[19px]">
+              <h3 className="mt-4 text-[15px] font-bold leading-snug text-[#1a2b4a] sm:text-[16px]">
                 {item.title}
               </h3>
               <Link
                 href={item.href}
-                className="mt-3 inline-block text-[14px] font-semibold leading-snug text-[#2563eb] sm:text-[15px]"
+                className="mt-2.5 inline-block text-[13px] font-semibold leading-snug text-[#2563eb] sm:text-[14px]"
               >
                 {item.tagline}
               </Link>
-              <ul className="mt-5 flex-1 space-y-3">
+              <ul className="mt-4 flex-1 space-y-2.5">
                 {item.bullets.map((bullet) => (
                   <li
                     key={bullet}
-                    className="flex items-start gap-2.5 text-[14px] leading-snug text-[#1a2b4a]/75 sm:text-[15px] lg:text-[16px]"
+                    className="flex items-start gap-2 text-[13px] leading-snug text-[#1a2b4a]/75 sm:text-[14px]"
                   >
                     <svg
                       viewBox="0 0 16 16"

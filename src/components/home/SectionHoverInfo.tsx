@@ -7,7 +7,7 @@ type SectionHoverInfoProps = {
   children: ReactNode;
   title: string;
   description: string;
-  variant?: "light" | "dark";
+  variant?: "light" | "dark" | "soft";
   className?: string;
 };
 
@@ -19,12 +19,20 @@ export default function SectionHoverInfo({
   className,
 }: SectionHoverInfoProps) {
   const panelClass =
-    variant === "light"
-      ? "border-[#d7e3f4] bg-white text-[#1a2b4a] shadow-[0_16px_40px_rgba(11,45,99,0.18)]"
-      : "border-white/15 bg-[#0b1118]/95 text-white shadow-[0_16px_40px_rgba(0,0,0,0.45)] backdrop-blur-sm";
+    variant === "soft"
+      ? "border-black/[0.08] bg-[#fafafa] text-black shadow-[0_16px_40px_rgba(0,0,0,0.12)]"
+      : variant === "light"
+        ? "border-[#d7e3f4] bg-white text-[#1a2b4a] shadow-[0_16px_40px_rgba(11,45,99,0.18)]"
+        : "border-white/15 bg-[#0b1118]/95 text-white shadow-[0_16px_40px_rgba(0,0,0,0.45)] backdrop-blur-sm";
 
-  const titleClass = variant === "light" ? "text-[#1a2b4a]" : "text-white";
-  const bodyClass = variant === "light" ? "text-[#1a2b4a]/70" : "text-white/70";
+  const titleClass =
+    variant === "soft" ? "text-black" : variant === "light" ? "text-[#1a2b4a]" : "text-white";
+  const bodyClass =
+    variant === "soft"
+      ? "text-black/75"
+      : variant === "light"
+        ? "text-[#1a2b4a]/70"
+        : "text-white/70";
 
   return (
     <div className={cn("group relative", className)}>

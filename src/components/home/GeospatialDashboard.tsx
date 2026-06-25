@@ -140,7 +140,7 @@ export default function GeospatialDashboard({ className }: GeospatialDashboardPr
                   key={kpi.label}
                   title={kpi.label}
                   description={kpi.info}
-                  variant="dark"
+                  variant="soft"
                   className="min-w-0"
                 >
                   <Shell className="cursor-default px-2.5 py-2.5 transition-colors hover:border-[#2563eb]/40">
@@ -158,7 +158,7 @@ export default function GeospatialDashboard({ className }: GeospatialDashboardPr
               <SectionHoverInfo
                 title="Progress Overview"
                 description="Track earthworks, grading and programme milestones against baseline schedules with trend visualisation."
-                variant="dark"
+                variant="soft"
                 className="col-span-1 min-w-0"
               >
                 <Shell className="cursor-default p-2.5 transition-colors hover:border-[#2563eb]/40">
@@ -170,7 +170,7 @@ export default function GeospatialDashboard({ className }: GeospatialDashboardPr
               <SectionHoverInfo
                 title="Site Overview"
                 description="Live orthophoto and site context for the active project, linked to maps, layers and annotation tools."
-                variant="dark"
+                variant="soft"
                 className="col-span-1 min-w-0"
               >
                 <Shell className="relative col-span-1 cursor-default overflow-hidden p-0 transition-colors hover:border-[#2563eb]/40">
@@ -187,7 +187,7 @@ export default function GeospatialDashboard({ className }: GeospatialDashboardPr
               <SectionHoverInfo
                 title="Volume Change"
                 description="Compare cut, fill and stockpile volumes between survey epochs to support reconciliation and billing."
-                variant="dark"
+                variant="soft"
                 className="col-span-1 min-w-0"
               >
                 <Shell className="cursor-default p-2.5 transition-colors hover:border-[#2563eb]/40">
@@ -203,7 +203,7 @@ export default function GeospatialDashboard({ className }: GeospatialDashboardPr
               <SectionHoverInfo
                 title="Recent Reports"
                 description="Quick access to the latest published deliverables, formatted for project directors and site teams."
-                variant="dark"
+                variant="soft"
                 className="min-w-0"
               >
                 <Shell className="cursor-default p-2.5 transition-colors hover:border-[#2563eb]/40">
@@ -219,7 +219,7 @@ export default function GeospatialDashboard({ className }: GeospatialDashboardPr
               <SectionHoverInfo
                 title="Active Issues"
                 description="Inspection and analytics findings with severity, status and responsible party for closed-loop remediation."
-                variant="dark"
+                variant="soft"
                 className="min-w-0"
               >
                 <Shell className="cursor-default p-2.5 transition-colors hover:border-[#2563eb]/40">
@@ -244,7 +244,7 @@ export default function GeospatialDashboard({ className }: GeospatialDashboardPr
               <SectionHoverInfo
                 title="Weather"
                 description="On-site conditions and forecast context to support flight planning and survey scheduling decisions."
-                variant="dark"
+                variant="soft"
                 className="min-w-0"
               >
                 <Shell className="flex cursor-default flex-col items-center justify-center p-2.5 text-center transition-colors hover:border-[#2563eb]/40">
