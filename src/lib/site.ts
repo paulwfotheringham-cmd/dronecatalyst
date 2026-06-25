@@ -8,6 +8,8 @@ export const SITE_DESCRIPTION =
 
 export const CONTACT = {
   email: "operations@dronecatalyst.com",
+  infoEmail: "info@dronecatalyst.com",
+  linkedin: "https://www.linkedin.com/company/drone-catalyst",
   phone: "+34 900 000 000",
   whatsapp: "34900000000",
   location: "Spain · International operations",

@@ -9,7 +9,6 @@ import MobileMenu from "./MobileMenu";
 const NAV = [
   { href: "/#services", label: "Services", hash: "services", chevron: true },
   { href: "/#platform", label: "Platform", hash: "platform", chevron: false },
-  { href: "/about", label: "About Us", hash: null, chevron: false },
 ] as const;
 
 function scrollToSection(hash: string) {

@@ -115,7 +115,7 @@ export default function HomeOfferPlatform() {
           {OFFERS.map((item, i) => (
             <div
               key={item.title}
-              className="mx-auto flex w-full max-w-[375px] min-h-[360px] flex-col rounded-xl bg-white px-5 py-6 shadow-[0_4px_24px_rgba(11,45,99,0.12)] sm:min-h-[380px] sm:px-6 sm:py-7"
+              className="mx-auto flex w-full max-w-[375px] min-h-[360px] flex-col rounded-xl bg-white px-5 py-6 text-center shadow-[0_4px_24px_rgba(11,45,99,0.12)] sm:min-h-[380px] sm:px-6 sm:py-7"
             >
               <div className="mx-auto flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#2563eb] sm:h-14 sm:w-14">
                 <ServiceIcon index={i} />
@@ -133,7 +133,7 @@ export default function HomeOfferPlatform() {
                 {item.bullets.map((bullet) => (
                   <li
                     key={bullet}
-                    className="flex items-start gap-2 text-[15px] leading-snug text-[#1a2b4a]/75 sm:text-[16px]"
+                    className="flex items-start justify-center gap-2 text-[15px] leading-snug text-[#1a2b4a]/75 sm:text-[16px]"
                   >
                     <svg
                       viewBox="0 0 16 16"

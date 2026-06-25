@@ -40,13 +40,7 @@ export default function HomeHero() {
             insights anytime, anywhere.
           </p>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-            <Link
-              href="#services"
-              className="inline-flex h-12 items-center justify-center rounded-xl bg-[#2563eb] px-6 text-sm font-semibold text-white shadow-[0_0_32px_rgba(37,99,235,0.35)] transition-colors hover:bg-[#1d4ed8]"
-            >
-              Explore Services
-            </Link>
+          <div className="mt-8">
             <Link
               href="/contact"
               className="inline-flex h-12 items-center justify-center rounded-xl border border-white/15 bg-white/[0.04] px-6 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:border-white/25 hover:bg-white/[0.08]"
