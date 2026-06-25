@@ -1,6 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
-import { LOGO_PATH, SITE_NAME } from "@/lib/site";
+import Logo from "./Logo";
 
 export default function Footer() {
   return (
@@ -8,15 +7,7 @@ export default function Footer() {
       <div className="mx-auto max-w-[1280px] px-8 pb-[32px] pt-[56px]">
         <div className="grid gap-[48px] md:grid-cols-2 lg:grid-cols-4">
           <div>
-            <Link href="/" className="inline-flex shrink-0 items-center">
-              <Image
-                src={LOGO_PATH}
-                alt={SITE_NAME}
-                width={170}
-                height={37}
-                className="h-[30px] w-auto object-contain"
-              />
-            </Link>
+            <Logo height={48} />
             <p className="mt-[14px] text-[13px] font-medium text-[#1a2b4a]/65">
               From Drone to Intelligence.
             </p>
