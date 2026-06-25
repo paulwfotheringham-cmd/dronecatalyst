@@ -96,7 +96,7 @@ function SectionTitle({
 
 export default function HomeOfferPlatform() {
   return (
-    <section id="services" className="relative overflow-x-hidden bg-[#050816] py-16 sm:py-20 lg:py-24">
+    <section id="services" className="relative scroll-mt-28 overflow-x-hidden bg-[#050816] py-16 sm:py-20 lg:py-24">
       <div className="absolute inset-0" aria-hidden>
         <Image
           src={CONSTRUCTION_BG}
@@ -157,10 +157,13 @@ export default function HomeOfferPlatform() {
           ))}
         </div>
 
-        <div id="platform" className="mt-16 sm:mt-20 lg:mt-24">
+        <div id="platform" className="mt-16 scroll-mt-28 sm:mt-20 lg:mt-24">
           <SectionTitle centered>Intelligence Platform</SectionTitle>
 
           <div className="mt-10 w-full">
+            <p className="mx-auto mb-4 max-w-2xl text-center text-sm text-white/50">
+              Hover any panel to explore the live operations workspace — maps, analytics, flight path, and FPV.
+            </p>
             <GeospatialDashboard className="w-full" />
           </div>
         </div>

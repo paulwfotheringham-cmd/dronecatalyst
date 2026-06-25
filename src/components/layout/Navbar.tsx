@@ -7,10 +7,17 @@ import Logo from "./Logo";
 import MobileMenu from "./MobileMenu";
 
 const NAV = [
-  { href: "/#services", label: "Services", chevron: true },
-  { href: "/#platform", label: "Platform", chevron: false },
-  { href: "/about", label: "About Us", chevron: false },
+  { href: "/#services", label: "Services", hash: "services", chevron: true },
+  { href: "/#platform", label: "Platform", hash: "platform", chevron: false },
+  { href: "/about", label: "About Us", hash: null, chevron: false },
 ] as const;
+
+function scrollToSection(hash: string) {
+  const target = document.getElementById(hash);
+  if (target) {
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -55,6 +62,12 @@ export default function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
+                  onClick={(event) => {
+                    if (pathname === "/" && link.hash) {
+                      event.preventDefault();
+                      scrollToSection(link.hash);
+                    }
+                  }}
                   className={`inline-flex items-center gap-1 whitespace-nowrap text-[14px] font-medium ${
                     isDarkNav ? "text-white/90" : "text-muted hover:text-foreground"
                   }`}

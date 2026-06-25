@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import Logo from "./Logo";
 
 type MobileMenuProps = {
@@ -9,12 +10,20 @@ type MobileMenuProps = {
 };
 
 const NAV = [
-  { href: "/#services", label: "Services" },
-  { href: "/#platform", label: "Platform" },
-  { href: "/about", label: "About Us" },
+  { href: "/#services", label: "Services", hash: "services" },
+  { href: "/#platform", label: "Platform", hash: "platform" },
+  { href: "/about", label: "About Us", hash: null },
 ] as const;
 
+function scrollToSection(hash: string) {
+  const target = document.getElementById(hash);
+  if (target) {
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
 export default function MobileMenu({ open, onClose }: MobileMenuProps) {
+  const pathname = usePathname();
   if (!open) return null;
 
   return (
@@ -47,7 +56,13 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
             <li key={link.href}>
               <Link
                 href={link.href}
-                onClick={onClose}
+                onClick={(event) => {
+                  if (pathname === "/" && link.hash) {
+                    event.preventDefault();
+                    scrollToSection(link.hash);
+                  }
+                  onClose();
+                }}
                 className="block rounded-lg px-4 py-3 text-base font-medium text-foreground transition-colors hover:bg-surface-elevated"
               >
                 {link.label}
