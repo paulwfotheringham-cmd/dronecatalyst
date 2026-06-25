@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import GeospatialDashboard from "./GeospatialDashboard";
-import SectionHoverInfo from "./SectionHoverInfo";
 
 const CONSTRUCTION_BG = "/images/construction-bg.jpg";
 
@@ -11,9 +10,6 @@ const OFFERS = [
     title: "Surveying & Geospatial Intelligence",
     tagline: "Measure. Map. Monitor.",
     href: "/surveying",
-    hoverTitle: "Surveying & Geospatial Intelligence",
-    hoverInfo:
-      "High-accuracy aerial capture for stockpile volumetrics, site mapping and construction progress. Deliverables include orthomosaics, DSMs, cut/fill analysis and survey-grade reporting.",
     bullets: [
       "Stockpile & Volume Analytics",
       "Construction Surveying",
@@ -25,9 +21,6 @@ const OFFERS = [
     title: "Inspection & Asset Intelligence",
     tagline: "Inspect. Assess. Report.",
     href: "/inspection",
-    hoverTitle: "Inspection & Asset Intelligence",
-    hoverInfo:
-      "Visual and thermal inspections for buildings, roofs, energy assets and industrial infrastructure. Structured findings, severity tagging and client-ready inspection reports.",
     bullets: [
       "Building & Roof Inspections",
       "Energy Asset Inspections",
@@ -39,9 +32,6 @@ const OFFERS = [
     title: "Premium Media & Broadcast",
     tagline: "Capture. Create. Communicate.",
     href: "/commercial-imaging",
-    hoverTitle: "Premium Media & Broadcast",
-    hoverInfo:
-      "Cinematic aerial production for brands, sports, maritime and live events. Professional crews, broadcast-ready capture and post-production support.",
     bullets: [
       "Commercial & Brand Productions",
       "Sports & Live Events",
@@ -119,17 +109,14 @@ export default function HomeOfferPlatform() {
       </div>
 
       <div className="relative mx-auto max-w-[1760px] px-5 sm:px-8 lg:px-10">
-        <SectionTitle>What We Can Offer</SectionTitle>
+        <SectionTitle centered>What We Can Offer</SectionTitle>
 
-        <div className="mx-auto mt-10 grid w-full max-w-[920px] grid-cols-1 gap-5 overflow-visible sm:grid-cols-3 sm:gap-5 lg:max-w-[980px] lg:gap-6">
+        <div className="mx-auto mt-10 grid w-full max-w-[1150px] grid-cols-1 gap-5 sm:grid-cols-3 sm:gap-5 lg:max-w-[1225px] lg:gap-6">
           {OFFERS.map((item, i) => (
-            <SectionHoverInfo
+            <div
               key={item.title}
-              title={item.hoverTitle}
-              description={item.hoverInfo}
-              variant="light"
+              className="mx-auto flex w-full max-w-[375px] min-h-[360px] flex-col rounded-xl bg-white px-5 py-6 shadow-[0_4px_24px_rgba(11,45,99,0.12)] sm:min-h-[380px] sm:px-6 sm:py-7"
             >
-              <div className="mx-auto flex w-full max-w-[300px] min-h-[360px] flex-col rounded-xl bg-white px-5 py-6 shadow-[0_4px_24px_rgba(11,45,99,0.12)] transition-shadow hover:shadow-[0_8px_32px_rgba(11,45,99,0.18)] sm:min-h-[380px] sm:px-6 sm:py-7">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#2563eb] sm:h-14 sm:w-14">
                 <ServiceIcon index={i} />
               </div>
@@ -166,8 +153,7 @@ export default function HomeOfferPlatform() {
                   </li>
                 ))}
               </ul>
-              </div>
-            </SectionHoverInfo>
+            </div>
           ))}
         </div>
 
