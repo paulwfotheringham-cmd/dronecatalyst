@@ -50,7 +50,7 @@ async function withImapClient<T>(
 ): Promise<T> {
   let credentials;
   try {
-    credentials = getAccountCredentials(accountId);
+    credentials = await getAccountCredentials(accountId);
   } catch {
     throw new EmailServiceError("Mailbox credentials are not configured.", "NOT_CONFIGURED");
   }

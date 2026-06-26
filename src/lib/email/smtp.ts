@@ -14,14 +14,7 @@ import {
 } from "@/lib/email/types";
 
 function createTransport(accountId: EmailAccountId) {
-  let credentials;
-  try {
-    credentials = getAccountCredentials(accountId);
-  } catch {
-    throw new EmailServiceError("Mailbox credentials are not configured.", "NOT_CONFIGURED");
-  }
-
-  return {
+  return getAccountCredentials(accountId).then((credentials) => ({
     credentials,
     transport: nodemailer.createTransport({
       host: ZOHO_SMTP_HOST,
@@ -32,7 +25,7 @@ function createTransport(accountId: EmailAccountId) {
         pass: credentials.password,
       },
     }),
-  };
+  }));
 }
 
 function parseRecipients(value: string | undefined) {
@@ -44,7 +37,7 @@ function parseRecipients(value: string | undefined) {
 }
 
 export async function sendMailboxEmail(payload: EmailSendPayload) {
-  const { credentials, transport } = createTransport(payload.account);
+  const { credentials, transport } = await createTransport(payload.account);
 
   try {
     const info = await transport.sendMail({
@@ -78,7 +71,7 @@ export async function sendMailboxReply(payload: EmailReplyPayload) {
   const text = payload.text ?? payload.html?.replace(/<[^>]+>/g, " ") ?? "";
   const html = payload.html ?? `<p>${text.replace(/\n/g, "<br/>")}</p>`;
 
-  const { credentials, transport } = createTransport(payload.account);
+  const { credentials, transport } = await createTransport(payload.account);
 
   try {
     const info = await transport.sendMail({

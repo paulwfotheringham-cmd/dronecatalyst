@@ -19,7 +19,7 @@ import { ChevronDown, Inbox, Loader2, Mail, MessageCircle, Paperclip, RefreshCw,
 const operators = createInitialUsers();
 const REFRESH_INTERVAL_MS = 30_000;
 
-type EmailAccountOption = EmailAccount;
+type EmailAccountOption = EmailAccount & { configured?: boolean };
 
 type WhatsAppStatus = {
   configured: boolean;
@@ -77,6 +77,8 @@ export default function InfoEmailWorkspace() {
   const [replyAsUserId, setReplyAsUserId] = useState(operators[0]?.id ?? "");
   const [whatsappStatus, setWhatsappStatus] = useState<WhatsAppStatus | null>(null);
   const [whatsappLoading, setWhatsappLoading] = useState(false);
+  const [setupPassword, setSetupPassword] = useState("");
+  const [savingCredentials, setSavingCredentials] = useState(false);
   const { showDetail, openDetail, closeDetail } = useMobileDetailPanel();
 
   const selectedAccount = useMemo(
@@ -90,6 +92,8 @@ export default function InfoEmailWorkspace() {
   );
 
   const replyAsUser = operators.find((operator) => operator.id === replyAsUserId);
+
+  const selectedAccountConfigured = selectedAccount?.configured ?? false;
 
   const loadWhatsAppStatus = useCallback(async () => {
     if (selectedAccountId !== "info") {
@@ -124,6 +128,13 @@ export default function InfoEmailWorkspace() {
 
   const loadInbox = useCallback(
     async (options?: { background?: boolean }) => {
+      if (!selectedAccountConfigured && !options?.background) {
+        setLoading(false);
+        setThreads([]);
+        setSelectedThreadId(null);
+        return;
+      }
+
       const background = options?.background ?? false;
       if (background) {
         setRefreshing(true);
@@ -172,7 +183,7 @@ export default function InfoEmailWorkspace() {
         }
       }
     },
-    [selectedAccountId],
+    [selectedAccountId, selectedAccountConfigured],
   );
 
   useEffect(() => {
@@ -200,6 +211,38 @@ export default function InfoEmailWorkspace() {
     setReplyBody("");
     closeDetail();
   }, [selectedAccountId, closeDetail]);
+
+  useEffect(() => {
+    setSetupPassword("");
+  }, [selectedAccountId]);
+
+  async function saveMailboxCredentials() {
+    if (!setupPassword.trim() || savingCredentials) return;
+
+    setSavingCredentials(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/email/credentials", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          account: selectedAccountId,
+          password: setupPassword.trim(),
+        }),
+      });
+      const data = await readApiJson<{ ok?: boolean; error?: string }>(response);
+      if (!response.ok || !data.ok) throw new Error(data.error ?? "Failed to save credentials");
+
+      setSetupPassword("");
+      await loadAccounts();
+      await loadInbox();
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : "Failed to save credentials");
+    } finally {
+      setSavingCredentials(false);
+    }
+  }
 
   async function toggleWhatsAppAlerts() {
     if (selectedAccountId !== "info" || whatsappLoading) return;
@@ -364,6 +407,39 @@ export default function InfoEmailWorkspace() {
         <p className="rounded-lg border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
           {error}
         </p>
+      )}
+
+      {!selectedAccountConfigured && (
+        <section className="rounded-2xl border border-amber-400/25 bg-amber-500/10 px-4 py-4 sm:px-5">
+          <h3 className="text-sm font-semibold text-amber-100">Connect {mailboxEmail}</h3>
+          <p className="mt-1 text-sm text-amber-100/80">
+            Enter the Zoho app-specific password for this mailbox. It is stored securely on the
+            server and never sent back to the browser.
+          </p>
+          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="flex-1">
+              <label className="text-[10px] font-medium uppercase tracking-[0.12em] text-amber-100/70">
+                Zoho app password
+              </label>
+              <input
+                type="password"
+                value={setupPassword}
+                onChange={(event) => setSetupPassword(event.target.value)}
+                placeholder="Paste app-specific password"
+                className={cn(inputClassName(), "mt-1.5 border-amber-400/20")}
+              />
+            </div>
+            <button
+              type="button"
+              disabled={savingCredentials || !setupPassword.trim()}
+              onClick={() => void saveMailboxCredentials()}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-medium text-[#0a1422] transition-colors hover:bg-amber-400 disabled:opacity-60"
+            >
+              {savingCredentials ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              Save & connect
+            </button>
+          </div>
+        </section>
       )}
 
       <ResponsiveMasterDetail
