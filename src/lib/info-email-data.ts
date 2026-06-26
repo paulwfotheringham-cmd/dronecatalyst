@@ -1,7 +1,7 @@
 export const INFO_EMAIL_ADDRESS = "info@dronecatalyst.com";
 export const INFO_EMAIL_PROVIDER = "Egg Mail";
 
-export type InfoEmailThreadStatus = "open" | "replied" | "closed";
+export type InfoEmailThreadStatus = "unread" | "open" | "replied" | "closed";
 
 export type InfoEmailDirection = "inbound" | "outbound";
 
@@ -100,6 +100,8 @@ export function mapInfoEmailThread(
 
 export function threadStatusLabel(status: InfoEmailThreadStatus) {
   switch (status) {
+    case "unread":
+      return "Unread";
     case "open":
       return "Awaiting reply";
     case "replied":
@@ -111,6 +113,8 @@ export function threadStatusLabel(status: InfoEmailThreadStatus) {
 
 export function threadStatusClass(status: InfoEmailThreadStatus) {
   switch (status) {
+    case "unread":
+      return "border-sky-400/30 bg-sky-500/15 text-sky-200";
     case "open":
       return "border-amber-400/30 bg-amber-500/15 text-amber-200";
     case "replied":
