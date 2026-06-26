@@ -564,3 +564,27 @@ body {
     background-position: 0 24px;
   }
 }
+
+/* CRM Connections map — dark popups & tooltips */
+.connections-map-popup .leaflet-popup-content-wrapper,
+.connections-map-tooltip.leaflet-tooltip {
+  background: #0b1524;
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+}
+
+.connections-map-popup .leaflet-popup-content {
+  margin: 12px 14px;
+  line-height: 1.45;
+}
+
+.connections-map-popup .leaflet-popup-tip {
+  background: #0b1524;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.connections-map-tooltip.leaflet-tooltip-top::before {
+  border-top-color: #0b1524;
+}
