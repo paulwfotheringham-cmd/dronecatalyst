@@ -14,7 +14,7 @@ import { groupMessagesIntoThreads, type EmailThread } from "@/lib/email/threadin
 import { createInitialUsers } from "@/lib/user-management-data";
 import { cn } from "@/lib/utils";
 import ResponsiveMasterDetail, { useMobileDetailPanel } from "@/components/ui/ResponsiveMasterDetail";
-import { ChevronDown, Inbox, Loader2, Mail, MessageCircle, Paperclip, RefreshCw, Reply, Send } from "lucide-react";
+import { ChevronDown, Inbox, Loader2, Mail, MessageCircle, Paperclip, PenSquare, RefreshCw, Reply, Send, X } from "lucide-react";
 
 const operators = createInitialUsers();
 const REFRESH_INTERVAL_MS = 30_000;
@@ -79,6 +79,12 @@ export default function InfoEmailWorkspace() {
   const [whatsappLoading, setWhatsappLoading] = useState(false);
   const [setupPassword, setSetupPassword] = useState("");
   const [savingCredentials, setSavingCredentials] = useState(false);
+  const [composeOpen, setComposeOpen] = useState(false);
+  const [composeTo, setComposeTo] = useState("");
+  const [composeCc, setComposeCc] = useState("");
+  const [composeSubject, setComposeSubject] = useState("");
+  const [composeBody, setComposeBody] = useState("");
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const { showDetail, openDetail, closeDetail } = useMobileDetailPanel();
 
   const selectedAccount = useMemo(
@@ -214,7 +220,19 @@ export default function InfoEmailWorkspace() {
 
   useEffect(() => {
     setSetupPassword("");
+    setComposeOpen(false);
+    setComposeTo("");
+    setComposeCc("");
+    setComposeSubject("");
+    setComposeBody("");
+    setSuccessMessage(null);
   }, [selectedAccountId]);
+
+  useEffect(() => {
+    if (!successMessage) return;
+    const timer = window.setTimeout(() => setSuccessMessage(null), 5000);
+    return () => window.clearTimeout(timer);
+  }, [successMessage]);
 
   async function saveMailboxCredentials() {
     if (!setupPassword.trim() || savingCredentials) return;
@@ -276,8 +294,19 @@ export default function InfoEmailWorkspace() {
 
     if (!replyTarget) return;
 
+    const replyTo =
+      replyTarget.direction === "inbound"
+        ? replyTarget.fromEmail || replyTarget.from
+        : selectedThread.fromEmail;
+
+    if (!replyTo) {
+      setError("Cannot determine reply recipient for this thread.");
+      return;
+    }
+
     setSending(true);
     setError(null);
+    setSuccessMessage(null);
 
     const signature = `\n\n— ${replyAsUser.fullName}\nDroneCatalyst`;
     const html = `<p>${replyBody.trim().replace(/\n/g, "<br/>")}</p><p>${signature.replace(/\n/g, "<br/>")}</p>`;
@@ -291,6 +320,12 @@ export default function InfoEmailWorkspace() {
           messageId: replyTarget.id,
           html,
           text: `${replyBody.trim()}${signature}`,
+          context: {
+            to: replyTo,
+            subject: selectedThread.subject,
+            messageId: replyTarget.messageId,
+            references: replyTarget.references,
+          },
         }),
       });
 
@@ -298,9 +333,61 @@ export default function InfoEmailWorkspace() {
       if (!response.ok || !data.ok) throw new Error(data.error ?? "Failed to send reply");
 
       setReplyBody("");
+      setSuccessMessage(`Reply sent from ${mailboxEmail}`);
       await loadInbox({ background: true });
     } catch (sendError) {
       setError(sendError instanceof Error ? sendError.message : "Failed to send reply");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  function openCompose() {
+    setComposeOpen(true);
+    setComposeTo("");
+    setComposeCc("");
+    setComposeSubject("");
+    setComposeBody("");
+    setError(null);
+    setSuccessMessage(null);
+  }
+
+  async function sendNewEmail() {
+    if (!composeTo.trim() || !composeSubject.trim() || !composeBody.trim() || !replyAsUser) return;
+
+    setSending(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    const signature = `\n\n— ${replyAsUser.fullName}\nDroneCatalyst`;
+    const html = `<p>${composeBody.trim().replace(/\n/g, "<br/>")}</p><p>${signature.replace(/\n/g, "<br/>")}</p>`;
+
+    try {
+      const response = await fetch("/api/email/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          account: selectedAccountId,
+          to: composeTo.trim(),
+          cc: composeCc.trim() || undefined,
+          subject: composeSubject.trim(),
+          html,
+          text: `${composeBody.trim()}${signature}`,
+        }),
+      });
+
+      const data = await readApiJson<{ ok?: boolean; error?: string }>(response);
+      if (!response.ok || !data.ok) throw new Error(data.error ?? "Failed to send email");
+
+      setComposeOpen(false);
+      setComposeTo("");
+      setComposeCc("");
+      setComposeSubject("");
+      setComposeBody("");
+      setSuccessMessage(`Email sent from ${mailboxEmail}`);
+      await loadInbox({ background: true });
+    } catch (sendError) {
+      setError(sendError instanceof Error ? sendError.message : "Failed to send email");
     } finally {
       setSending(false);
     }
@@ -392,6 +479,15 @@ export default function InfoEmailWorkspace() {
             )}
             <button
               type="button"
+              onClick={openCompose}
+              disabled={!selectedAccountConfigured || sending}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-sky-400/30 bg-sky-500/10 px-3 py-1.5 text-xs font-medium text-sky-200 transition-colors hover:bg-sky-500/15 disabled:opacity-60"
+            >
+              <PenSquare className="h-3.5 w-3.5" />
+              New email
+            </button>
+            <button
+              type="button"
               onClick={() => void loadInbox()}
               disabled={loading}
               className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-white/70 transition-colors hover:bg-white/[0.04] disabled:opacity-60"
@@ -407,6 +503,112 @@ export default function InfoEmailWorkspace() {
         <p className="rounded-lg border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
           {error}
         </p>
+      )}
+
+      {successMessage && (
+        <p className="rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
+          {successMessage}
+        </p>
+      )}
+
+      {composeOpen && selectedAccountConfigured && (
+        <section className="rounded-2xl border border-sky-400/25 bg-sky-500/5 px-4 py-4 sm:px-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold text-white">New email from {mailboxEmail}</h3>
+              <p className="mt-0.5 text-xs text-white/50">
+                Compose and send without opening a thread first.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setComposeOpen(false)}
+              className="rounded-lg border border-white/10 p-1.5 text-white/60 transition-colors hover:bg-white/[0.04]"
+              aria-label="Close compose"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="text-[10px] font-medium uppercase tracking-[0.12em] text-white/45">
+                To
+              </label>
+              <input
+                type="email"
+                value={composeTo}
+                onChange={(event) => setComposeTo(event.target.value)}
+                placeholder="recipient@example.com"
+                className={cn(inputClassName(), "mt-1.5")}
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-medium uppercase tracking-[0.12em] text-white/45">
+                CC (optional)
+              </label>
+              <input
+                type="text"
+                value={composeCc}
+                onChange={(event) => setComposeCc(event.target.value)}
+                placeholder="cc@example.com"
+                className={cn(inputClassName(), "mt-1.5")}
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="text-[10px] font-medium uppercase tracking-[0.12em] text-white/45">
+                Subject
+              </label>
+              <input
+                type="text"
+                value={composeSubject}
+                onChange={(event) => setComposeSubject(event.target.value)}
+                placeholder="Subject line"
+                className={cn(inputClassName(), "mt-1.5")}
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-medium uppercase tracking-[0.12em] text-white/45">
+                Send as
+              </label>
+              <select
+                value={replyAsUserId}
+                onChange={(event) => setReplyAsUserId(event.target.value)}
+                className={cn(inputClassName(), "mt-1.5")}
+              >
+                {operators.map((operator) => (
+                  <option key={operator.id} value={operator.id}>
+                    {operator.fullName}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] font-medium uppercase tracking-[0.12em] text-white/45">
+                Message
+              </label>
+              <textarea
+                value={composeBody}
+                onChange={(event) => setComposeBody(event.target.value)}
+                rows={5}
+                placeholder="Write your message…"
+                className={cn(inputClassName(), "mt-1.5 resize-y")}
+              />
+            </div>
+          </div>
+
+          <button
+            type="button"
+            disabled={
+              sending || !composeTo.trim() || !composeSubject.trim() || !composeBody.trim()
+            }
+            onClick={() => void sendNewEmail()}
+            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-sky-400 disabled:opacity-60"
+          >
+            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            Send email
+          </button>
+        </section>
       )}
 
       {!selectedAccountConfigured && (

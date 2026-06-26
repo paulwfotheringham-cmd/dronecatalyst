@@ -16,6 +16,12 @@ export async function POST(request: NextRequest) {
       messageId?: string;
       html?: string;
       text?: string;
+      context?: {
+        to?: string;
+        subject?: string;
+        messageId?: string | null;
+        references?: string[];
+      };
     };
 
     const account = parseAccountId(body.account ?? null);
@@ -29,11 +35,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Reply body is required." }, { status: 400 });
     }
 
+    const context =
+      body.context?.to?.trim() && body.context.subject?.trim()
+        ? {
+            to: body.context.to.trim(),
+            subject: body.context.subject.trim(),
+            messageId: body.context.messageId ?? null,
+            references: body.context.references ?? [],
+          }
+        : undefined;
+
     const result = await sendMailboxReply({
       account,
       messageId: body.messageId,
       html: body.html,
       text: body.text,
+      context,
     });
 
     return NextResponse.json({ ok: true, ...result });

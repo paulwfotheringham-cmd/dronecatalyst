@@ -47,11 +47,20 @@ export type EmailSendPayload = {
   text?: string;
 };
 
+export type EmailReplyContext = {
+  to: string;
+  subject: string;
+  messageId?: string | null;
+  references?: string[];
+};
+
 export type EmailReplyPayload = {
   account: EmailAccountId;
   messageId: string;
   html?: string;
   text?: string;
+  /** When provided, SMTP send skips IMAP re-fetch (required when inbox read is unavailable). */
+  context?: EmailReplyContext;
 };
 
 export class EmailServiceError extends Error {
