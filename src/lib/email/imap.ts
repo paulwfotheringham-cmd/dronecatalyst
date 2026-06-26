@@ -44,6 +44,51 @@ function mapAttachments(attachments: Attachment[] | undefined): EmailAttachmentM
     }));
 }
 
+type ImapFlowError = Error & {
+  response?: string;
+  responseStatus?: string;
+  responseText?: string;
+  serverResponseCode?: string;
+  executedCommand?: string;
+  authenticationFailed?: boolean;
+};
+
+function formatImapConnectionError(error: unknown): string {
+  const imapError = error as ImapFlowError;
+
+  if (imapError.responseText?.trim()) {
+    return imapError.responseText.trim();
+  }
+
+  if (imapError.response?.trim()) {
+    return imapError.response.trim();
+  }
+
+  if (error instanceof Error && error.message.trim()) {
+    return error.message.trim();
+  }
+
+  return "Unable to connect to Zoho Mail.";
+}
+
+function logImapConnectionError(accountId: EmailAccountId, username: string, error: unknown) {
+  const imapError = error as ImapFlowError;
+  console.error("[email/imap] connection failed", {
+    account: accountId,
+    username,
+    host: ZOHO_IMAP_HOST,
+    port: ZOHO_IMAP_PORT,
+    secure: true,
+    response: imapError.response ?? null,
+    responseStatus: imapError.responseStatus ?? null,
+    responseText: imapError.responseText ?? null,
+    serverResponseCode: imapError.serverResponseCode ?? null,
+    executedCommand: imapError.executedCommand ?? null,
+    authenticationFailed: imapError.authenticationFailed ?? null,
+    message: error instanceof Error ? error.message : null,
+  });
+}
+
 async function withImapClient<T>(
   accountId: EmailAccountId,
   fn: (client: ImapFlow, mailboxEmail: string) => Promise<T>,
@@ -71,15 +116,8 @@ async function withImapClient<T>(
     await client.connect();
     return await fn(client, credentials.email);
   } catch (error) {
-    const raw = error instanceof Error ? error.message : "Unable to connect to Zoho Mail.";
-    const authRejected =
-      raw.includes("Command failed") ||
-      raw.toUpperCase().includes("AUTHENTICATIONFAILED") ||
-      raw === "NO";
-    const message = authRejected
-      ? "Zoho rejected the IMAP login. In Zoho Mail go to Settings → Mail Accounts → enable IMAP Access, and use an app-specific password if 2FA is on."
-      : raw;
-    throw new EmailServiceError(message, "CONNECTION_FAILED");
+    logImapConnectionError(accountId, credentials.email, error);
+    throw new EmailServiceError(formatImapConnectionError(error), "CONNECTION_FAILED");
   } finally {
     try {
       await client.logout();
