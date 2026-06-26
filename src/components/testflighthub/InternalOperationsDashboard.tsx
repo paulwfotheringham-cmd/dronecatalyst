@@ -42,6 +42,7 @@ import TestingWeatherPanel from "./TestingWeatherPanel";
 import UserManagementWorkspace from "./UserManagementWorkspace";
 import WebODMWorkspace from "./WebODMWorkspace";
 import TelemetryDashboard from "@/components/telemetry/TelemetryDashboard";
+import { useInfoEmailWhatsAppPoller } from "@/hooks/useInfoEmailWhatsAppPoller";
 import { createInitialUsers, type ManagedUser } from "@/lib/user-management-data";
 import { useSurveyOperationsSimulator } from "./SurveyOperationsSimulatorProvider";
 
@@ -66,6 +67,8 @@ export default function InternalOperationsDashboard() {
   const [users, setUsers] = useState<ManagedUser[]>(() => createInitialUsers());
   const [selectedUserId, setSelectedUserId] = useState("user-1");
   const testingSandboxHostRef = useRef<HTMLDivElement>(null);
+
+  useInfoEmailWhatsAppPoller(true);
 
   useEffect(() => {
     const viewParam = searchParams.get("view");

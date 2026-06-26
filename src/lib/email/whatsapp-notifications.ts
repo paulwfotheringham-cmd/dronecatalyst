@@ -126,6 +126,24 @@ async function markMessageNotified(message: EmailMessage) {
   if (error) throw new Error(error.message);
 }
 
+/** On first run, mark existing inbox messages as seen so old mail does not trigger alerts. */
+async function bootstrapNotificationLog(messages: EmailMessage[]) {
+  if (!isSupabaseConfigured()) return;
+
+  const supabase = requireSupabase();
+  const { count, error: countError } = await supabase
+    .from("email_whatsapp_notification_log")
+    .select("*", { count: "exact", head: true });
+
+  if (countError) throw new Error(countError.message);
+  if ((count ?? 0) > 0) return;
+
+  const inbound = messages.filter((message) => message.direction === "inbound");
+  for (const message of inbound) {
+    await markMessageNotified(message);
+  }
+}
+
 export async function processInfoMailboxWhatsAppNotifications(
   prefetchedMessages?: EmailMessage[],
 ) {
@@ -134,9 +152,9 @@ export async function processInfoMailboxWhatsAppNotifications(
   }
 
   const messages = prefetchedMessages ?? (await fetchMailboxMessages("info"));
-  const candidates = messages.filter(
-    (message) => message.direction === "inbound" && message.unread,
-  );
+  await bootstrapNotificationLog(messages);
+
+  const candidates = messages.filter((message) => message.direction === "inbound");
 
   let sent = 0;
   const results: Array<{ messageUid: number; subject: string; ok: boolean; error?: string }> = [];

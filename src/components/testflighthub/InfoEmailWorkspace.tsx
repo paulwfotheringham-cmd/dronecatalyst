@@ -278,8 +278,34 @@ export default function InfoEmailWorkspace() {
       const data = await readApiJson<WhatsAppStatus & { ok?: boolean; error?: string }>(response);
       if (!response.ok) throw new Error(data.error ?? "Failed to update WhatsApp alerts");
       setWhatsappStatus(data);
+      if (nextEnabled) {
+        setSuccessMessage("WhatsApp alerts enabled for new info@ emails");
+      }
     } catch (toggleError) {
       setError(toggleError instanceof Error ? toggleError.message : "Failed to update WhatsApp alerts");
+    } finally {
+      setWhatsappLoading(false);
+    }
+  }
+
+  async function sendWhatsAppTestAlert() {
+    if (selectedAccountId !== "info" || whatsappLoading || !whatsappStatus?.configured) return;
+
+    setWhatsappLoading(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      const response = await fetch("/api/email/notifications/whatsapp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "test" }),
+      });
+      const data = await readApiJson<{ ok?: boolean; error?: string; response?: string }>(response);
+      if (!response.ok || !data.ok) throw new Error(data.error ?? "WhatsApp test failed");
+      setSuccessMessage("Test WhatsApp alert sent to +34 657 106 176");
+    } catch (testError) {
+      setError(testError instanceof Error ? testError.message : "WhatsApp test failed");
     } finally {
       setWhatsappLoading(false);
     }
@@ -442,34 +468,46 @@ export default function InfoEmailWorkspace() {
           </div>
           <div className="flex items-center gap-2">
             {selectedAccountId === "info" && (
-              <button
-                type="button"
-                onClick={() => void toggleWhatsAppAlerts()}
-                disabled={whatsappLoading || !whatsappStatus?.configured}
-                title={
-                  whatsappStatus?.configured
-                    ? whatsappStatus.enabled
-                      ? `WhatsApp alerts on · ${whatsappStatus.phone}`
-                      : "WhatsApp alerts off"
-                    : "WhatsApp not configured on server"
-                }
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs transition-colors disabled:opacity-60",
-                  whatsappStatus?.enabled
-                    ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/15"
-                    : "border-white/10 text-white/70 hover:bg-white/[0.04]",
+              <>
+                <button
+                  type="button"
+                  onClick={() => void toggleWhatsAppAlerts()}
+                  disabled={whatsappLoading || !whatsappStatus?.configured}
+                  title={
+                    whatsappStatus?.configured
+                      ? whatsappStatus.enabled
+                        ? `WhatsApp alerts on · ${whatsappStatus.phone}`
+                        : "WhatsApp alerts off"
+                      : "Set CALLMEBOT_API_KEY on Vercel to enable WhatsApp alerts"
+                  }
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs transition-colors disabled:opacity-60",
+                    whatsappStatus?.enabled
+                      ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/15"
+                      : "border-white/10 text-white/70 hover:bg-white/[0.04]",
+                  )}
+                >
+                  {whatsappLoading ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <MessageCircle className="h-3.5 w-3.5" />
+                  )}
+                  WhatsApp
+                  {whatsappStatus?.enabled && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                  )}
+                </button>
+                {whatsappStatus?.configured && (
+                  <button
+                    type="button"
+                    onClick={() => void sendWhatsAppTestAlert()}
+                    disabled={whatsappLoading}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-white/70 transition-colors hover:bg-white/[0.04] disabled:opacity-60"
+                  >
+                    Test alert
+                  </button>
                 )}
-              >
-                {whatsappLoading ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <MessageCircle className="h-3.5 w-3.5" />
-                )}
-                WhatsApp
-                {whatsappStatus?.enabled && (
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
-                )}
-              </button>
+              </>
             )}
             {refreshing && (
               <span className="inline-flex items-center gap-1.5 text-xs text-white/45">

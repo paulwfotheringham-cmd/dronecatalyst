@@ -18,8 +18,8 @@ export async function GET(request: NextRequest) {
   try {
     const messages = await fetchMailboxMessages(account);
     if (account === "info") {
-      void processInfoMailboxWhatsAppNotifications(messages).catch(() => {
-        // notification failures should not block inbox loading
+      void processInfoMailboxWhatsAppNotifications(messages).catch((error) => {
+        console.error("[email/whatsapp] notification check failed", error);
       });
     }
     return NextResponse.json(messages);
