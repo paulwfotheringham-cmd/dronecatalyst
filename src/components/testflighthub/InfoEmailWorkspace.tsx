@@ -14,12 +14,19 @@ import { groupMessagesIntoThreads, type EmailThread } from "@/lib/email/threadin
 import { createInitialUsers } from "@/lib/user-management-data";
 import { cn } from "@/lib/utils";
 import ResponsiveMasterDetail, { useMobileDetailPanel } from "@/components/ui/ResponsiveMasterDetail";
-import { ChevronDown, Inbox, Loader2, Mail, Paperclip, RefreshCw, Reply, Send } from "lucide-react";
+import { ChevronDown, Inbox, Loader2, Mail, MessageCircle, Paperclip, RefreshCw, Reply, Send } from "lucide-react";
 
 const operators = createInitialUsers();
 const REFRESH_INTERVAL_MS = 30_000;
 
 type EmailAccountOption = EmailAccount;
+
+type WhatsAppStatus = {
+  configured: boolean;
+  enabled: boolean;
+  phone: string;
+  lastNotifiedAt: string | null;
+};
 
 async function readApiJson<T>(response: Response): Promise<T> {
   const text = await response.text();
@@ -68,6 +75,8 @@ export default function InfoEmailWorkspace() {
   const [error, setError] = useState<string | null>(null);
   const [replyBody, setReplyBody] = useState("");
   const [replyAsUserId, setReplyAsUserId] = useState(operators[0]?.id ?? "");
+  const [whatsappStatus, setWhatsappStatus] = useState<WhatsAppStatus | null>(null);
+  const [whatsappLoading, setWhatsappLoading] = useState(false);
   const { showDetail, openDetail, closeDetail } = useMobileDetailPanel();
 
   const selectedAccount = useMemo(
@@ -81,6 +90,22 @@ export default function InfoEmailWorkspace() {
   );
 
   const replyAsUser = operators.find((operator) => operator.id === replyAsUserId);
+
+  const loadWhatsAppStatus = useCallback(async () => {
+    if (selectedAccountId !== "info") {
+      setWhatsappStatus(null);
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/email/notifications/whatsapp", { cache: "no-store" });
+      const data = await readApiJson<WhatsAppStatus>(response);
+      if (!response.ok) throw new Error("Failed to load WhatsApp status");
+      setWhatsappStatus(data);
+    } catch {
+      setWhatsappStatus(null);
+    }
+  }, [selectedAccountId]);
 
   const loadAccounts = useCallback(async () => {
     try {
@@ -151,6 +176,10 @@ export default function InfoEmailWorkspace() {
   );
 
   useEffect(() => {
+    void loadWhatsAppStatus();
+  }, [loadWhatsAppStatus]);
+
+  useEffect(() => {
     void loadAccounts();
   }, [loadAccounts]);
 
@@ -171,6 +200,29 @@ export default function InfoEmailWorkspace() {
     setReplyBody("");
     closeDetail();
   }, [selectedAccountId, closeDetail]);
+
+  async function toggleWhatsAppAlerts() {
+    if (selectedAccountId !== "info" || whatsappLoading) return;
+
+    setWhatsappLoading(true);
+    setError(null);
+
+    try {
+      const nextEnabled = !(whatsappStatus?.enabled ?? false);
+      const response = await fetch("/api/email/notifications/whatsapp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: nextEnabled ? "enable" : "disable" }),
+      });
+      const data = await readApiJson<WhatsAppStatus & { ok?: boolean; error?: string }>(response);
+      if (!response.ok) throw new Error(data.error ?? "Failed to update WhatsApp alerts");
+      setWhatsappStatus(data);
+    } catch (toggleError) {
+      setError(toggleError instanceof Error ? toggleError.message : "Failed to update WhatsApp alerts");
+    } finally {
+      setWhatsappLoading(false);
+    }
+  }
 
   async function sendReply() {
     if (!selectedThread || !replyBody.trim() || !replyAsUser) return;
@@ -259,6 +311,36 @@ export default function InfoEmailWorkspace() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {selectedAccountId === "info" && (
+              <button
+                type="button"
+                onClick={() => void toggleWhatsAppAlerts()}
+                disabled={whatsappLoading || !whatsappStatus?.configured}
+                title={
+                  whatsappStatus?.configured
+                    ? whatsappStatus.enabled
+                      ? `WhatsApp alerts on · ${whatsappStatus.phone}`
+                      : "WhatsApp alerts off"
+                    : "WhatsApp not configured on server"
+                }
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs transition-colors disabled:opacity-60",
+                  whatsappStatus?.enabled
+                    ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/15"
+                    : "border-white/10 text-white/70 hover:bg-white/[0.04]",
+                )}
+              >
+                {whatsappLoading ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <MessageCircle className="h-3.5 w-3.5" />
+                )}
+                WhatsApp
+                {whatsappStatus?.enabled && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                )}
+              </button>
+            )}
             {refreshing && (
               <span className="inline-flex items-center gap-1.5 text-xs text-white/45">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />

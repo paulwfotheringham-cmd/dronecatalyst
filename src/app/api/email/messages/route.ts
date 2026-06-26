@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { parseAccountId } from "@/lib/email/accounts";
 import { emailErrorResponse } from "@/lib/email/api-utils";
 import { fetchMailboxMessages } from "@/lib/email/imap";
+import { processInfoMailboxWhatsAppNotifications } from "@/lib/email/whatsapp-notifications";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,6 +17,11 @@ export async function GET(request: NextRequest) {
 
   try {
     const messages = await fetchMailboxMessages(account);
+    if (account === "info") {
+      void processInfoMailboxWhatsAppNotifications(messages).catch(() => {
+        // notification failures should not block inbox loading
+      });
+    }
     return NextResponse.json(messages);
   } catch (error) {
     return emailErrorResponse(error, "Failed to load mailbox messages.");
