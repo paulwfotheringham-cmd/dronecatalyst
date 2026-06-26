@@ -410,3 +410,15 @@ export function getProfileMapStyle(profile: FlightProfile): ProfileMapStyle {
   if (profile.mapStyle) return profile.mapStyle;
   return profile.mode === "orbit" ? "urban" : "satellite";
 }
+
+export function getProfileWeatherLocation(profile: FlightProfile) {
+  const anchor = profile.mode === "orbit" ? profile.orbitCenter : profile.startPosition;
+  return {
+    profileId: profile.id,
+    latitude: anchor.latitude,
+    longitude: anchor.longitude,
+    label: anchor.label,
+  };
+}
+
+export const TESTING_FLIGHT_PROFILE_IDS: FlightProfileId[] = ["random", "spain", "oxford"];

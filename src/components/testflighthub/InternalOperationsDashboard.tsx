@@ -37,6 +37,7 @@ import RecentMissionsPanel from "./RecentMissionsPanel";
 import StrategyWorkspace from "./StrategyWorkspace";
 import WhiteboardWorkspace from "./WhiteboardWorkspace";
 import SurveyOperationsShell from "./SurveyOperationsShell";
+import TestingWeatherPanel from "./TestingWeatherPanel";
 import UserManagementWorkspace from "./UserManagementWorkspace";
 import WebODMWorkspace from "./WebODMWorkspace";
 import TelemetryDashboard from "@/components/telemetry/TelemetryDashboard";
@@ -176,7 +177,12 @@ export default function InternalOperationsDashboard() {
             />
           )}
 
-          {activeView === "testing" && <div ref={testingSandboxHostRef} className="space-y-6" />}
+          {activeView === "testing" && (
+            <div className="space-y-6">
+              <div ref={testingSandboxHostRef} />
+              <TestingWeatherPanel liveTelemetry={liveTelemetry} />
+            </div>
+          )}
 
           {activeView === "projects" && <ProjectsWorkspace clients={clients} />}
 
