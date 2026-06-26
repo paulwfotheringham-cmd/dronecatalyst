@@ -4,6 +4,7 @@ export type InternalOperationsView =
   | "home"
   | "clients"
   | "crm"
+  | "connections"
   | "financials"
   | "strategy"
   | "whiteboard"
@@ -30,6 +31,7 @@ export const internalOperationsViews: InternalOperationsView[] = [
   "home",
   "clients",
   "crm",
+  "connections",
   "financials",
   "strategy",
   "whiteboard",
@@ -144,6 +146,7 @@ export const internalViewTitles: Record<
   home: { title: "Internal Operations", subtitle: "Drone Catalyst" },
   clients: { title: "Client Directory", subtitle: "Internal Operations" },
   crm: { title: "CRM", subtitle: "Internal Operations" },
+  connections: { title: "Connections", subtitle: "Internal Operations" },
   financials: { title: "Financials", subtitle: "Internal Operations" },
   strategy: { title: "Strategy", subtitle: "Internal Operations" },
   whiteboard: { title: "Whiteboard", subtitle: "Internal Operations" },

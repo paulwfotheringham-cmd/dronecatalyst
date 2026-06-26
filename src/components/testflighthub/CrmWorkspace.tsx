@@ -13,7 +13,7 @@ import {
 } from "@/lib/crm-data";
 import { cn } from "@/lib/utils";
 import ResponsiveMasterDetail, { useMobileDetailPanel } from "@/components/ui/ResponsiveMasterDetail";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Loader2, Network, Plus, Trash2 } from "lucide-react";
 
 async function readApiJson<T>(response: Response): Promise<T> {
   const text = await response.text();
@@ -37,7 +37,11 @@ function inputClassName() {
   return "mt-1.5 w-full rounded-xl border border-white/10 bg-[#0b1524] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-sky-400/50";
 }
 
-export default function CrmWorkspace() {
+export default function CrmWorkspace({
+  onOpenConnections,
+}: {
+  onOpenConnections?: () => void;
+}) {
   const [leads, setLeads] = useState<CrmLead[]>([]);
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<LeadStatus | "All">("All");
@@ -217,20 +221,32 @@ export default function CrmWorkspace() {
               {statusCounts.Cold} cold
             </p>
           </div>
-          <div className="min-w-[180px]">
-            <FieldLabel>Filter by status</FieldLabel>
-            <select
-              className={inputClassName()}
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value as LeadStatus | "All")}
-            >
-              <option value="All">All statuses</option>
-              {LEAD_STATUS_OPTIONS.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
+          <div className="flex flex-wrap items-end gap-3">
+            {onOpenConnections && (
+              <button
+                type="button"
+                onClick={onOpenConnections}
+                className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-violet-500/40 bg-violet-500/15 px-3 text-xs font-semibold text-violet-200 transition-colors hover:border-violet-400/60 hover:bg-violet-500/25"
+              >
+                <Network className="h-3.5 w-3.5" />
+                Connections
+              </button>
+            )}
+            <div className="min-w-[180px]">
+              <FieldLabel>Filter by status</FieldLabel>
+              <select
+                className={inputClassName()}
+                value={statusFilter}
+                onChange={(event) => setStatusFilter(event.target.value as LeadStatus | "All")}
+              >
+                <option value="All">All statuses</option>
+                {LEAD_STATUS_OPTIONS.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       </section>

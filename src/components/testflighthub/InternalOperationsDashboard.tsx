@@ -22,6 +22,7 @@ import ClientManagementWorkspace from "./ClientManagementWorkspace";
 import CalendarWorkspace from "./CalendarWorkspace";
 import CompetitorsWorkspace from "./CompetitorsWorkspace";
 import CrmWorkspace from "./CrmWorkspace";
+import ConnectionsWorkspace from "./ConnectionsWorkspace";
 import FileRepositoryReferenceImages from "./FileRepositoryReferenceImages";
 import FileRepositoryWorkspace from "./FileRepositoryWorkspace";
 import FinancialsWorkspace from "./FinancialsWorkspace";
@@ -190,7 +191,13 @@ export default function InternalOperationsDashboard() {
 
           {activeView === "webodm" && <WebODMWorkspace />}
 
-          {activeView === "crm" && <CrmWorkspace />}
+          {activeView === "crm" && (
+            <CrmWorkspace onOpenConnections={() => handleViewChange("connections")} />
+          )}
+
+          {activeView === "connections" && (
+            <ConnectionsWorkspace onBackToCrm={() => handleViewChange("crm")} />
+          )}
 
           {activeView === "financials" && <FinancialsWorkspace />}
 
