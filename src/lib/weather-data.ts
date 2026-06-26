@@ -157,8 +157,83 @@ export function formatForecastDay(date: string, timezone: string) {
 
   if (todayKey === dayKey) return "Today";
 
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowKey = tomorrow.toLocaleDateString("en-GB", { timeZone: timezone });
+  if (tomorrowKey === dayKey) return "Tomorrow";
+
   return value.toLocaleDateString("en-GB", {
     weekday: "short",
     timeZone: timezone,
   });
+}
+
+export type WeatherTimeframe = "today" | "tomorrow" | "next-7-days";
+
+export function weatherMapTint(code: number) {
+  if (code === 0) return "rgba(251, 191, 36, 0.18)";
+  if (code <= 2) return "rgba(148, 163, 184, 0.14)";
+  if (code === 3) return "rgba(100, 116, 139, 0.28)";
+  if (code <= 48) return "rgba(148, 163, 184, 0.32)";
+  if (code <= 57) return "rgba(96, 165, 250, 0.28)";
+  if (code <= 67) return "rgba(37, 99, 235, 0.38)";
+  if (code <= 77) return "rgba(186, 230, 253, 0.35)";
+  if (code <= 82) return "rgba(59, 130, 246, 0.34)";
+  if (code <= 86) return "rgba(191, 219, 254, 0.36)";
+  if (code <= 99) return "rgba(79, 70, 229, 0.4)";
+  return "rgba(59, 130, 246, 0.2)";
+}
+
+export type WeatherDisplaySnapshot = {
+  dayLabel: string;
+  weatherCode: number;
+  tempHighC: number;
+  tempLowC: number;
+  windSpeedMph: number;
+  windDirectionDeg: number;
+  humidityPct: number;
+  rainMm: number;
+  precipMm: number;
+  isLive: boolean;
+};
+
+export function getWeatherDisplaySnapshot(
+  weather: LocationWeather,
+  timeframe: WeatherTimeframe,
+  weekDayIndex = 0,
+): WeatherDisplaySnapshot {
+  if (timeframe === "today") {
+    const today = weather.daily[0];
+    return {
+      dayLabel: "Today",
+      weatherCode: weather.current.weatherCode,
+      tempHighC: today?.tempMaxC ?? weather.current.temperatureC,
+      tempLowC: today?.tempMinC ?? weather.current.temperatureC,
+      windSpeedMph: weather.current.windSpeedMph,
+      windDirectionDeg: weather.current.windDirectionDeg,
+      humidityPct: weather.current.humidityPct,
+      rainMm: weather.current.rainMm,
+      precipMm: weather.current.precipitationMm,
+      isLive: true,
+    };
+  }
+
+  const dailyIndex = timeframe === "tomorrow" ? 1 : weekDayIndex;
+  const day = weather.daily[dailyIndex] ?? weather.daily[0];
+
+  return {
+    dayLabel:
+      timeframe === "tomorrow"
+        ? "Tomorrow"
+        : formatForecastDay(day.date, weather.timezone),
+    weatherCode: day.weatherCode,
+    tempHighC: day.tempMaxC,
+    tempLowC: day.tempMinC,
+    windSpeedMph: day.windSpeedMaxMph,
+    windDirectionDeg: day.windDirectionDeg,
+    humidityPct: day.humidityMeanPct,
+    rainMm: day.rainMm,
+    precipMm: day.precipitationMm,
+    isLive: false,
+  };
 }

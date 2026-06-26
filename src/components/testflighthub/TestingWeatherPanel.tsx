@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { CloudRain, Droplets, Loader2, Wind } from "lucide-react";
+import dynamic from "next/dynamic";
+import { useEffect, useMemo, useState } from "react";
+import { ChevronDown, Loader2 } from "lucide-react";
 
 import {
   FLIGHT_PROFILES,
@@ -16,9 +17,19 @@ import {
   formatForecastDay,
   formatWindDirection,
   type LocationWeather,
+  type WeatherTimeframe,
   weatherCodeEmoji,
   weatherCodeLabel,
 } from "@/lib/weather-data";
+
+const WeatherBroadcastMap = dynamic(() => import("./WeatherBroadcastMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-[min(58vh,520px)] items-center justify-center rounded-2xl border border-white/10 bg-[#0b1220] text-sm text-white/55">
+      Loading weather map…
+    </div>
+  ),
+});
 
 type TestingWeatherPanelProps = {
   liveTelemetry: Telemetry | null;
@@ -32,191 +43,17 @@ type ProfileWeatherState = {
   error: string | null;
 };
 
-function profileAccent(profileId: FlightProfileId) {
-  switch (profileId) {
-    case "random":
-      return {
-        border: "border-[#2563eb]/35",
-        glow: "from-[#2563eb]/20 via-[#2563eb]/5 to-transparent",
-        badge: "bg-[#2563eb]/20 text-[#93c5fd]",
-        activeRing: "ring-[#2563eb]/50",
-      };
-    case "spain":
-      return {
-        border: "border-amber-500/35",
-        glow: "from-amber-500/20 via-amber-500/5 to-transparent",
-        badge: "bg-amber-500/20 text-amber-200",
-        activeRing: "ring-amber-400/50",
-      };
-    case "oxford":
-      return {
-        border: "border-emerald-500/35",
-        glow: "from-emerald-500/20 via-emerald-500/5 to-transparent",
-        badge: "bg-emerald-500/20 text-emerald-200",
-        activeRing: "ring-emerald-400/50",
-      };
-    default:
-      return {
-        border: "border-white/15",
-        glow: "from-white/10 to-transparent",
-        badge: "bg-white/10 text-white/70",
-        activeRing: "ring-white/30",
-      };
-  }
+const TIMEFRAME_OPTIONS: { id: WeatherTimeframe; label: string }[] = [
+  { id: "today", label: "Today" },
+  { id: "tomorrow", label: "Tomorrow" },
+  { id: "next-7-days", label: "Next 7 Days" },
+];
+
+function profileShortName(profile: FlightProfile) {
+  return profile.buttonLabel.replace("Start ", "").replace(" Drone", "");
 }
 
-function WindArrow({ degrees, className }: { degrees: number; className?: string }) {
-  return (
-    <span
-      className={`inline-flex items-center justify-center ${className ?? ""}`}
-      style={{ transform: `rotate(${degrees}deg)` }}
-      aria-hidden
-    >
-      <Wind className="h-4 w-4" />
-    </span>
-  );
-}
-
-function MetricTile({
-  label,
-  value,
-  icon,
-}: {
-  label: string;
-  value: string;
-  icon: ReactNode;
-}) {
-  return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
-      <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.12em] text-white/45">
-        {icon}
-        <span>{label}</span>
-      </div>
-      <p className="mt-1 text-sm font-semibold text-white">{value}</p>
-    </div>
-  );
-}
-
-function WeatherLocationCard({
-  entry,
-  isActive,
-}: {
-  entry: ProfileWeatherState;
-  isActive: boolean;
-}) {
-  const accent = profileAccent(entry.profileId);
-  const { weather } = entry;
-
-  return (
-    <article
-      className={`overflow-hidden rounded-2xl border bg-white/[0.03] shadow-[0_20px_48px_rgba(0,0,0,0.28)] backdrop-blur-xl ${accent.border} ${
-        isActive ? `ring-2 ${accent.activeRing}` : ""
-      }`}
-    >
-      <div className={`bg-gradient-to-br px-5 py-4 ${accent.glow}`}>
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#60a5fa]">
-              {entry.profile.buttonLabel.replace("Start ", "").replace(" Drone", "")}
-            </p>
-            <h3 className="mt-1 text-base font-semibold text-white">{entry.profile.startPosition.label}</h3>
-            {isActive && (
-              <span
-                className={`mt-2 inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${accent.badge}`}
-              >
-                Active area
-              </span>
-            )}
-          </div>
-          {weather && (
-            <div className="text-right">
-              <p className="text-4xl font-bold tracking-tight text-white">
-                {Math.round(weather.current.temperatureC)}°
-              </p>
-              <p className="mt-1 text-sm text-white/65">
-                {weatherCodeEmoji(weather.current.weatherCode)}{" "}
-                {weatherCodeLabel(weather.current.weatherCode)}
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="space-y-4 px-5 py-4">
-        {entry.loading && (
-          <div className="flex items-center gap-2 text-sm text-white/55">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Loading live weather…
-          </div>
-        )}
-
-        {entry.error && !entry.loading && (
-          <p className="text-sm text-red-300/90">{entry.error}</p>
-        )}
-
-        {weather && !entry.loading && (
-          <>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <MetricTile
-                label="Wind"
-                value={`${weather.current.windSpeedMph.toFixed(0)} mph ${formatWindDirection(weather.current.windDirectionDeg)}`}
-                icon={<WindArrow degrees={weather.current.windDirectionDeg} className="h-3.5 w-3.5 text-sky-300" />}
-              />
-              <MetricTile
-                label="Humidity"
-                value={`${Math.round(weather.current.humidityPct)}%`}
-                icon={<Droplets className="h-3.5 w-3.5 text-cyan-300" />}
-              />
-              <MetricTile
-                label="Rain"
-                value={`${weather.current.rainMm.toFixed(1)} mm`}
-                icon={<CloudRain className="h-3.5 w-3.5 text-blue-300" />}
-              />
-              <MetricTile
-                label="Precip"
-                value={`${weather.current.precipitationMm.toFixed(1)} mm`}
-                icon={<CloudRain className="h-3.5 w-3.5 text-indigo-300" />}
-              />
-            </div>
-
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/45">
-                7-day outlook
-              </p>
-              <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-                {weather.daily.map((day) => (
-                  <div
-                    key={day.date}
-                    className="min-w-[92px] shrink-0 rounded-xl border border-white/10 bg-[#0b1220]/70 px-3 py-3 text-center"
-                  >
-                    <p className="text-[11px] font-semibold text-white/75">
-                      {formatForecastDay(day.date, weather.timezone)}
-                    </p>
-                    <p className="mt-2 text-xl">{weatherCodeEmoji(day.weatherCode)}</p>
-                    <p className="mt-2 text-sm font-semibold text-white">
-                      {Math.round(day.tempMaxC)}°
-                      <span className="text-white/45"> / {Math.round(day.tempMinC)}°</span>
-                    </p>
-                    <p className="mt-1 text-[10px] text-sky-300/90">
-                      {day.windSpeedMaxMph.toFixed(0)} mph {formatWindDirection(day.windDirectionDeg)}
-                    </p>
-                    <p className="mt-1 text-[10px] text-white/45">
-                      {Math.round(day.humidityMeanPct)}% · {day.rainMm.toFixed(1)} mm
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-    </article>
-  );
-}
-
-async function fetchLocationWeather(
-  profile: FlightProfile,
-): Promise<LocationWeather> {
+async function fetchLocationWeather(profile: FlightProfile): Promise<LocationWeather> {
   const location = getProfileWeatherLocation(profile);
   const params = new URLSearchParams({
     latitude: location.latitude.toString(),
@@ -243,6 +80,11 @@ export default function TestingWeatherPanel({ liveTelemetry }: TestingWeatherPan
     return inferFlightProfile(liveTelemetry.latitude, liveTelemetry.longitude).id;
   }, [liveTelemetry]);
 
+  const [selectedProfileId, setSelectedProfileId] = useState<FlightProfileId>(
+    TESTING_FLIGHT_PROFILE_IDS[0],
+  );
+  const [timeframe, setTimeframe] = useState<WeatherTimeframe>("today");
+  const [weekDayIndex, setWeekDayIndex] = useState(0);
   const [entries, setEntries] = useState<ProfileWeatherState[]>(() =>
     profiles.map((profile) => ({
       profileId: profile.id,
@@ -252,6 +94,12 @@ export default function TestingWeatherPanel({ liveTelemetry }: TestingWeatherPan
       error: null,
     })),
   );
+
+  useEffect(() => {
+    if (activeProfileId && TESTING_FLIGHT_PROFILE_IDS.includes(activeProfileId)) {
+      setSelectedProfileId(activeProfileId);
+    }
+  }, [activeProfileId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -302,6 +150,11 @@ export default function TestingWeatherPanel({ liveTelemetry }: TestingWeatherPan
     };
   }, [profiles]);
 
+  const selectedEntry = entries.find((entry) => entry.profileId === selectedProfileId) ?? entries[0];
+  const selectedLocation = selectedEntry
+    ? getProfileWeatherLocation(selectedEntry.profile)
+    : null;
+
   return (
     <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -311,8 +164,8 @@ export default function TestingWeatherPanel({ liveTelemetry }: TestingWeatherPan
           </p>
           <h2 className="mt-1 text-lg font-semibold text-white">Live Weather Intelligence</h2>
           <p className="mt-2 max-w-2xl text-sm text-white/60">
-            Current conditions and 7-day outlook for each selectable test area — temperature,
-            wind, rain, and humidity from live Open-Meteo feeds.
+            Select a survey site and forecast window to view a broadcast-style regional weather map
+            with live temperature, wind, rain, and humidity.
           </p>
         </div>
         <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/55">
@@ -320,15 +173,135 @@ export default function TestingWeatherPanel({ liveTelemetry }: TestingWeatherPan
         </span>
       </div>
 
-      <div className="mt-6 grid gap-5 xl:grid-cols-3">
-        {entries.map((entry) => (
-          <WeatherLocationCard
-            key={entry.profileId}
-            entry={entry}
-            isActive={activeProfileId === entry.profileId}
-          />
-        ))}
+      <div className="mt-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <label className="block min-w-[240px] flex-1">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/45">
+            Survey site
+          </span>
+          <div className="relative mt-2">
+            <select
+              value={selectedProfileId}
+              onChange={(event) => {
+                setSelectedProfileId(event.target.value as FlightProfileId);
+                setTimeframe("today");
+                setWeekDayIndex(0);
+              }}
+              className="h-11 w-full appearance-none rounded-xl border border-white/15 bg-[#0b1220]/80 px-4 pr-10 text-sm font-medium text-white outline-none transition-colors focus:border-[#3b82f6]/60"
+            >
+              {entries.map((entry) => (
+                <option key={entry.profileId} value={entry.profileId} className="bg-[#0b1220]">
+                  {profileShortName(entry.profile)} — {entry.profile.startPosition.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/45" />
+          </div>
+        </label>
+
+        <div className="flex flex-wrap gap-2">
+          {TIMEFRAME_OPTIONS.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              onClick={() => {
+                setTimeframe(option.id);
+                setWeekDayIndex(0);
+              }}
+              className={`h-11 rounded-xl px-4 text-sm font-semibold transition-colors ${
+                timeframe === option.id
+                  ? "bg-[#2563eb] text-white shadow-[0_0_24px_rgba(37,99,235,0.35)]"
+                  : "border border-white/15 bg-white/[0.04] text-white/75 hover:border-white/25 hover:bg-white/[0.08]"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
       </div>
+
+      {selectedEntry?.loading && (
+        <div className="mt-6 flex items-center gap-2 text-sm text-white/55">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Loading live weather for {profileShortName(selectedEntry.profile)}…
+        </div>
+      )}
+
+      {selectedEntry?.error && !selectedEntry.loading && (
+        <p className="mt-6 text-sm text-red-300/90">{selectedEntry.error}</p>
+      )}
+
+      {selectedEntry?.weather && selectedLocation && !selectedEntry.loading && (
+        <div className="mt-6 space-y-4">
+          <WeatherBroadcastMap
+            latitude={selectedLocation.latitude}
+            longitude={selectedLocation.longitude}
+            locationLabel={selectedLocation.label}
+            regionLabel={profileShortName(selectedEntry.profile)}
+            weather={selectedEntry.weather}
+            timeframe={timeframe}
+            weekDayIndex={weekDayIndex}
+          />
+
+          {timeframe === "next-7-days" && (
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/45">
+                Select day
+              </p>
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                {selectedEntry.weather.daily.map((day, index) => (
+                  <button
+                    key={day.date}
+                    type="button"
+                    onClick={() => setWeekDayIndex(index)}
+                    className={`min-w-[108px] shrink-0 rounded-xl border px-3 py-3 text-center transition-colors ${
+                      weekDayIndex === index
+                        ? "border-[#3b82f6]/60 bg-[#2563eb]/20 text-white"
+                        : "border-white/10 bg-[#0b1220]/70 text-white/75 hover:border-white/20"
+                    }`}
+                  >
+                    <p className="text-[11px] font-semibold">
+                      {formatForecastDay(day.date, selectedEntry.weather!.timezone)}
+                    </p>
+                    <p className="mt-2 text-xl">{weatherCodeEmoji(day.weatherCode)}</p>
+                    <p className="mt-2 text-sm font-semibold">
+                      {Math.round(day.tempMaxC)}°
+                      <span className="text-white/45"> / {Math.round(day.tempMinC)}°</span>
+                    </p>
+                    <p className="mt-1 text-[10px] text-sky-300/90">
+                      {day.windSpeedMaxMph.toFixed(0)} mph {formatWindDirection(day.windDirectionDeg)}
+                    </p>
+                    <p className="mt-1 text-[10px] text-white/45">
+                      {Math.round(day.humidityMeanPct)}% · {day.rainMm.toFixed(1)} mm
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {timeframe !== "next-7-days" && (
+            <div className="grid gap-2 sm:grid-cols-4">
+              {selectedEntry.weather.daily.slice(0, 4).map((day) => (
+                <div
+                  key={day.date}
+                  className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-3 text-center"
+                >
+                  <p className="text-[11px] font-semibold text-white/70">
+                    {formatForecastDay(day.date, selectedEntry.weather!.timezone)}
+                  </p>
+                  <p className="mt-1 text-lg">{weatherCodeEmoji(day.weatherCode)}</p>
+                  <p className="mt-1 text-sm font-semibold text-white">
+                    {Math.round(day.tempMaxC)}° / {Math.round(day.tempMinC)}°
+                  </p>
+                  <p className="mt-1 text-[10px] text-white/45">
+                    {weatherCodeLabel(day.weatherCode)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </section>
   );
 }

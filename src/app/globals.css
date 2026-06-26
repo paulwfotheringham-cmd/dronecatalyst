@@ -331,6 +331,19 @@ body {
   filter: saturate(1.12) contrast(1.1) brightness(0.97);
 }
 
+.weather-broadcast-shell {
+  isolation: isolate;
+}
+
+.weather-broadcast-shell .leaflet-container {
+  background: #07111f;
+  filter: saturate(1.15) contrast(1.12) brightness(0.9);
+}
+
+.weather-broadcast-shell .leaflet-control-container {
+  display: none;
+}
+
 .aerial-intel-map-shell {
   isolation: isolate;
 }
