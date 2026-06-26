@@ -16,6 +16,7 @@ import type { Telemetry } from "@/lib/telemetry";
 import {
   formatForecastDay,
   formatWindDirection,
+  getWeatherDisplaySnapshot,
   type LocationWeather,
   type WeatherTimeframe,
   weatherCodeEmoji,
@@ -267,11 +268,11 @@ export default function TestingWeatherPanel({ liveTelemetry }: TestingWeatherPan
                       {Math.round(day.tempMaxC)}°
                       <span className="text-white/45"> / {Math.round(day.tempMinC)}°</span>
                     </p>
-                    <p className="mt-1 text-[10px] text-sky-300/90">
-                      {day.windSpeedMaxMph.toFixed(0)} mph {formatWindDirection(day.windDirectionDeg)}
+                    <p className="mt-1 text-[11px] font-medium text-sky-300/90">
+                      Wind {day.windSpeedMaxMph.toFixed(0)} mph {formatWindDirection(day.windDirectionDeg)}
                     </p>
                     <p className="mt-1 text-[10px] text-white/45">
-                      {Math.round(day.humidityMeanPct)}% · {day.rainMm.toFixed(1)} mm
+                      {Math.round(day.humidityMeanPct)}% humidity · {day.rainMm.toFixed(1)} mm rain
                     </p>
                   </button>
                 ))}
@@ -279,25 +280,32 @@ export default function TestingWeatherPanel({ liveTelemetry }: TestingWeatherPan
             </div>
           )}
 
-          {timeframe !== "next-7-days" && (
-            <div className="grid gap-2 sm:grid-cols-4">
-              {selectedEntry.weather.daily.slice(0, 4).map((day) => (
-                <div
-                  key={day.date}
-                  className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-3 text-center"
-                >
-                  <p className="text-[11px] font-semibold text-white/70">
-                    {formatForecastDay(day.date, selectedEntry.weather!.timezone)}
-                  </p>
-                  <p className="mt-1 text-lg">{weatherCodeEmoji(day.weatherCode)}</p>
-                  <p className="mt-1 text-sm font-semibold text-white">
-                    {Math.round(day.tempMaxC)}° / {Math.round(day.tempMinC)}°
-                  </p>
-                  <p className="mt-1 text-[10px] text-white/45">
-                    {weatherCodeLabel(day.weatherCode)}
-                  </p>
-                </div>
-              ))}
+          {timeframe !== "next-7-days" && selectedEntry.weather && (
+            <div className="grid gap-2 sm:max-w-sm">
+              {(() => {
+                const snapshot = getWeatherDisplaySnapshot(
+                  selectedEntry.weather,
+                  timeframe,
+                  weekDayIndex,
+                );
+                return (
+                  <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-4 text-center">
+                    <p className="text-[11px] font-semibold text-white/70">{snapshot.dayLabel}</p>
+                    <p className="mt-1 text-2xl">{weatherCodeEmoji(snapshot.weatherCode)}</p>
+                    <p className="mt-1 text-lg font-semibold text-white">
+                      {Math.round(snapshot.tempHighC)}° / {Math.round(snapshot.tempLowC)}°
+                    </p>
+                    <p className="mt-2 text-sm font-medium text-sky-300/90">
+                      Wind {snapshot.windSpeedMph.toFixed(0)} mph{" "}
+                      {formatWindDirection(snapshot.windDirectionDeg)}
+                    </p>
+                    <p className="mt-1 text-[11px] text-white/45">
+                      {weatherCodeLabel(snapshot.weatherCode)} · {Math.round(snapshot.humidityPct)}%
+                      humidity · {snapshot.rainMm.toFixed(1)} mm rain
+                    </p>
+                  </div>
+                );
+              })()}
             </div>
           )}
         </div>

@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import L from "leaflet";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
+import { Minus, Plus } from "lucide-react";
 import "leaflet/dist/leaflet.css";
 
 import {
@@ -27,10 +29,24 @@ type WeatherBroadcastMapProps = {
 
 function MapRecenter({ latitude, longitude }: { latitude: number; longitude: number }) {
   const map = useMap();
+  const lastSiteKey = useRef<string | null>(null);
+  const siteKey = `${latitude.toFixed(5)},${longitude.toFixed(5)}`;
 
   useEffect(() => {
+    if (lastSiteKey.current === siteKey) return;
     map.setView([latitude, longitude], 9, { animate: true });
-  }, [latitude, longitude, map]);
+    lastSiteKey.current = siteKey;
+  }, [latitude, longitude, map, siteKey]);
+
+  return null;
+}
+
+function MapBridge({ onReady }: { onReady: (map: L.Map) => void }) {
+  const map = useMap();
+
+  useEffect(() => {
+    onReady(map);
+  }, [map, onReady]);
 
   return null;
 }
@@ -84,6 +100,13 @@ export default function WeatherBroadcastMap({
 }: WeatherBroadcastMapProps) {
   const snapshot = getWeatherDisplaySnapshot(weather, timeframe, weekDayIndex);
   const tint = weatherMapTint(snapshot.weatherCode);
+  const mapRef = useRef<L.Map | null>(null);
+  const [mapReady, setMapReady] = useState(false);
+
+  const handleMapReady = useCallback((map: L.Map) => {
+    mapRef.current = map;
+    setMapReady(true);
+  }, []);
 
   return (
     <div className="weather-broadcast-shell relative overflow-hidden rounded-2xl border-2 border-[#1d4ed8]/70 shadow-[0_24px_64px_rgba(0,0,0,0.55)]">
@@ -105,9 +128,11 @@ export default function WeatherBroadcastMap({
         <MapContainer
           center={[latitude, longitude]}
           zoom={9}
-          scrollWheelZoom={false}
-          dragging={false}
-          doubleClickZoom={false}
+          minZoom={6}
+          maxZoom={16}
+          scrollWheelZoom
+          dragging
+          doubleClickZoom
           zoomControl={false}
           attributionControl={false}
           className="h-full w-full"
@@ -122,7 +147,30 @@ export default function WeatherBroadcastMap({
             opacity={0.85}
           />
           <MapRecenter latitude={latitude} longitude={longitude} />
+          <MapBridge onReady={handleMapReady} />
         </MapContainer>
+
+        {mapReady && (
+          <div className="absolute bottom-28 right-4 z-[470] flex flex-col overflow-hidden rounded-xl border border-white/20 bg-[#0b1f44]/88 shadow-[0_12px_32px_rgba(0,0,0,0.45)] backdrop-blur-md">
+            <button
+              type="button"
+              aria-label="Zoom in"
+              onClick={() => mapRef.current?.zoomIn()}
+              className="flex h-10 w-10 items-center justify-center text-white transition-colors hover:bg-white/10"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+            <div className="h-px bg-white/15" />
+            <button
+              type="button"
+              aria-label="Zoom out"
+              onClick={() => mapRef.current?.zoomOut()}
+              className="flex h-10 w-10 items-center justify-center text-white transition-colors hover:bg-white/10"
+            >
+              <Minus className="h-4 w-4" />
+            </button>
+          </div>
+        )}
 
         <div
           className="pointer-events-none absolute inset-0 z-[410]"
@@ -207,6 +255,9 @@ export default function WeatherBroadcastMap({
               <p className="text-lg font-bold text-white">{locationLabel}</p>
             </div>
             <div className="flex flex-wrap gap-4 text-sm text-white/90">
+              <span>
+                Wind {snapshot.windSpeedMph.toFixed(0)} mph {formatWindDirection(snapshot.windDirectionDeg)}
+              </span>
               <span>Humidity {Math.round(snapshot.humidityPct)}%</span>
               <span>Rain {snapshot.rainMm.toFixed(1)} mm</span>
               <span>Precip {snapshot.precipMm.toFixed(1)} mm</span>
