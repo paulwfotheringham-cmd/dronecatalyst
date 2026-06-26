@@ -6,10 +6,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   createBlankConnectionInput,
   CRM_CONNECTION_ROLE_OPTIONS,
+  geocodeConnection,
   type CrmConnection,
 } from "@/lib/connections-data";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, Loader2, Plus, Trash2, Users } from "lucide-react";
+import { ArrowLeft, Loader2, Plus, Save, Trash2, Users } from "lucide-react";
 
 const ConnectionsMap = dynamic(() => import("./ConnectionsMap"), {
   ssr: false,
@@ -42,6 +43,30 @@ function inputClassName() {
   return "mt-1.5 w-full rounded-xl border border-white/10 bg-[#0b1524] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-sky-400/50";
 }
 
+function connectionFieldsEqual(a: CrmConnection, b: CrmConnection) {
+  return (
+    a.name === b.name &&
+    a.role === b.role &&
+    a.specialties === b.specialties &&
+    a.background === b.background &&
+    a.countryExperience === b.countryExperience &&
+    a.city === b.city &&
+    a.country === b.country
+  );
+}
+
+function draftToMapConnection(draft: Omit<CrmConnection, "id" | "createdAt" | "updatedAt">): CrmConnection {
+  const [latitude, longitude] = geocodeConnection(draft.city, draft.country);
+  return {
+    ...draft,
+    id: "__draft__",
+    latitude,
+    longitude,
+    createdAt: "",
+    updatedAt: "",
+  };
+}
+
 type ConnectionsWorkspaceProps = {
   onBackToCrm?: () => void;
 };
@@ -52,12 +77,29 @@ export default function ConnectionsWorkspace({ onBackToCrm }: ConnectionsWorkspa
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [newDraft, setNewDraft] = useState<CrmConnection | null>(null);
+  const [savedSnapshot, setSavedSnapshot] = useState<CrmConnection | null>(null);
+  const snapshottedIdRef = useRef<string | null>(null);
 
-  const selected = useMemo(
-    () => connections.find((entry) => entry.id === selectedId) ?? null,
-    [connections, selectedId],
-  );
+  const selected = useMemo(() => {
+    if (selectedId === "__draft__" && newDraft) return newDraft;
+    return connections.find((entry) => entry.id === selectedId) ?? null;
+  }, [connections, selectedId, newDraft]);
+
+  const isDirty = useMemo(() => {
+    if (!selected) return false;
+    if (selected.id === "__draft__") return true;
+    if (!savedSnapshot || savedSnapshot.id !== selected.id) return true;
+    return !connectionFieldsEqual(selected, savedSnapshot);
+  }, [selected, savedSnapshot]);
+
+  const mapConnections = useMemo(() => {
+    if (newDraft && selectedId === "__draft__") {
+      return [...connections, draftToMapConnection(newDraft)];
+    }
+    return connections;
+  }, [connections, newDraft, selectedId]);
 
   const loadConnections = useCallback(async () => {
     setLoading(true);
@@ -71,6 +113,7 @@ export default function ConnectionsWorkspace({ onBackToCrm }: ConnectionsWorkspa
       const next = data.connections ?? [];
       setConnections(next);
       setSelectedId((current) => {
+        if (current === "__draft__") return current;
         if (current && next.some((entry) => entry.id === current)) return current;
         return next[0]?.id ?? null;
       });
@@ -88,16 +131,57 @@ export default function ConnectionsWorkspace({ onBackToCrm }: ConnectionsWorkspa
   }, [loadConnections]);
 
   useEffect(() => {
-    return () => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    };
-  }, []);
+    if (!selectedId || selectedId === "__draft__") {
+      snapshottedIdRef.current = null;
+      setSavedSnapshot(null);
+      return;
+    }
+    if (snapshottedIdRef.current === selectedId) return;
+    const entry = connections.find((item) => item.id === selectedId);
+    if (entry) {
+      snapshottedIdRef.current = selectedId;
+      setSavedSnapshot({ ...entry });
+    }
+  }, [selectedId, connections]);
 
-  async function saveConnection(connection: CrmConnection) {
+  async function saveConnection(connection: CrmConnection, isNew: boolean) {
     setBusy(true);
     setError(null);
 
     try {
+      if (isNew) {
+        if (!connection.name.trim()) {
+          throw new Error("Name is required before saving");
+        }
+
+        const response = await fetch("/api/crm/connections", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: connection.name,
+            role: connection.role,
+            specialties: connection.specialties,
+            background: connection.background,
+            countryExperience: connection.countryExperience,
+            city: connection.city,
+            country: connection.country,
+          }),
+        });
+
+        const data = await readApiJson<{ connection?: CrmConnection; error?: string }>(response);
+        if (!response.ok || !data.connection) throw new Error(data.error ?? "Failed to save contact");
+
+        setConnections((current) =>
+          [...current, data.connection!].sort((a, b) => a.name.localeCompare(b.name)),
+        );
+        setNewDraft(null);
+        setSelectedId(data.connection.id);
+        snapshottedIdRef.current = data.connection.id;
+        setSavedSnapshot(data.connection);
+        setSaveMessage("Contact saved to map");
+        return;
+      }
+
       const response = await fetch(`/api/crm/connections/${connection.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -118,6 +202,9 @@ export default function ConnectionsWorkspace({ onBackToCrm }: ConnectionsWorkspa
       setConnections((current) =>
         current.map((entry) => (entry.id === data.connection!.id ? data.connection! : entry)),
       );
+      snapshottedIdRef.current = data.connection.id;
+      setSavedSnapshot(data.connection);
+      setSaveMessage("Changes saved");
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Failed to save");
     } finally {
@@ -127,47 +214,59 @@ export default function ConnectionsWorkspace({ onBackToCrm }: ConnectionsWorkspa
 
   function patchSelected(patch: Partial<CrmConnection>) {
     if (!selected) return;
-    const next = { ...selected, ...patch };
-    setConnections((current) => current.map((entry) => (entry.id === next.id ? next : entry)));
 
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(() => {
-      void saveConnection(next);
-    }, 500);
+    if (selected.id === "__draft__" && newDraft) {
+      const next = { ...newDraft, ...patch };
+      const [latitude, longitude] =
+        patch.city !== undefined || patch.country !== undefined
+          ? geocodeConnection(next.city, next.country)
+          : [next.latitude, next.longitude];
+      setNewDraft({ ...next, latitude, longitude });
+      return;
+    }
+
+    const next = { ...selected, ...patch };
+    if (patch.city !== undefined || patch.country !== undefined) {
+      const [latitude, longitude] = geocodeConnection(next.city, next.country);
+      next.latitude = latitude;
+      next.longitude = longitude;
+    }
+    setConnections((current) => current.map((entry) => (entry.id === next.id ? next : entry)));
   }
 
-  async function handleAddContact() {
-    setBusy(true);
+  function handleAddContact() {
     setError(null);
-
+    setSaveMessage(null);
     const blank = createBlankConnectionInput();
+    const [latitude, longitude] = geocodeConnection(blank.city, blank.country);
+    setNewDraft({
+      ...blank,
+      id: "__draft__",
+      latitude,
+      longitude,
+      createdAt: "",
+      updatedAt: "",
+    });
+    setSelectedId("__draft__");
+  }
 
-    try {
-      const response = await fetch("/api/crm/connections", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...blank,
-          name: "New Contact",
-        }),
-      });
-
-      const data = await readApiJson<{ connection?: CrmConnection; error?: string }>(response);
-      if (!response.ok || !data.connection) throw new Error(data.error ?? "Failed to create contact");
-
-      setConnections((current) => [...current, data.connection!].sort((a, b) =>
-        a.name.localeCompare(b.name),
-      ));
-      setSelectedId(data.connection.id);
-    } catch (createError) {
-      setError(createError instanceof Error ? createError.message : "Failed to create contact");
-    } finally {
-      setBusy(false);
-    }
+  async function handleSaveContact() {
+    if (!selected) return;
+    setError(null);
+    setSaveMessage(null);
+    await saveConnection(selected, selected.id === "__draft__");
   }
 
   async function handleDeleteContact() {
     if (!selected) return;
+
+    if (selected.id === "__draft__") {
+      setNewDraft(null);
+      setSelectedId(connections[0]?.id ?? null);
+      setSaveMessage(null);
+      return;
+    }
+
     if (!window.confirm(`Remove "${selected.name}" from connections?`)) return;
 
     setBusy(true);
@@ -180,7 +279,9 @@ export default function ConnectionsWorkspace({ onBackToCrm }: ConnectionsWorkspa
 
       const remaining = connections.filter((entry) => entry.id !== selected.id);
       setConnections(remaining);
+      snapshottedIdRef.current = remaining[0]?.id ?? null;
       setSelectedId(remaining[0]?.id ?? null);
+      setSavedSnapshot(remaining[0] ? { ...remaining[0] } : null);
     } catch (deleteError) {
       setError(deleteError instanceof Error ? deleteError.message : "Failed to delete contact");
     } finally {
@@ -216,7 +317,7 @@ export default function ConnectionsWorkspace({ onBackToCrm }: ConnectionsWorkspa
           <button
             type="button"
             disabled={busy}
-            onClick={() => void handleAddContact()}
+            onClick={handleAddContact}
             className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-sky-500/40 bg-sky-500/15 px-3 text-xs font-semibold text-sky-300 transition-colors hover:border-sky-400/60 hover:bg-sky-500/25 disabled:opacity-50"
           >
             <Plus className="h-3.5 w-3.5" />
@@ -224,6 +325,12 @@ export default function ConnectionsWorkspace({ onBackToCrm }: ConnectionsWorkspa
           </button>
         </div>
       </section>
+
+      {saveMessage && (
+        <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+          {saveMessage}
+        </div>
+      )}
 
       {error && (
         <div className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
@@ -245,7 +352,7 @@ export default function ConnectionsWorkspace({ onBackToCrm }: ConnectionsWorkspa
       ) : (
         <>
           <ConnectionsMap
-            connections={connections}
+            connections={mapConnections}
             selectedId={selectedId}
             onSelect={setSelectedId}
           />
@@ -255,22 +362,50 @@ export default function ConnectionsWorkspace({ onBackToCrm }: ConnectionsWorkspa
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#60a5fa]">
-                    Contact record
+                    {selected.id === "__draft__" ? "New contact" : "Contact record"}
                   </p>
-                  <h2 className="mt-1 text-lg font-semibold text-white">{selected.name}</h2>
+                  <h2 className="mt-1 text-lg font-semibold text-white">
+                    {selected.name || "Untitled contact"}
+                  </h2>
                   <p className="mt-1 text-sm text-white/50">
                     {selected.city}, {selected.country}
+                    {selected.id === "__draft__" && (
+                      <span className="ml-2 text-amber-300/90">· unsaved</span>
+                    )}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void handleDeleteContact()}
-                  className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-red-400/20 px-3 text-xs text-red-300 hover:bg-red-500/10 disabled:opacity-50"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  Delete
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={busy || !isDirty}
+                    onClick={() => void handleSaveContact()}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-emerald-500/40 bg-emerald-500/15 px-3 text-xs font-semibold text-emerald-200 transition-colors hover:border-emerald-400/60 hover:bg-emerald-500/25 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Save className="h-3.5 w-3.5" />
+                    Save
+                  </button>
+                  {selected.id !== "__draft__" && (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void handleDeleteContact()}
+                      className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-red-400/20 px-3 text-xs text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Delete
+                    </button>
+                  )}
+                  {selected.id === "__draft__" && (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void handleDeleteContact()}
+                      className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-white/10 px-3 text-xs text-white/55 hover:bg-white/[0.04] disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
