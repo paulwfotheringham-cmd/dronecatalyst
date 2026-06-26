@@ -2,10 +2,10 @@ import type { EmailAccount, EmailAccountId } from "@/lib/email/types";
 
 import { resolveAccountCredentials } from "@/lib/email/credentials-service";
 
-export const ZOHO_IMAP_HOST = "imap.zoho.eu";
-export const ZOHO_IMAP_PORT = 993;
-export const ZOHO_SMTP_HOST = "smtp.zoho.eu";
-export const ZOHO_SMTP_PORT = 465;
+export const ZOHO_IMAP_HOST = process.env.ZOHO_IMAP_HOST?.trim() || "imappro.zoho.eu";
+export const ZOHO_IMAP_PORT = Number(process.env.ZOHO_IMAP_PORT ?? 993);
+export const ZOHO_SMTP_HOST = process.env.ZOHO_SMTP_HOST?.trim() || "smtppro.zoho.eu";
+export const ZOHO_SMTP_PORT = Number(process.env.ZOHO_SMTP_PORT ?? 465);
 
 const ACCOUNT_DEFINITIONS: readonly EmailAccount[] = [
   {

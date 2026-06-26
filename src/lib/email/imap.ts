@@ -71,8 +71,14 @@ async function withImapClient<T>(
     await client.connect();
     return await fn(client, credentials.email);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unable to connect to Zoho Mail.";
+    const raw = error instanceof Error ? error.message : "Unable to connect to Zoho Mail.";
+    const authRejected =
+      raw.includes("Command failed") ||
+      raw.toUpperCase().includes("AUTHENTICATIONFAILED") ||
+      raw === "NO";
+    const message = authRejected
+      ? "Zoho rejected the IMAP login. In Zoho Mail go to Settings → Mail Accounts → enable IMAP Access, and use an app-specific password if 2FA is on."
+      : raw;
     throw new EmailServiceError(message, "CONNECTION_FAILED");
   } finally {
     try {
