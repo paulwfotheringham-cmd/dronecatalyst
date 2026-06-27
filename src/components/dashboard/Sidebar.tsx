@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import Logo from "@/components/layout/Logo";
 import { NAV_ITEMS, project } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { FlaskConical, X } from "lucide-react";
@@ -21,7 +20,18 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
     >
       <div className="flex h-12 shrink-0 items-center justify-between border-b border-white/[0.08] px-3 lg:h-14 lg:px-4">
         <div className="min-w-0 flex-1 rounded-lg bg-white px-2.5 py-1.5">
-          <Logo height={30} href="/clients/westport" className="block w-full max-w-none" />
+          <Link
+            href="/clients/westport"
+            className="inline-flex shrink-0 items-center"
+            aria-label="Westport"
+          >
+            <span
+              className="font-semibold tracking-[-0.03em] text-[#0b2d63]"
+              style={{ fontSize: 16 }}
+            >
+              West<span className="text-[#2563eb]">port</span>
+            </span>
+          </Link>
         </div>
         <button
           type="button"
