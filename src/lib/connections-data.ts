@@ -55,6 +55,7 @@ const CITY_COORDINATES: Record<string, [number, number]> = {
   "montreal|canada": [45.5017, -73.5673],
   "glasgow|scotland": [55.8642, -4.2518],
   "glasgow|uk": [55.8642, -4.2518],
+  "santiago|chile": [-33.4489, -70.6693],
 };
 
 function locationKey(city: string, country: string) {
