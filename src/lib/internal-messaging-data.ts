@@ -27,14 +27,20 @@ export type MessagingParticipant = {
   joinedAt: string;
 };
 
+export type MessageChannelType = "internal" | "client";
+
 export type MessageChannel = {
   id: string;
   room: string;
   name: string;
+  channelType: MessageChannelType;
+  clientKey: string | null;
   createdByOperatorId: string;
   createdByOperatorName: string;
   memberOperatorIds: string[];
+  memberClientUsernames: string[];
   createdAt: string;
+  unreadCount?: number;
 };
 
 export type ScheduledCall = {
@@ -69,9 +75,12 @@ type DbChannel = {
   id: string;
   room: string;
   name: string;
+  channel_type?: string | null;
+  client_key?: string | null;
   created_by_operator_id: string;
   created_by_operator_name: string;
   member_operator_ids: string[];
+  member_client_usernames?: string[] | null;
   created_at: string;
 };
 
@@ -119,9 +128,12 @@ export function mapMessageChannel(row: DbChannel): MessageChannel {
     id: row.id,
     room: row.room,
     name: row.name,
+    channelType: row.channel_type === "client" ? "client" : "internal",
+    clientKey: row.client_key ?? null,
     createdByOperatorId: row.created_by_operator_id,
     createdByOperatorName: row.created_by_operator_name,
     memberOperatorIds: row.member_operator_ids ?? [],
+    memberClientUsernames: row.member_client_usernames ?? [],
     createdAt: row.created_at,
   };
 }

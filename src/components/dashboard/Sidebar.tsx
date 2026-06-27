@@ -1,8 +1,13 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { NAV_ITEMS, project } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
-import { FlaskConical, X } from "lucide-react";
+import { FlaskConical, MessageSquare, X } from "lucide-react";
 import { DashboardIcon } from "./icons";
 
 type SidebarProps = {
@@ -10,12 +15,36 @@ type SidebarProps = {
   onClose?: () => void;
 };
 
+const VIEWER_KEY = "client:westport";
+
 export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
+  const pathname = usePathname();
+  const [unreadTotal, setUnreadTotal] = useState(0);
+
+  const loadUnread = useCallback(async () => {
+    try {
+      const response = await fetch(
+        `/api/messaging/unread?viewerKey=${encodeURIComponent(VIEWER_KEY)}`,
+        { cache: "no-store" },
+      );
+      const data = (await response.json()) as { unreadTotal?: number };
+      if (response.ok) setUnreadTotal(data.unreadTotal ?? 0);
+    } catch {
+      // ignore polling errors
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadUnread();
+    const timer = window.setInterval(() => void loadUnread(), 15000);
+    return () => window.clearInterval(timer);
+  }, [loadUnread, pathname]);
+
   return (
     <aside
       className={cn(
         "fixed inset-y-0 left-0 z-50 flex h-dvh w-[min(280px,88vw)] flex-col overflow-hidden border-r border-white/[0.08] bg-[#07111F] transition-transform duration-300 ease-out lg:static lg:z-auto lg:w-[240px] lg:shrink-0 lg:translate-x-0",
-        mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
       )}
     >
       <div className="flex h-12 shrink-0 items-center justify-between border-b border-white/[0.08] px-3 lg:h-14 lg:px-4">
@@ -60,22 +89,41 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
 
       <ScrollArea className="min-h-0 flex-1 px-2 py-3 lg:px-3 lg:py-4">
         <nav className="space-y-1">
+          <Link
+            href="/clients/westport/messages"
+            onClick={onClose}
+            className={cn(
+              "flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-left text-[13px] transition-colors",
+              pathname.startsWith("/clients/westport/messages")
+                ? "bg-[#0D1B2A] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
+                : "text-white/45 hover:bg-[#0D1B2A]/60 hover:text-white/75",
+            )}
+          >
+            <MessageSquare className="h-4 w-4 shrink-0" />
+            <span className="flex-1">Messages</span>
+            {unreadTotal > 0 && (
+              <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-semibold text-[#07111F]">
+                {unreadTotal}
+              </span>
+            )}
+          </Link>
+
           {NAV_ITEMS.map((item) => (
-            <button
+            <Link
               key={item.label}
-              type="button"
-              aria-current={"active" in item && item.active ? "page" : undefined}
+              href="/clients/westport"
               onClick={onClose}
+              aria-current={"active" in item && item.active ? "page" : undefined}
               className={cn(
                 "flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-left text-[13px] transition-colors",
-                "active" in item && item.active
+                "active" in item && item.active && pathname === "/clients/westport"
                   ? "bg-[#0D1B2A] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
-                  : "text-white/45 hover:bg-[#0D1B2A]/60 hover:text-white/75"
+                  : "text-white/45 hover:bg-[#0D1B2A]/60 hover:text-white/75",
               )}
             >
               <DashboardIcon name={item.icon} className="h-4 w-4 shrink-0" />
               <span className="flex-1">{item.label}</span>
-            </button>
+            </Link>
           ))}
         </nav>
       </ScrollArea>

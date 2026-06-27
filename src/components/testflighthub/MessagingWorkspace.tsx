@@ -12,9 +12,11 @@ import {
   MESSAGING_STORAGE_KEY,
   type ChatMessage,
   type MessageChannel,
+  type MessageChannelType,
   type MessagingParticipant,
   type ScheduledCall,
 } from "@/lib/internal-messaging-data";
+import { CLIENT_MESSAGING_OPTIONS } from "@/lib/client-messaging-config";
 import { createInitialUsers } from "@/lib/user-management-data";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -134,6 +136,8 @@ export default function MessagingWorkspace() {
   const [newChannelMembers, setNewChannelMembers] = useState<string[]>(
     operators.map((operator) => operator.id),
   );
+  const [newChannelType, setNewChannelType] = useState<MessageChannelType>("internal");
+  const [newChannelClientKey, setNewChannelClientKey] = useState("westport");
   const [showAddMembers, setShowAddMembers] = useState(false);
   const [memberDraft, setMemberDraft] = useState<string[]>([]);
   const [activeCallLink, setActiveCallLink] = useState<string | null>(null);
@@ -154,11 +158,23 @@ export default function MessagingWorkspace() {
       id: "default",
       room: INTERNAL_MESSAGING_ROOM,
       name: "Internal Operations Room",
+      channelType: "internal",
+      clientKey: null,
       createdByOperatorId: "user-1",
       createdByOperatorName: "Paul Fotheringham",
       memberOperatorIds: operators.map((operator) => operator.id),
+      memberClientUsernames: [],
       createdAt: new Date().toISOString(),
     } satisfies MessageChannel);
+
+  const internalChannels = useMemo(
+    () => channels.filter((channel) => channel.channelType === "internal"),
+    [channels],
+  );
+  const clientChannels = useMemo(
+    () => channels.filter((channel) => channel.channelType === "client"),
+    [channels],
+  );
 
   const channelMembers = useMemo(
     () =>
@@ -172,11 +188,32 @@ export default function MessagingWorkspace() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  const loadChannels = useCallback(async () => {
-    const response = await fetch("/api/messaging/channels", { cache: "no-store" });
+  const loadChannels = useCallback(async (operatorId?: string | null) => {
+    const params = new URLSearchParams({ viewerType: "internal" });
+    if (operatorId) {
+      params.set("operatorId", operatorId);
+      params.set("viewerKey", operatorId);
+    }
+    const response = await fetch(`/api/messaging/channels?${params.toString()}`, {
+      cache: "no-store",
+    });
     const data = await readApiJson<{ channels?: MessageChannel[]; error?: string }>(response);
     if (!response.ok) throw new Error(data.error ?? "Failed to load channels");
     setChannels(data.channels ?? []);
+    return data.channels ?? [];
+  }, []);
+
+  const markRead = useCallback(async (room: string, operatorId: string) => {
+    await fetch("/api/messaging/channels", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "markRead", viewerKey: operatorId, room }),
+    });
+    setChannels((current) =>
+      current.map((channel) =>
+        channel.room === room ? { ...channel, unreadCount: 0 } : channel,
+      ),
+    );
   }, []);
 
   const loadMessages = useCallback(async (room: string) => {
@@ -215,9 +252,12 @@ export default function MessagingWorkspace() {
       setLoading(true);
       setError(null);
       try {
-        await loadChannels();
+        await loadChannels(joinedOperatorId);
         await loadMessages(activeRoom);
         await loadScheduledCalls(activeRoom);
+        if (joinedOperatorId) {
+          await markRead(activeRoom, joinedOperatorId);
+        }
       } catch (loadError) {
         if (!cancelled) {
           setError(loadError instanceof Error ? loadError.message : "Failed to load messaging");
@@ -231,7 +271,12 @@ export default function MessagingWorkspace() {
     return () => {
       cancelled = true;
     };
-  }, [activeRoom, loadChannels, loadMessages, loadScheduledCalls]);
+  }, [activeRoom, joinedOperatorId, loadChannels, loadMessages, loadScheduledCalls, markRead]);
+
+  useEffect(() => {
+    if (!joinedOperatorId) return;
+    void loadChannels(joinedOperatorId).catch(() => undefined);
+  }, [joinedOperatorId, loadChannels]);
 
   useEffect(() => {
     scrollToBottom();
@@ -316,6 +361,12 @@ export default function MessagingWorkspace() {
                   },
                 ];
               });
+
+              if (row.operator_id.startsWith("client:")) {
+                void loadChannels(operator.id).catch(() => undefined);
+              } else if (row.operator_id !== operator.id && row.room === activeRoom) {
+                void markRead(activeRoom, operator.id).catch(() => undefined);
+              }
             },
           )
           .on("presence", { event: "sync" }, () => {
@@ -371,7 +422,7 @@ export default function MessagingWorkspace() {
       if (pollTimer) clearInterval(pollTimer);
       if (channel && supabase) void supabase.removeChannel(channel);
     };
-  }, [joinedOperator, activeRoom, loadMessages]);
+  }, [joinedOperator, activeRoom, loadChannels, loadMessages, markRead]);
 
   function handleJoin(operatorId: string) {
     setJoinedOperatorId(operatorId);
@@ -391,6 +442,9 @@ export default function MessagingWorkspace() {
     window.localStorage.setItem(MESSAGING_ACTIVE_CHANNEL_KEY, room);
     setShowAddMembers(false);
     openChat();
+    if (joinedOperatorId) {
+      void markRead(room, joinedOperatorId);
+    }
   }
 
   async function postMessage(payload: {
@@ -453,16 +507,21 @@ export default function MessagingWorkspace() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: newChannelName.trim(),
+          channelType: newChannelType,
+          clientKey: newChannelType === "client" ? newChannelClientKey : undefined,
           createdByOperatorId: joinedOperator.id,
           createdByOperatorName: joinedOperator.fullName,
           memberOperatorIds: newChannelMembers,
+          memberClientUsernames:
+            newChannelType === "client" ? [newChannelClientKey] : undefined,
         }),
       });
       const data = await readApiJson<{ channel?: MessageChannel; error?: string }>(response);
       if (!response.ok || !data.channel) throw new Error(data.error ?? "Failed to create channel");
 
-      setChannels((current) => [...current, data.channel!]);
+      await loadChannels(joinedOperator.id);
       setNewChannelName("");
+      setNewChannelType("internal");
       setShowCreateChannel(false);
       selectChannel(data.channel.room);
     } catch (createError) {
@@ -615,6 +674,45 @@ export default function MessagingWorkspace() {
     );
   }
 
+  function renderChannelButton(channel: MessageChannel) {
+    const clientLabel =
+      channel.channelType === "client"
+        ? CLIENT_MESSAGING_OPTIONS.find((client) => client.key === channel.clientKey)?.label
+        : null;
+
+    return (
+      <li key={channel.room}>
+        <button
+          type="button"
+          onClick={() => selectChannel(channel.room)}
+          className={cn(
+            "flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-left transition-colors",
+            channel.room === activeRoom
+              ? "border-sky-400/30 bg-sky-500/10 text-white"
+              : "border-white/10 bg-white/[0.03] text-white/70 hover:bg-white/[0.06]",
+          )}
+        >
+          <div className="min-w-0">
+            <span className="block truncate text-sm font-medium">{channel.name}</span>
+            {clientLabel && (
+              <span className="mt-0.5 block truncate text-[10px] text-violet-300/80">
+                {clientLabel}
+              </span>
+            )}
+          </div>
+          <div className="ml-2 flex shrink-0 items-center gap-1.5">
+            {(channel.unreadCount ?? 0) > 0 && (
+              <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-semibold text-[#07111F]">
+                {channel.unreadCount}
+              </span>
+            )}
+            <span className="text-[10px] text-white/40">{channel.memberOperatorIds.length}</span>
+          </div>
+        </button>
+      </li>
+    );
+  }
+
   return (
     <ResponsiveMasterDetail
       showDetail={showChat && !!joinedOperator}
@@ -675,15 +773,16 @@ export default function MessagingWorkspace() {
             </div>
             <button
               type="button"
+              disabled={!joinedOperator}
               onClick={() => setShowCreateChannel((current) => !current)}
-              className="inline-flex h-8 items-center gap-1 rounded-lg border border-white/10 px-2.5 text-xs font-medium text-white/70 transition-colors hover:bg-white/[0.06]"
+              className="inline-flex h-8 items-center gap-1 rounded-lg border border-white/10 px-2.5 text-xs font-medium text-white/70 transition-colors hover:bg-white/[0.06] disabled:opacity-40"
             >
               <Plus className="h-3.5 w-3.5" />
               New
             </button>
           </div>
 
-          {showCreateChannel && (
+          {showCreateChannel && joinedOperator && (
             <div className="mt-3 space-y-3 rounded-xl border border-white/10 bg-white/[0.03] p-3">
               <input
                 value={newChannelName}
@@ -693,7 +792,56 @@ export default function MessagingWorkspace() {
               />
               <div>
                 <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-white/45">
-                  Add users
+                  Channel type
+                </p>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setNewChannelType("internal")}
+                    className={cn(
+                      "rounded-lg border px-3 py-2 text-xs font-medium transition-colors",
+                      newChannelType === "internal"
+                        ? "border-sky-400/40 bg-sky-500/10 text-white"
+                        : "border-white/10 text-white/60 hover:bg-white/[0.04]",
+                    )}
+                  >
+                    Internal users
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewChannelType("client")}
+                    className={cn(
+                      "rounded-lg border px-3 py-2 text-xs font-medium transition-colors",
+                      newChannelType === "client"
+                        ? "border-violet-400/40 bg-violet-500/10 text-white"
+                        : "border-white/10 text-white/60 hover:bg-white/[0.04]",
+                    )}
+                  >
+                    External client
+                  </button>
+                </div>
+              </div>
+              {newChannelType === "client" && (
+                <div>
+                  <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-white/45">
+                    Client
+                  </p>
+                  <select
+                    value={newChannelClientKey}
+                    onChange={(event) => setNewChannelClientKey(event.target.value)}
+                    className={cn(inputClassName(), "mt-2")}
+                  >
+                    {CLIENT_MESSAGING_OPTIONS.map((client) => (
+                      <option key={client.key} value={client.key}>
+                        {client.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <div>
+                <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-white/45">
+                  {newChannelType === "client" ? "Internal team members" : "Add users"}
                 </p>
                 <div className="mt-2 space-y-1.5">
                   {operators.map((operator) => (
@@ -724,27 +872,33 @@ export default function MessagingWorkspace() {
             </div>
           )}
 
-          <ul className="mt-3 space-y-1.5">
-            {(channels.length > 0 ? channels : [activeChannel]).map((channel) => (
-              <li key={channel.room}>
-                <button
-                  type="button"
-                  onClick={() => selectChannel(channel.room)}
-                  className={cn(
-                    "flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-left transition-colors",
-                    channel.room === activeRoom
-                      ? "border-sky-400/30 bg-sky-500/10 text-white"
-                      : "border-white/10 bg-white/[0.03] text-white/70 hover:bg-white/[0.06]",
-                  )}
-                >
-                  <span className="truncate text-sm font-medium">{channel.name}</span>
-                  <span className="ml-2 shrink-0 text-[10px] text-white/40">
-                    {channel.memberOperatorIds.length}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
+          <div className="mt-4 space-y-4">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/40">
+                Internal users
+              </p>
+              <ul className="mt-2 space-y-1.5">
+                {(internalChannels.length > 0 ? internalChannels : [activeChannel]).map(
+                  (channel) => renderChannelButton(channel),
+                )}
+              </ul>
+            </div>
+
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/40">
+                External clients
+              </p>
+              {clientChannels.length === 0 ? (
+                <p className="mt-2 text-xs text-white/40">
+                  No client channels yet. Create one to share with Westport.
+                </p>
+              ) : (
+                <ul className="mt-2 space-y-1.5">
+                  {clientChannels.map((channel) => renderChannelButton(channel))}
+                </ul>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="rounded-2xl border border-white/15 bg-white/[0.04] p-5 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
@@ -885,7 +1039,15 @@ export default function MessagingWorkspace() {
               <div>
                 <h2 className="text-lg font-semibold text-white">{activeChannel.name}</h2>
                 <p className="text-xs text-white/45">
-                  {channelMembers.map((member) => member.fullName).join(" · ") || "No members"}
+                  {activeChannel.channelType === "client"
+                    ? [
+                        ...channelMembers.map((member) => member.fullName),
+                        CLIENT_MESSAGING_OPTIONS.find(
+                          (client) => client.key === activeChannel.clientKey,
+                        )?.label ?? "Client",
+                      ].join(" · ")
+                    : channelMembers.map((member) => member.fullName).join(" · ") ||
+                      "No members"}
                 </p>
               </div>
             </div>

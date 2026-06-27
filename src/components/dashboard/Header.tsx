@@ -1,5 +1,8 @@
 "use client";
 
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { project } from "@/lib/mock-data";
@@ -9,7 +12,30 @@ type HeaderProps = {
   onMenuClick?: () => void;
 };
 
+const VIEWER_KEY = "client:westport";
+
 export default function Header({ onMenuClick }: HeaderProps) {
+  const [unreadTotal, setUnreadTotal] = useState(0);
+
+  const loadUnread = useCallback(async () => {
+    try {
+      const response = await fetch(
+        `/api/messaging/unread?viewerKey=${encodeURIComponent(VIEWER_KEY)}`,
+        { cache: "no-store" },
+      );
+      const data = (await response.json()) as { unreadTotal?: number };
+      if (response.ok) setUnreadTotal(data.unreadTotal ?? 0);
+    } catch {
+      // ignore polling errors
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadUnread();
+    const timer = window.setInterval(() => void loadUnread(), 15000);
+    return () => window.clearInterval(timer);
+  }, [loadUnread]);
+
   return (
     <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-white/[0.08] bg-[#07111F]/90 px-4 backdrop-blur-xl sm:h-16 sm:px-6 lg:px-10">
       <div className="flex min-w-0 items-center gap-2 sm:gap-3">
@@ -40,10 +66,18 @@ export default function Header({ onMenuClick }: HeaderProps) {
             ⌘K
           </kbd>
         </div>
-        <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-xl sm:h-10 sm:w-10">
+        <Link
+          href="/clients/westport/messages"
+          className="relative inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.08] text-white/70 transition-colors hover:bg-white/[0.04] sm:h-10 sm:w-10"
+          aria-label="Open messages"
+        >
           <Bell className="h-4 w-4" />
-          <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-red-500" />
-        </Button>
+          {unreadTotal > 0 && (
+            <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-400 px-1 text-[10px] font-semibold text-[#07111F]">
+              {unreadTotal}
+            </span>
+          )}
+        </Link>
         <Button variant="secondary" size="sm" className="hidden rounded-2xl sm:inline-flex">
           <Download className="h-3.5 w-3.5" />
           Export
