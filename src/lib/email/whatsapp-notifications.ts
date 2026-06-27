@@ -2,11 +2,14 @@ import { createSupabaseServerClient, isSupabaseConfigured } from "@/lib/supabase
 import { fetchMailboxMessages } from "@/lib/email/imap";
 import type { EmailMessage } from "@/lib/email/types";
 import {
+  formatClientChannelWhatsAppMessage,
   formatNewEmailWhatsAppMessage,
   getWhatsAppNotifyPhone,
   isWhatsAppConfigured,
   sendWhatsAppMessage,
 } from "@/lib/email/whatsapp";
+import type { ChatMessage } from "@/lib/internal-messaging-data";
+import { getChannelByRoom } from "@/lib/internal-messaging-service";
 
 type WhatsAppSettingsRow = {
   account_id: string;
@@ -126,6 +129,50 @@ async function markMessageNotified(message: EmailMessage) {
   if (error) throw new Error(error.message);
 }
 
+const WESTPORT_MESSAGING_ACCOUNT_ID = "westport-messaging";
+
+function hashStringToSafeInteger(value: string) {
+  let hash = 5381;
+  for (let i = 0; i < value.length; i++) {
+    hash = (hash * 33) ^ value.charCodeAt(i);
+  }
+  return Math.abs(hash % 9007199254740991);
+}
+
+async function wasMessagingMessageNotified(messageId: string) {
+  if (!isSupabaseConfigured()) return false;
+
+  const supabase = requireSupabase();
+  const { data } = await supabase
+    .from("email_whatsapp_notification_log")
+    .select("id")
+    .eq("account_id", WESTPORT_MESSAGING_ACCOUNT_ID)
+    .eq("message_id", messageId)
+    .maybeSingle();
+
+  return Boolean(data);
+}
+
+async function markMessagingMessageNotified(message: ChatMessage, channelName: string) {
+  if (!isSupabaseConfigured()) return;
+
+  const supabase = requireSupabase();
+  const firstLine = message.content.trim().split(/\r?\n/)[0]?.trim() || "(No message)";
+  const { error } = await supabase.from("email_whatsapp_notification_log").upsert(
+    {
+      account_id: WESTPORT_MESSAGING_ACCOUNT_ID,
+      message_uid: hashStringToSafeInteger(message.id),
+      message_id: message.id,
+      from_name: channelName,
+      subject: firstLine,
+      notified_at: new Date().toISOString(),
+    },
+    { onConflict: "account_id,message_uid" },
+  );
+
+  if (error) throw new Error(error.message);
+}
+
 /** On first run, mark existing inbox messages as seen so old mail does not trigger alerts. */
 async function bootstrapNotificationLog(messages: EmailMessage[]) {
   if (!isSupabaseConfigured()) return;
@@ -186,4 +233,34 @@ export async function sendWhatsAppTestNotification() {
   return sendWhatsAppMessage(
     formatNewEmailWhatsAppMessage("DroneCatalyst Test", "WhatsApp alerts are working"),
   );
+}
+
+export async function notifyWestportClientMessageWhatsApp(message: ChatMessage) {
+  if (!(await isWhatsAppEnabledForInfo())) {
+    return { sent: false as const, skipped: "disabled" as const };
+  }
+
+  if (!message.operatorId.startsWith("client:")) {
+    return { sent: false as const, skipped: "not_client" as const };
+  }
+
+  if (message.messageType === "system") {
+    return { sent: false as const, skipped: "system" as const };
+  }
+
+  if (await wasMessagingMessageNotified(message.id)) {
+    return { sent: false as const, skipped: "already_notified" as const };
+  }
+
+  const channel = await getChannelByRoom(message.room);
+  if (!channel || channel.channelType !== "client") {
+    return { sent: false as const, skipped: "not_client_channel" as const };
+  }
+
+  await sendWhatsAppMessage(
+    formatClientChannelWhatsAppMessage(channel.name, message.createdAt, message.content),
+  );
+  await markMessagingMessageNotified(message, channel.name);
+
+  return { sent: true as const, channelName: channel.name };
 }

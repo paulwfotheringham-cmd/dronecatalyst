@@ -83,6 +83,18 @@ export async function sendMessage(input: {
   return mapChatMessage(data as DbMessage);
 }
 
+export async function getChannelByRoom(room: string): Promise<MessageChannel | null> {
+  const supabase = requireMessagingSupabase();
+  const { data, error } = await supabase
+    .from("internal_message_channels")
+    .select("*")
+    .eq("room", room)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  return data ? mapMessageChannel(data as DbChannel) : null;
+}
+
 export async function listChannels(): Promise<MessageChannel[]> {
   const supabase = requireMessagingSupabase();
   const { data, error } = await supabase

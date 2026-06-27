@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { INTERNAL_MESSAGING_ROOM } from "@/lib/internal-messaging-data";
+import { notifyWestportClientMessageWhatsApp } from "@/lib/email/whatsapp-notifications";
 import { listMessages, sendMessage } from "@/lib/internal-messaging-service";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 
@@ -58,6 +59,10 @@ export async function POST(request: NextRequest) {
       attachmentUrl: body.attachmentUrl,
       attachmentMime: body.attachmentMime,
       callLink: body.callLink,
+    });
+
+    void notifyWestportClientMessageWhatsApp(message).catch((error) => {
+      console.error("[messaging/whatsapp] Westport notification failed", error);
     });
 
     return NextResponse.json({ message });

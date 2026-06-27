@@ -24,6 +24,28 @@ export function formatNewEmailWhatsAppMessage(fromName: string, subject: string)
   ].join("\n");
 }
 
+export function formatClientChannelWhatsAppMessage(
+  channelName: string,
+  createdAt: string,
+  content: string,
+) {
+  const firstLine = content.trim().split(/\r?\n/)[0]?.trim() || "(No message)";
+  const when = new Date(createdAt).toLocaleString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  return [
+    "Westport client message",
+    `Channel: ${channelName.trim() || "Shared channel"}`,
+    when,
+    firstLine,
+  ].join("\n");
+}
+
 export async function sendWhatsAppMessage(text: string) {
   const apiKey = process.env.CALLMEBOT_API_KEY?.trim();
   if (!apiKey) {
