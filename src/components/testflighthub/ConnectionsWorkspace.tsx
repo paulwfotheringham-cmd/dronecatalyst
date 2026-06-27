@@ -357,6 +357,29 @@ export default function ConnectionsWorkspace({ onBackToCrm }: ConnectionsWorkspa
             onSelect={setSelectedId}
           />
 
+          {connections.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {connections.map((connection) => (
+                <button
+                  key={connection.id}
+                  type="button"
+                  onClick={() => setSelectedId(connection.id)}
+                  className={cn(
+                    "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                    selectedId === connection.id
+                      ? "border-sky-400/40 bg-sky-500/15 text-sky-200"
+                      : "border-white/10 bg-white/[0.03] text-white/65 hover:border-white/20 hover:text-white",
+                  )}
+                >
+                  {connection.name}
+                  <span className="ml-1.5 text-white/35">
+                    · {connection.city}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+
           {selected ? (
             <section className="rounded-2xl border border-white/15 bg-white/[0.04] p-4 shadow-[0_24px_64px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl sm:p-6">
               <div className="flex flex-wrap items-start justify-between gap-3">
