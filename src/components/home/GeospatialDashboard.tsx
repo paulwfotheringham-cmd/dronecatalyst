@@ -277,10 +277,6 @@ export default function GeospatialDashboard({ className }: GeospatialDashboardPr
               Westport Logistics Hub · TerraBuild Infrastructure
             </p>
           </div>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-emerald-300">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
-            FlightHub Connected
-          </span>
         </div>
 
         <div className="relative flex min-h-[640px]">

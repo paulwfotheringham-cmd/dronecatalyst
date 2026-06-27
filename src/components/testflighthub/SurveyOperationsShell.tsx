@@ -87,14 +87,6 @@ export default function SurveyOperationsShell({
               <h1 className="truncate text-base font-semibold text-white sm:text-lg">{resolvedTitle}</h1>
             </div>
           </div>
-          <div className="hidden items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-300 sm:inline-flex">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
-            FlightHub Connected
-          </div>
-          <span
-            className="inline-flex h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)] sm:hidden"
-            aria-label="FlightHub connected"
-          />
         </header>
 
       <div className="safe-area-pb min-h-0 flex-1 overflow-y-auto overflow-x-hidden">{children}</div>
