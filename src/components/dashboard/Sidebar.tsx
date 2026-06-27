@@ -21,7 +21,7 @@ export default function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
     >
       <div className="flex h-12 shrink-0 items-center justify-between border-b border-white/[0.08] px-3 lg:h-14 lg:px-4">
         <div className="min-w-0 flex-1 rounded-lg bg-white px-2.5 py-1.5">
-          <Logo height={30} href="/test1" className="block w-full max-w-none" />
+          <Logo height={30} href="/clients/westport" className="block w-full max-w-none" />
         </div>
         <button
           type="button"

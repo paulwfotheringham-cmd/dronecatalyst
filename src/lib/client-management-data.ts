@@ -162,7 +162,7 @@ export function createInitialClients(): ManagedClient[] {
       activeProjects: 1,
       notes:
         "TerraBuild Infrastructure — 240ha industrial logistics precinct. Earthworks, warehouse zones, and drainage monitoring. Project value $180M · target completion March 2026.",
-      platformUrl: "/test1",
+      platformUrl: "/clients/westport",
     },
   ];
 }

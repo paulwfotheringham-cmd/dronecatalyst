@@ -21,9 +21,11 @@ function scrollToSection(hash: string) {
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
-  const isDarkNav = pathname === "/" || pathname === "/contact";
+  const isLoginPage = pathname === "/login";
+  const isDarkNav = pathname === "/" || pathname === "/contact" || isLoginPage;
   const isDashboard =
     pathname?.startsWith("/test1") ||
+    pathname?.startsWith("/clients/westport") ||
     pathname?.startsWith("/testflighthub") ||
     pathname?.startsWith("/internaldashboard") ||
     pathname?.startsWith("/files") ||
@@ -53,6 +55,7 @@ export default function Navbar() {
             </div>
 
             {/* Centered navigation */}
+            {!isLoginPage && (
             <nav
               aria-label="Main navigation"
               className="hidden items-center justify-center gap-12 lg:flex xl:gap-14"
@@ -88,8 +91,10 @@ export default function Navbar() {
                 </Link>
               ))}
             </nav>
+            )}
 
             {/* Contact — far right */}
+            {!isLoginPage && (
             <div className="flex items-center justify-end gap-3">
               <Link
                 href="/contact"
@@ -125,6 +130,7 @@ export default function Navbar() {
                 </svg>
               </button>
             </div>
+            )}
           </div>
         </div>
       </header>

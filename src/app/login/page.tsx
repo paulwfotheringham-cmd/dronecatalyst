@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 
-import LoginForm from "@/components/auth/LoginForm";
+import LoginPageContent from "@/components/auth/LoginPageContent";
 import JsonLd from "@/components/JsonLd";
-import Hero from "@/components/sections/Hero";
 import { createPageMetadata } from "@/lib/metadata";
 import { breadcrumbJsonLd } from "@/lib/structured-data";
 
@@ -21,16 +20,7 @@ export default function LoginPage() {
           { name: "Login", path: "/login" },
         ])}
       />
-      <Hero
-        compact
-        title="Sign In"
-        subtitle="Connect to your client intelligence platform or internal operations workspace."
-      />
-      <section className="pb-20 lg:pb-24">
-        <div className="mx-auto max-w-md px-6">
-          <LoginForm />
-        </div>
-      </section>
+      <LoginPageContent />
     </>
   );
 }
