@@ -67,6 +67,46 @@ function draftToMapConnection(draft: Omit<CrmConnection, "id" | "createdAt" | "u
   };
 }
 
+function connectionLocationLabel(connection: CrmConnection) {
+  return `${connection.city}, ${connection.country}`;
+}
+
+function connectionSpecialtyTags(specialties: string) {
+  return specialties
+    .split(/[,;|/]/)
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+}
+
+function collectSpecialtyOptions(items: CrmConnection[]) {
+  const tags = new Set<string>();
+  for (const connection of items) {
+    for (const tag of connectionSpecialtyTags(connection.specialties)) {
+      tags.add(tag);
+    }
+  }
+  return [...tags].sort((a, b) => a.localeCompare(b));
+}
+
+function collectLocationOptions(items: CrmConnection[]) {
+  return [...new Set(items.map((connection) => connectionLocationLabel(connection)))].sort((a, b) =>
+    a.localeCompare(b),
+  );
+}
+
+function connectionMatchesSpecialty(connection: CrmConnection, specialty: string) {
+  if (specialty === "all") return true;
+  const normalized = specialty.toLowerCase();
+  return connectionSpecialtyTags(connection.specialties).some(
+    (tag) => tag.toLowerCase() === normalized,
+  );
+}
+
+function connectionMatchesLocation(connection: CrmConnection, location: string) {
+  if (location === "all") return true;
+  return connectionLocationLabel(connection) === location;
+}
+
 type ConnectionsWorkspaceProps = {
   onBackToCrm?: () => void;
 };
@@ -80,6 +120,8 @@ export default function ConnectionsWorkspace({ onBackToCrm }: ConnectionsWorkspa
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [newDraft, setNewDraft] = useState<CrmConnection | null>(null);
   const [savedSnapshot, setSavedSnapshot] = useState<CrmConnection | null>(null);
+  const [filterSpecialty, setFilterSpecialty] = useState("all");
+  const [filterLocation, setFilterLocation] = useState("all");
   const snapshottedIdRef = useRef<string | null>(null);
 
   const selected = useMemo(() => {
@@ -100,6 +142,19 @@ export default function ConnectionsWorkspace({ onBackToCrm }: ConnectionsWorkspa
     }
     return connections;
   }, [connections, newDraft, selectedId]);
+
+  const specialtyOptions = useMemo(() => collectSpecialtyOptions(connections), [connections]);
+  const locationOptions = useMemo(() => collectLocationOptions(connections), [connections]);
+
+  const filteredConnections = useMemo(
+    () =>
+      connections.filter(
+        (connection) =>
+          connectionMatchesSpecialty(connection, filterSpecialty) &&
+          connectionMatchesLocation(connection, filterLocation),
+      ),
+    [connections, filterSpecialty, filterLocation],
+  );
 
   const loadConnections = useCallback(async () => {
     setLoading(true);
@@ -129,6 +184,14 @@ export default function ConnectionsWorkspace({ onBackToCrm }: ConnectionsWorkspa
   useEffect(() => {
     void loadConnections();
   }, [loadConnections]);
+
+  useEffect(() => {
+    if (selectedId === "__draft__") return;
+    if (selectedId && filteredConnections.some((connection) => connection.id === selectedId)) {
+      return;
+    }
+    setSelectedId(filteredConnections[0]?.id ?? null);
+  }, [filteredConnections, selectedId]);
 
   useEffect(() => {
     if (!selectedId || selectedId === "__draft__") {
@@ -358,25 +421,56 @@ export default function ConnectionsWorkspace({ onBackToCrm }: ConnectionsWorkspa
           />
 
           {connections.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {connections.map((connection) => (
-                <button
-                  key={connection.id}
-                  type="button"
-                  onClick={() => setSelectedId(connection.id)}
-                  className={cn(
-                    "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-                    selectedId === connection.id
-                      ? "border-sky-400/40 bg-sky-500/15 text-sky-200"
-                      : "border-white/10 bg-white/[0.03] text-white/65 hover:border-white/20 hover:text-white",
-                  )}
+            <div className="grid gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:grid-cols-3">
+              <div>
+                <FieldLabel>Specialty</FieldLabel>
+                <select
+                  className={inputClassName()}
+                  value={filterSpecialty}
+                  onChange={(event) => setFilterSpecialty(event.target.value)}
                 >
-                  {connection.name}
-                  <span className="ml-1.5 text-white/35">
-                    · {connection.city}
-                  </span>
-                </button>
-              ))}
+                  <option value="all">All specialties</option>
+                  {specialtyOptions.map((specialty) => (
+                    <option key={specialty} value={specialty}>
+                      {specialty}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <FieldLabel>Location</FieldLabel>
+                <select
+                  className={inputClassName()}
+                  value={filterLocation}
+                  onChange={(event) => setFilterLocation(event.target.value)}
+                >
+                  <option value="all">All locations</option>
+                  {locationOptions.map((location) => (
+                    <option key={location} value={location}>
+                      {location}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <FieldLabel>Contact</FieldLabel>
+                <select
+                  className={inputClassName()}
+                  value={selectedId && selectedId !== "__draft__" ? selectedId : ""}
+                  onChange={(event) => setSelectedId(event.target.value || null)}
+                >
+                  <option value="">
+                    {filteredConnections.length === 0
+                      ? "No contacts match filters"
+                      : "Select a contact"}
+                  </option>
+                  {filteredConnections.map((connection) => (
+                    <option key={connection.id} value={connection.id}>
+                      {connection.name} · {connection.city}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           )}
 
