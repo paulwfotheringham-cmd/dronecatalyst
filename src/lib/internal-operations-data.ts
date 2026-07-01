@@ -3,6 +3,7 @@ import type { SurveyOperationsBasePath } from "@/lib/survey-operations-mock-data
 export type InternalOperationsView =
   | "home"
   | "clients"
+  | "representatives"
   | "crm"
   | "connections"
   | "financials"
@@ -16,6 +17,8 @@ export type InternalOperationsView =
   | "recent-missions"
   | "webodm"
   | "messaging"
+  | "social"
+  | "settings"
   | "calendar"
   | "info-email"
   | "files"
@@ -30,6 +33,7 @@ export const INTERNAL_OPERATIONS_BASE_PATH: SurveyOperationsBasePath = "/interna
 export const internalOperationsViews: InternalOperationsView[] = [
   "home",
   "clients",
+  "representatives",
   "crm",
   "connections",
   "financials",
@@ -43,6 +47,8 @@ export const internalOperationsViews: InternalOperationsView[] = [
   "recent-missions",
   "webodm",
   "messaging",
+  "social",
+  "settings",
   "calendar",
   "info-email",
   "files",
@@ -89,6 +95,7 @@ export const internalSurveyNavSections: readonly InternalNavSection[] = [
     label: "Business Central",
     items: [
       { label: "Clients", icon: "Building2", view: "clients" as const },
+      { label: "Representatives", icon: "Handshake", view: "representatives" as const },
       { label: "CRM", icon: "ContactRound", view: "crm" as const },
       { label: "Projects", icon: "FolderKanban", view: "projects" as const },
       { label: "Recent Missions", icon: "History", view: "recent-missions" as const },
@@ -109,6 +116,7 @@ export const internalSurveyNavSections: readonly InternalNavSection[] = [
       { label: "Calendar", icon: "CalendarDays", view: "calendar" as const },
       { label: "Email", icon: "Mail", view: "info-email" as const },
       { label: "Messaging", icon: "MessageSquare", view: "messaging" as const },
+      { label: "Social", icon: "Share2", view: "social" as const },
     ],
   },
   {
@@ -133,6 +141,10 @@ export const internalSurveyNavSections: readonly InternalNavSection[] = [
       { label: "Users", icon: "Users", view: "users" as const },
     ],
   },
+  {
+    label: "Settings",
+    items: [{ label: "Settings", icon: "Settings", view: "settings" as const }],
+  },
 ];
 
 export const internalSurveyNavItems: InternalNavItem[] = internalSurveyNavSections.flatMap(
@@ -145,6 +157,7 @@ export const internalViewTitles: Record<
 > = {
   home: { title: "Internal Operations", subtitle: "Drone Catalyst" },
   clients: { title: "Client Directory", subtitle: "Internal Operations" },
+  representatives: { title: "Representatives", subtitle: "Internal Operations" },
   crm: { title: "CRM", subtitle: "Internal Operations" },
   connections: { title: "Connections", subtitle: "Internal Operations" },
   financials: { title: "Financials", subtitle: "Internal Operations" },
@@ -158,6 +171,8 @@ export const internalViewTitles: Record<
   "recent-missions": { title: "Recent Missions", subtitle: "Internal Operations" },
   webodm: { title: "WebODM Processing", subtitle: "Internal Operations" },
   messaging: { title: "Messaging", subtitle: "Internal Operations" },
+  social: { title: "Social", subtitle: "Internal Operations" },
+  settings: { title: "Settings", subtitle: "Internal Operations" },
   calendar: { title: "Calendar", subtitle: "Internal Operations" },
   "info-email": { title: "Email", subtitle: "Internal Operations" },
   files: { title: "File Repository", subtitle: "Internal Operations" },

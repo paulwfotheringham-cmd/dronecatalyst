@@ -14,6 +14,7 @@ import {
   type InternalNavItem,
   type InternalOperationsView,
 } from "@/lib/internal-operations-data";
+import { OFFICE_LOCATIONS } from "@/lib/office-locations-data";
 import {
   getSurveyNavHref,
   isSurveyNavItemActive,
@@ -33,6 +34,7 @@ import {
   FlaskConical,
   FolderKanban,
   FolderOpen,
+  Handshake,
   History,
   Layers,
   LayoutDashboard,
@@ -48,6 +50,8 @@ import {
   Plane,
   Radio,
   ScrollText,
+  Settings,
+  Share2,
   Target,
   Users,
   X,
@@ -66,9 +70,12 @@ const iconMap = {
   Plane,
   Radio,
   ScrollText,
+  Settings,
+  Share2,
   FlaskConical,
   FolderKanban,
   FolderOpen,
+  Handshake,
   History,
   Layers,
   MessageSquare,
@@ -101,6 +108,33 @@ const navItemClass = (active: boolean, compact = false) =>
 
 const sectionHeaderClass =
   "mb-1 px-2.5 pt-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-sky-400/90 lg:mb-1.5 lg:text-[9.5px]";
+
+const officeLocationsTitleClass =
+  "mb-1 mt-2 px-2.5 pt-2 text-[9px] font-bold uppercase tracking-[0.12em] text-white/35";
+
+function renderOfficeLocationsBlock() {
+  return (
+    <div className="border-t border-white/[0.06]">
+      <p className={officeLocationsTitleClass}>Office Locations</p>
+      <ul className="space-y-1 px-1 pb-1">
+        {OFFICE_LOCATIONS.map((site) => (
+          <li
+            key={site.id}
+            className="rounded-lg border border-white/[0.05] bg-white/[0.02] px-2.5 py-1.5"
+          >
+            <p className="truncate text-[11px] font-medium text-white/75">{site.name}</p>
+            <p className="truncate text-[10px] text-white/40">
+              {site.city}, {site.country}
+            </p>
+            <p className="mt-0.5 text-[9.5px] text-white/30">
+              {site.staffCount} staff · {site.timezone}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 type SurveyOperationsSidebarProps = {
   mobileOpen?: boolean;
@@ -286,6 +320,7 @@ export default function SurveyOperationsSidebar({
         <div className="space-y-0.5">
           {section.items.map((item) => renderInternalNavItemBlock(item))}
         </div>
+        {section.label === "Business Central" ? renderOfficeLocationsBlock() : null}
       </div>
     );
   }

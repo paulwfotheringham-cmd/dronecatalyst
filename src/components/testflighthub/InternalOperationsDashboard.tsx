@@ -12,6 +12,10 @@ import {
   type ManagedClient,
 } from "@/lib/client-management-data";
 import {
+  createInitialRepresentatives,
+  type Representative,
+} from "@/lib/representatives-data";
+import {
   INTERNAL_OPERATIONS_BASE_PATH,
   isInternalOperationsView,
   normalizeInternalOperationsView,
@@ -34,6 +38,9 @@ import SectorWorkspace from "./SectorWorkspace";
 import ProjectsWorkspace from "./ProjectsWorkspace";
 import MediaExampleWorkspace from "./MediaExampleWorkspace";
 import MessagingWorkspace from "./MessagingWorkspace";
+import SocialWorkspace from "./SocialWorkspace";
+import SettingsWorkspace from "./SettingsWorkspace";
+import RepresentativesWorkspace from "./RepresentativesWorkspace";
 import RecentMissionsPanel from "./RecentMissionsPanel";
 import StrategyWorkspace from "./StrategyWorkspace";
 import WhiteboardWorkspace from "./WhiteboardWorkspace";
@@ -62,8 +69,12 @@ export default function InternalOperationsDashboard() {
   const [assetCategories, setAssetCategories] = useState<string[]>(() => assetRegistry.categories);
   const [assetLocations, setAssetLocations] = useState<string[]>(() => assetRegistry.locations);
   const [clients, setClients] = useState<ManagedClient[]>(() => createInitialClients());
+  const [representatives, setRepresentatives] = useState<Representative[]>(() =>
+    createInitialRepresentatives(),
+  );
   const [selectedAssetId, setSelectedAssetId] = useState("asset-1");
   const [selectedClientId, setSelectedClientId] = useState("client-1");
+  const [selectedRepresentativeId, setSelectedRepresentativeId] = useState("rep-1");
   const [users, setUsers] = useState<ManagedUser[]>(() => createInitialUsers());
   const [selectedUserId, setSelectedUserId] = useState("user-1");
   const testingSandboxHostRef = useRef<HTMLDivElement>(null);
@@ -157,6 +168,15 @@ export default function InternalOperationsDashboard() {
             />
           )}
 
+          {activeView === "representatives" && (
+            <RepresentativesWorkspace
+              representatives={representatives}
+              selectedRepresentativeId={selectedRepresentativeId}
+              onSelectRepresentative={setSelectedRepresentativeId}
+              onRepresentativesChange={setRepresentatives}
+            />
+          )}
+
           {activeView === "assets" && (
             <AssetManagementWorkspace
               assets={assets}
@@ -213,6 +233,10 @@ export default function InternalOperationsDashboard() {
           {activeView === "sector" && <SectorWorkspace />}
 
           {activeView === "messaging" && <MessagingWorkspace />}
+
+          {activeView === "social" && <SocialWorkspace />}
+
+          {activeView === "settings" && <SettingsWorkspace />}
 
           {activeView === "calendar" && <CalendarWorkspace />}
 
